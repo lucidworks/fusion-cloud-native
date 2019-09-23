@@ -1,0 +1,23 @@
+= Fusion Cloud Native on Kubernetes
+
+This repo contains scripts for installing Fusion 5.x on Kubernetes
+
+== Google Kubernetes Engine (GKE)
+
+Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster.
+
+See: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/how-to-deploy-gke.html for more information on deploying Fusion 5 on GKE.
+
+== Other Kubernetes Platforms
+
+Lucidworks provides a Helm chart for Fusion 5.x, so if you're not running on GKE, you can simply do:
+```
+RELEASE=f5
+NAMESPACE=default
+helm repo add lucidworks https://charts.lucidworks.com
+helm repo update
+helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks/fusion
+kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
+```
+
+For more information, please see the Fusion documentation: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/index.html
