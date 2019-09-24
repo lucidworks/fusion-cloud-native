@@ -2,22 +2,21 @@
 
 This repo contains scripts for installing Fusion 5.x on Kubernetes
 
+== Release Name and Namespace
+
+Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses a release name to track a specific installation of an application in the cluster. You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion. Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the cluster in separate namespaces. However, do not install more than one Fusion release in the same namespace.
+
 == Google Kubernetes Engine (GKE)
 
-Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster.
+Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `--help` option to see script usage.
+
+_Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart._
 
 See: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/how-to-deploy-gke.html for more information on deploying Fusion 5 on GKE.
 
 == Other Kubernetes Platforms
 
 If you're not running on GKE, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
-
-=== Choose a Release Name and Namespace
-
-Choose a unique release name for Fusion, such as `f5`; Helm uses a release name to track a specific installation of an application in the cluster.
-
-You also need to choose the Kubernetes namespace to install Fusion. You can install multiple instances of Fusion in the cluster in separate namespaces.
-However, do not install more than one Fusion release in the same namespace.
 
 === Customize Fusion Chart Settings
 
@@ -43,3 +42,11 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 ```
 
 For more information, please see the Fusion documentation: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/index.html
+
+====  Upgrade Existing Installation
+
+To update an existing installation, do:
+```
+helm repo update
+helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+```

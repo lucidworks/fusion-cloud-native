@@ -30,7 +30,7 @@ GCLOUD_ZONE=us-west1
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-MY_VALUES=${NAMESPACE}_fusion_values.yaml
+MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 GCS_BUCKET=
 CREATE_MODE=
@@ -39,6 +39,7 @@ INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.0"
 SOLR_REPLICAS=3
 ML_MODEL_STORE="fs"
+CUSTOM_MY_VALUES=""
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -65,7 +66,7 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES=${NAMESPACE}_fusion_values.yaml
+            MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
             shift 2
         ;;
         -p)
@@ -82,6 +83,7 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
+            MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
             shift 2
         ;;
         -z)
@@ -113,7 +115,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            MY_VALUES="$2"
+            CUSTOM_MY_VALUES="$2"
             shift 2
         ;;
         --create)
@@ -165,6 +167,10 @@ fi
 if [ "$GCLOUD_PROJECT" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the GCP project name using: -p <project>"
   exit 1
+fi
+
+if [ "$CUSTOM_MY_VALUES" != "" ]; then
+  MY_VALUES=$CUSTOM_MY_VALUES
 fi
 
 # verify the user is logged in ...
