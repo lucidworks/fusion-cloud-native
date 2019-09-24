@@ -1,16 +1,19 @@
 = Fusion Cloud Native on Kubernetes
 
-This repo contains scripts for installing Fusion 5.x on Kubernetes
+This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s)
 
 == Release Name and Namespace
 
-Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses a release name to track a specific installation of an application in the cluster. You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion. Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the cluster in separate namespaces. However, do not install more than one Fusion release in the same namespace.
+Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
+You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
+Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
+However, do not install more than one Fusion release in the same namespace.
 
 == Google Kubernetes Engine (GKE)
 
 Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `--help` option to see script usage.
 
-_Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart._
+__Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart.__
 
 See: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/how-to-deploy-gke.html for more information on deploying Fusion 5 on GKE.
 
