@@ -1,0 +1,60 @@
+cx-ui:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: "200m"
+      memory: 64Mi
+    requests:
+      cpu: "100m"
+      memory: 64Mi
+
+cx-api:
+  replicaCount: 1
+  volumeClaimTemplates:
+    storageSize: "5Gi"
+
+kafka:
+  replicaCount: 1
+  resources: {}
+  kafkaHeapOptions: "-Xmx512m"
+
+sql-service:
+  replicaCount: 0
+  service:
+    thrift:
+      type: "ClusterIP"
+
+solr:
+  image:
+    tag: 8.2.0
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx8g"
+  volumeClaimTemplates:
+    storageSize: "100Gi"
+  replicaCount: 3 
+  resources: {}
+  zookeeper:
+    replicaCount: 3 
+    resources: {}
+    env:
+      ZK_HEAP_SIZE: 1G
+
+ml-model-service:
+  modelRepository:
+    impl: fs
+    gcs:
+      bucketName: 
+      baseDirectoryName: dev
+
+fusion-admin:
+  readinessProbe:
+    initialDelaySeconds: 180
+
+fusion-indexing:
+  readinessProbe:
+    initialDelaySeconds: 180
+
+query-pipeline:
+  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+
