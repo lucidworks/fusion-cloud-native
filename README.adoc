@@ -10,22 +10,32 @@ See: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/how-to-d
 
 == Other Kubernetes Platforms
 
-Lucidworks provides a Helm chart for Fusion 5.x, so if you're not running on GKE, you can simply do:
+If you're not running on GKE, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+
+=== Choose a Release Name and Namespace
+
+Choose a unique release name for Fusion, such as `f5`; Helm uses a release name to track a specific installation of an application in the cluster.
+
+You also need to choose the Kubernetes namespace to install Fusion. You can install multiple instances of Fusion in the cluster in separate namespaces.
+However, do not install more than one Fusion release in the same namespace.
 
 === Customize Fusion Chart Settings
 
-Fusion aims to be well-configured out-of-the-box but you can customize any of the built-in settings using a custom values yaml file.
-
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
+To begin, copy the example file provided in this repo:
 ```
 cp customize_fusion_values.yaml.example <release>_<namespace>_fusion_values.yaml
 ```
 where `<release>` is the name you give to your Fusion release, such as `f5` and `<namespace>` is the Kubernetes namespace where you want to install Fusion, such as `default`.
 
-After making changes to the yaml file, install Fusion using the following commands:
+=== Use Helm to Install Fusion
+
+After making changes to the custom values yaml file, install Fusion using the following commands:
 
 ```
 RELEASE=f5
 NAMESPACE=default
+
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
 helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks/fusion --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
