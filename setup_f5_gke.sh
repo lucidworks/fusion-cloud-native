@@ -8,7 +8,7 @@ function print_usage() {
     echo -e "\nERROR: $ERROR_MSG"
   fi
 
-  echo -e "\nUse this script to install Fusion 5 on GKE; optionally create a GKE cluster in the process\n"
+  echo -e "\nUse this script to install Fusion 5 on GKE; optionally create a GKE cluster in the process"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c          Name of the GKE cluster (required)\n"
   echo -e "  -p          GCP Project ID (required)\n"
@@ -18,12 +18,12 @@ function print_usage() {
   echo -e "  -b          GCS Bucket for storing ML models\n"
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --version   Fusion Helm Chart version\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to custom_fusion_values.yaml\n"
-  echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az, node_pools\n"
+  echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.0\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster\n"
+  echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
 }
 
 SCRIPT_CMD="$0"
