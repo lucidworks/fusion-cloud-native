@@ -17,6 +17,8 @@ function print_usage() {
   echo -e "  -z          GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
   echo -e "  -b          GCS Bucket for storing ML models\n"
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
+  echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -h          Hostname for the ingress to route requests to this fusion cluster. If used with the -t parameter the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
   echo -e "  --version   Fusion Helm Chart version\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to custom_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az, node_pools\n"
@@ -83,7 +85,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
-            MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
             shift 2
         ;;
         -z)
@@ -92,6 +93,18 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             GCLOUD_ZONE="$2"
+            shift 2
+        ;;
+        -t)
+            TLS_ENABLED=1
+            shift 1
+        ;;
+        -h)
+            if [[ -h "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -h parameter!"
+              exit 1
+            fi
+            INGRESS_HOSTNAME="$2"
             shift 2
         ;;
         -i)
@@ -171,6 +184,11 @@ fi
 
 if [ "$CUSTOM_MY_VALUES" != "" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES
+fi
+
+if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
+  print_usage "$SCRIPT_CMD" "if -t is specified -h must be specified and a domain that you can update to add an A record to point to the GCP Loadbalancer IP"
+  exit 1
 fi
 
 # verify the user is logged in ...
@@ -276,6 +294,16 @@ function proxy_url() {
   echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+}
+
+function ingress_setup() {
+  export INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  # Patch yaml for now, until fix gets into helm charts
+  kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
+  echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
+  echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
+  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated, this may take up to an hour after DNS has updated to be issued"
+
 }
 
 if [ "$GCS_BUCKET" != "" ]; then
@@ -385,17 +413,56 @@ fi
 
 helm repo update
 
+
+ADDITIONAL_VALUES=""
+if [ "${TLS_ENABLED}" == "1" ]; then
+  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
+apiVersion: networking.gke.io/v1beta1
+kind: ManagedCertificate
+metadata:
+  name: "${RELEASE}-managed-certificate"
+spec:
+  domains:
+  - "${INGRESS_HOSTNAME}"
+EOF
+
+  TLS_VALUES="tls-values.yaml"
+  ADDITIONAL_VALUES="${ADDITIONAL_VALUES} --values tls-values.yaml"
+  tee "${TLS_VALUES}" << END
+api-gateway:
+  service:
+    type: "NodePort"
+  ingress:
+    enabled: true
+    host: "${INGRESS_HOSTNAME}"
+    tls:
+      enabled: true
+    annotations:
+      "networking.gke.io/managed-certificates": "${RELEASE}-managed-certificate"
+      "kubernetes.io/ingress.class": "gce"
+
+END
+fi
+
 if [ "$UPGRADE" == "1" ]; then
   echo -e "\nUpgrading the Fusion 5.0 release  ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
   upgrade_status=$?
-  proxy_url
+  if [ "${TLS_ENABLED}" == "1" ]; then
+    ingress_setup
+  else
+    proxy_url
+  fi
   exit $upgrade_status
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${lw_helm_repo}/fusion --version ${CHART_VERSION}
+helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${lw_helm_repo}/fusion --version ${CHART_VERSION}
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
 
-proxy_url
+if [ "${TLS_ENABLED}" == "1" ]; then
+  ingress_setup
+else
+  proxy_url
+fi
