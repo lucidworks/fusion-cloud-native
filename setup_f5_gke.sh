@@ -9,7 +9,7 @@ function print_usage() {
   fi
 
   echo -e "\nUse this script to install Fusion 5 on GKE; optionally create a GKE cluster in the process\n"
-  echo -e "\nUsage: $CMD -c <cluster> -r <release> -n <namespace> -p <project> -z <zone> -i <instance_type> --values <values> --create <mode> --upgrade --purge\n"
+  echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c          Name of the GKE cluster (required)\n"
   echo -e "  -p          GCP Project ID (required)\n"
   echo -e "  -r          Helm release name for installing Fusion 5, defaults to 'f5'\n"
@@ -18,7 +18,7 @@ function print_usage() {
   echo -e "  -b          GCS Bucket for storing ML models\n"
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h          Hostname for the ingress to route requests to this fusion cluster. If used with the -t parameter the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
   echo -e "  --version   Fusion Helm Chart version\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to custom_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az, node_pools\n"
@@ -413,7 +413,6 @@ END
 fi
 
 helm repo update
-
 
 ADDITIONAL_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
