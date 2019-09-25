@@ -75,6 +75,7 @@ kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NA
 
 - Download the helm v3 beta from here: https://github.com/helm/helm/releases
 - Extract it to a directory: IE: ~/Downloads/darwin-amd64
+- Then run the following commands (assuming you put the helm binary in the same location as I did)
 
 ```
 HELM3_HOME=~/Downloads/darwin-amd64
