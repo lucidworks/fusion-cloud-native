@@ -73,8 +73,8 @@ kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NA
 
 ==== Helm v3 beta3 instructions without Tiller
 
-Download the helm v3 beta from here: https://github.com/helm/helm/releases
-Extract it to a directory: IE: ~/Downloads/darwin-amd64
+- Download the helm v3 beta from here: https://github.com/helm/helm/releases
+- Extract it to a directory: IE: ~/Downloads/darwin-amd64
 
 ```
 HELM3_HOME=~/Downloads/darwin-amd64
