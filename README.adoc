@@ -54,7 +54,7 @@ helm repo update
 helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
 ```
 
-==== Don't want to use Tiller?
+==== Don't want to use Tiller? (Helm v2)
 
 Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns].
 If your K8s administrators do not allow the use of Tiller for installing Helm charts, then you can use Helm 3 (currently in beta) or simply do:
@@ -69,5 +69,21 @@ helm fetch lucidworks/fusion
 find . -name "fusion-5.*.tgz" -exec tar zxf {} \;
 helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
 kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
+```
+
+==== Helm v3 beta3 instructions without Tiller
+
+- Download the helm v3 beta from here: https://github.com/helm/helm/releases
+- Extract it to a directory: IE: ~/Downloads/darwin-amd64
+- Then run the following commands (assuming you put the helm binary in the same location as I did)
+
+```
+HELM3_HOME=~/Downloads/darwin-amd64
+RELEASE=f5
+NAMESPACE=default
+${HELM3_HOME}/helm repo add lucidworks https://charts.lucidworks.com
+${HELM3_HOME}/helm repo update
+${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" lucidworks/fusion --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" 
+kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
