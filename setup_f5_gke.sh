@@ -19,6 +19,7 @@ function print_usage() {
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  -L          Enable/disable logstash for this deployment by providing true/false\n"
   echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.0\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
@@ -42,6 +43,7 @@ CHART_VERSION="5.0.0"
 SOLR_REPLICAS=3
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
+LOGSTASH_ENABLED=true
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -114,6 +116,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             INSTANCE_TYPE="$2"
+            shift 2
+        ;;
+        -L)
+          if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -L parameter!"
+              exit 1
+            fi
+            LOGSTASH_ENABLED="$2"
             shift 2
         ;;
         --version)
@@ -370,6 +380,7 @@ kafka:
   kafkaHeapOptions: "-Xmx512m"
 
 sql-service:
+  logstashEnabled: ${LOGSTASH_ENABLED}
   replicaCount: 0
   service:
     thrift:
@@ -392,6 +403,7 @@ solr:
       ZK_HEAP_SIZE: 1G
 
 ml-model-service:
+  logstashEnabled: ${LOGSTASH_ENABLED}
   modelRepository:
     impl: ${ML_MODEL_STORE}
     gcs:
@@ -399,14 +411,35 @@ ml-model-service:
       baseDirectoryName: dev
 
 fusion-admin:
+  logstashEnabled: ${LOGSTASH_ENABLED}
   readinessProbe:
     initialDelaySeconds: 180
 
 fusion-indexing:
+  logstashEnabled: ${LOGSTASH_ENABLED}
   readinessProbe:
     initialDelaySeconds: 180
 
+api-gateway:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
+classic-rest-service:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
+rest-service:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
+rpc-service:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
+job-launcher:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
+job-rest-server:
+  logstashEnabled: ${LOGSTASH_ENABLED}
+
 query-pipeline:
+  logstashEnabled: ${LOGSTASH_ENABLED}
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
