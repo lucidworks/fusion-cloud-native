@@ -68,7 +68,7 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
+            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -p)
@@ -85,6 +85,7 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
+            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -z)
@@ -182,7 +183,7 @@ if [ "$GCLOUD_PROJECT" == "" ]; then
   exit 1
 fi
 
-if [ "$CUSTOM_MY_VALUES" != "" ]; then
+if [ -n "$CUSTOM_MY_VALUES" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES
 fi
 
