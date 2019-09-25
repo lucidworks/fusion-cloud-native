@@ -11,7 +11,7 @@ However, do not install more than one Fusion release in the same namespace.
 
 == Google Kubernetes Engine (GKE)
 
-Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `--help` option to see script usage.
+Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `-help` option to see script usage.
 
 __Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart.__
 
