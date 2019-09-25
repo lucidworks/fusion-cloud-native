@@ -53,3 +53,21 @@ To update an existing installation, do:
 helm repo update
 helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
 ```
+
+==== Don't want to use Tiller?
+
+Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns].
+If your K8s administrators do not allow the use of Tiller for installing Helm charts, then you can use Helm 3 (currently in beta) or simply do:
+
+```
+RELEASE=f5
+NAMESPACE=default
+
+helm repo add lucidworks https://charts.lucidworks.com
+helm repo update
+helm fetch lucidworks/fusion
+find . -name "fusion-5.*.tgz" -exec tar zxf {} \;
+helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
+kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
+```
+
