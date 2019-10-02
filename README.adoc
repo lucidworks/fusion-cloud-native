@@ -1,23 +1,135 @@
 = Fusion Cloud Native on Kubernetes
+:toc:
+:toclevels: 4
+:toc-title:
 
 This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s)
+
+// tag::body[]
 
 == Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
+
 You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
 Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
 However, do not install more than one Fusion release in the same namespace.
 
 == Google Kubernetes Engine (GKE)
 
-Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `-help` option to see script usage.
+// tag::gke[]
+
+See the prerequisites and setup information below, then run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `-help` option to see script usage.
 
 __Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart.__
 
-See: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/how-to-deploy-gke.html for more information on deploying Fusion 5 on GKE.
+These are the high-level steps, explained in detail later in this topic:
+
+.How to deploy Fusion on GKE
+. One time only: link:#sdk-setup[Set up the Google Cloud SDK].
+. link:#cluster-create[Create a Fusion cluster in GKE].
+
+=== Prerequisites
+
+You need an account on each of these cloud services before you can begin deploying Fusion on GKE:
+
+* https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^]
+* https://hub.docker.com/signup[Docker Hub^]
+
+You also need these tools, installed _on your local machine_:
+
+* https://cloud.google.com/sdk/docs/quickstarts[Google Cloud SDK^]
+* https://kubernetes.io/docs/tasks/tools/install-kubectl/[`kubectl`^]
+* https://helm.sh/docs/using_helm/#installing-helm[Helm^]
+
+[[sdk-setup]]
+=== Set up the Google Cloud SDK (one time only)
+
+These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
+
+Usually, you only need to perform these setup steps once per local session.  After that, you're ready to link:#cluster-create[create a cluster].
+
+.How to set up the Google Cloud SDK
+. https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine[Enable the Kubernetes Engine API^].
+. Log in to Google Cloud: `gcloud auth login`
+. Set up the Google Cloud SDK:
+.. `gcloud config set compute/zone <zone-name>`
++
+If you are working with regional clusters instead of zone clusters, use `gcloud config set compute/region <region-name>` instead.
+.. `gcloud config set core/account <email address>`
+.. _New GKE projects only:_ `gcloud projects create <new-project-name>`
++
+If you have already created a project, for example in the https://console.cloud.google.com/[Google Cloud Platform console^], then skip to the next step.
+.. `gcloud config set project <project-name>`
+.. `gcloud auth configure-docker`
+
+[[cluster-create]]
+=== How to create a Fusion cluster in GKE
+
+When you run `setup_f5_gke.sh` to create a demo cluster, the script creates a `default_fusion_values.yaml` file from which it reads parameters for creating your Fusion cluster in GKE.
+
+The values in the `default_fusion_values.yaml` file are suitable for a single-node demo cluster only.  For multi-node clusters, you need to customize the file, then run `setup_f5_gke.sh` with the `--values` flag and specify the name of your file.
+
+The steps below show you how to create several kinds of Fusion clusters.
+
+==== How to create a single-node Fusion demo cluster
+
+A single-node configuration is useful for exploring Fusion in a demo or development environment.
+
+This type of deployment can take at least 12 minutes, plus 3–5 minutes for cluster startup.
+
+.How to create a single-node Fusion demo cluster
+. Run the setup script:
++
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name>
+```
++
+--
+* `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
+* `<project>` must match the name of an existing project in GKE.
++
+Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
+* `<zone-name>` must match the name of the zone you set in GKE.
++
+Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
+--
++
+Upon success, the script shows you where to find the Fusion UI.  For example:
++
+```
+Fusion 5 Gateway service exposed at: 198.51.100.16:6764
+```
+. Access the link:/fusion-server/{version}/getting-started/fusion-server-ui/index.html[Fusion UI] by pointing your browser to the IP address and port specified in the setup script's output.
+
+
+==== Create a three-node regional cluster to withstand a zone outage
+
+With a three-node regional cluster, nodes are deployed across three separate availability zones.
+
+In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
+
+When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
+
+With this setup, you should install a Solr auto-scaling policy that distributes replicas across different zones.
+
+// TODO: Install a zone aware auto-scaling policy for this type of cluster
+
+==== Multiple node pools for workload isolation
+
+This configuration requires a minimum of seven nodes across three node pools:
+
+* 2 system pools
+* 2 analytics pools
+* 3 search pools
+
+// TODO: Need to document nodeSelectors for each service
+
+// end::gke[]
 
 == Other Kubernetes Platforms
+
+// tag::other[]
 
 If you're not running on GKE, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
@@ -109,7 +221,10 @@ RELEASE=f5
 NAMESPACE=default
 ${HELM3_HOME}/helm repo add lucidworks https://charts.lucidworks.com
 ${HELM3_HOME}/helm repo update
-${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" lucidworks/fusion --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" 
+${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" lucidworks/fusion --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
+// end::other[]
+
+// end::body[]
