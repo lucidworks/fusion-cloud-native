@@ -54,6 +54,32 @@ helm repo update
 helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
 ```
 
+Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy, e.g.:
+```
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+```
+
+Zookeepers use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
+Thus, after performing the upgrade, to get changes to Zookeeper to apply, you need to manually delete the pods, e.g.
+```
+kubectl delete po f5-zookeeper-0
+```
+Do this one-by-one for each pod and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
+
+Alternatively, you can set the `updateStrategy` under the zookeeper section in your `${RELEASE}_${NAMESPACE}_fusion_values.yaml` file:
+
+```
+solr:
+  ...
+  zookeeper:
+    updateStrategy:
+      type: "RollingUpdate"
+```
+
 ==== Don't want to use Tiller? (Helm v2)
 
 Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns].
