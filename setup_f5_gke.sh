@@ -19,10 +19,12 @@ function print_usage() {
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --gke       GKE Master version; defaults to 1.13.7-gke.24\n"
   echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.0\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
 }
 
@@ -42,6 +44,8 @@ CHART_VERSION="5.0.0"
 SOLR_REPLICAS=3
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
+GKE_MASTER_VERSION="1.13.7-gke.24"
+DRY_RUN=""
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -116,6 +120,14 @@ if [ $# -gt 0 ]; then
             INSTANCE_TYPE="$2"
             shift 2
         ;;
+        --gke)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --gke parameter!"
+              exit 1
+            fi
+            GKE_MASTER_VERSION="$2"
+            shift 2
+        ;;
         --version)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --version parameter!"
@@ -142,6 +154,10 @@ if [ $# -gt 0 ]; then
         ;;
         --upgrade)
             UPGRADE=1
+            shift 1
+        ;;
+        --dry-run)
+            DRY_RUN="--dry-run"
             shift 1
         ;;
         --purge)
@@ -189,6 +205,13 @@ fi
 
 if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
   print_usage "$SCRIPT_CMD" "if -t is specified -h must be specified and a domain that you can update to add an A record to point to the GCP Loadbalancer IP"
+  exit 1
+fi
+
+has_gcloud=$(gcloud --version > /dev/null 2<&1)
+has_prereq=$?
+if [ $has_prereq == 1 ]; then
+  echo -e "\nERROR: Must install GCloud command line tools! See https://cloud.google.com/sdk/docs/quickstarts"
   exit 1
 fi
 
@@ -241,14 +264,14 @@ if [ "$cluster_status" != "0" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
 
-  echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} ($CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
+  echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
     SOLR_REPLICAS=1
     # have to cut off the zone part for the --subnetwork arg
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "1.12.8-gke.10" --machine-type "${INSTANCE_TYPE}" --image-type "COS" \
+      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" --image-type "COS" \
       --disk-type "pd-standard" --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
@@ -258,7 +281,7 @@ if [ "$cluster_status" != "0" ]; then
       --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "1.12.8-gke.10" --machine-type "${INSTANCE_TYPE}" \
+      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" \
       --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
@@ -303,8 +326,7 @@ function ingress_setup() {
   kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
-  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated, this may take up to an hour after DNS has updated to be issued"
-
+  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
 }
 
 if [ "$GCS_BUCKET" != "" ]; then
@@ -445,8 +467,18 @@ END
 fi
 
 if [ "$UPGRADE" == "1" ]; then
-  echo -e "\nUpgrading the Fusion 5.0 release  ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ ! -f "${MY_VALUES}" ]; then
+    echo -e "\nERROR: Custom values file ${MY_VALUES} not found! Please provide the values yaml you used to create the cluster!\n"
+    exit 1
+  fi
+
+  if [ "${DRY_RUN}" == "" ]; then
+    echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
+  else
+    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace ..."
+  fi
+
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
