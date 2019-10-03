@@ -1,0 +1,835 @@
+admin-ui:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - admin-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - admin-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+api-gateway:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - api-gateway
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - api-gateway
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+auth-ui:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - auth-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - auth-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+classic-rest-service:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - classic-rest-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - classic-rest-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+
+cx-api:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-api
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-api
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+cx-scheduler:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-scheduler
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-scheduler
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+cx-ui:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - cx-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+devops-ui:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - devops-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - devops-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+fusion-admin:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - fusion-admin
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - fusion-admin
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+fusion-indexing:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - fusion-indexing
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - fusion-indexing
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+insights:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - insights
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - insights
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+job-launcher:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - job-launcher
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - job-launcher
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+job-rest-server:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - job-rest-server
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - job-rest-server
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+kafka:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - kafka
+            - key: "app.kubernetes.io/name"
+              operator: In
+              values:
+              - kafka
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - kafka
+            - key: "app.kubernetes.io/name"
+              operator: In
+              values:
+              - kafka
+          topologyKey: kubernetes.io/hostname
+
+ml-model-service:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - ml-model-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - ml-model-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+query-pipeline:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - query-pipeline
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - query-pipeline
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+rest-service:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rest-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rest-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+rpc-service:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rpc-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rpc-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+rules-ui:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rules-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - rules-ui
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+solr:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - server
+            - key: "app.kubernetes.io/name"
+              operator: In
+              values:
+              - solr
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - server
+            - key: "app.kubernetes.io/name"
+              operator: In
+              values:
+              - solr
+          topologyKey: kubernetes.io/hostname
+
+sql-service:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - sql-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - sql-service
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname
+
+webapps:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - webapps
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: failure-domain.beta.kubernetes.io/zone
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: "app.kubernetes.io/instance"
+              operator: In
+              values:
+              - "{{ .Release.Name }}"
+            - key: "app.kubernetes.io/component"
+              operator: In
+              values:
+              - webapps
+            - key: "app.kubernetes.io/part-of"
+              operator: In
+              values:
+              - fusion
+          topologyKey: kubernetes.io/hostname

@@ -21,7 +21,7 @@ function print_usage() {
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
   echo -e "  --gke       GKE Master version; defaults to 1.13.7-gke.24\n"
   echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.0\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml (can be specified multiple times)\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
@@ -34,7 +34,7 @@ GCLOUD_ZONE=us-west1
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
+MY_VALUES=()
 UPGRADE=0
 GCS_BUCKET=
 CREATE_MODE=
@@ -43,7 +43,7 @@ INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.0"
 SOLR_REPLICAS=3
 ML_MODEL_STORE="fs"
-CUSTOM_MY_VALUES=""
+CUSTOM_MY_VALUES=()
 GKE_MASTER_VERSION="1.13.7-gke.24"
 DRY_RUN=""
 
@@ -72,7 +72,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -p)
@@ -89,7 +88,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -z)
@@ -141,7 +139,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            CUSTOM_MY_VALUES="$2"
+            CUSTOM_MY_VALUES+=("$2")
             shift 2
         ;;
         --create)
@@ -199,16 +197,12 @@ if [ "$GCLOUD_PROJECT" == "" ]; then
   exit 1
 fi
 
-if [ -n "$CUSTOM_MY_VALUES" ]; then
-  MY_VALUES=$CUSTOM_MY_VALUES
-fi
-
 if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
   print_usage "$SCRIPT_CMD" "if -t is specified -h must be specified and a domain that you can update to add an A record to point to the GCP Loadbalancer IP"
   exit 1
 fi
 
-has_gcloud=$(gcloud --version > /dev/null 2<&1)
+gcloud --version > /dev/null 2<&1
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
   echo -e "\nERROR: Must install GCloud command line tools! See https://cloud.google.com/sdk/docs/quickstarts"
@@ -238,26 +232,26 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
-gcloud config set compute/zone $GCLOUD_ZONE
-gcloud config set project $GCLOUD_PROJECT
+gcloud config set compute/zone "${GCLOUD_ZONE}"
+gcloud config set project "${GCLOUD_PROJECT}"
 
 if [ "$PURGE" == "1" ]; then
-  gcloud container clusters get-credentials $CLUSTER_NAME
+  gcloud container clusters get-credentials "${CLUSTER_NAME}"
   current=$(kubectl config current-context)
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} in: $current? This operation cannot be undone! y/n " confirm
   if [ "$confirm" == "y" ]; then
-    helm del --purge ${RELEASE}
+    helm del --purge "${RELEASE}"
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
+    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
     kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
     kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
   fi
   exit 0
 fi
 
-gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME} > /dev/null 2>&1
+gcloud beta container clusters list --filter="${CLUSTER_NAME}" | grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
 if [ "$cluster_status" != "0" ]; then
   if [ "$CREATE_MODE" == "" ]; then
@@ -287,7 +281,7 @@ if [ "$cluster_status" != "0" ]; then
       --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_ZONE}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "1" --max-nodes "2" \
+      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "1" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
   else
     echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
@@ -296,7 +290,7 @@ if [ "$cluster_status" != "0" ]; then
   fi
 
   echo -e "\nCluster '${CLUSTER_NAME}' deployed ... testing if it is healthy"
-  gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME}
+  gcloud beta container clusters list --filter="${CLUSTER_NAME}" | grep "${CLUSTER_NAME}"
   cluster_status=$?
   if [ "$cluster_status" != "0" ]; then
     echo -e "\nERROR: Status of GKE cluster ${CLUSTER_NAME} is suspect, check the Google Cloud console before proceeding!\n"
@@ -308,13 +302,13 @@ else
   fi
 fi
 
-gcloud container clusters get-credentials $CLUSTER_NAME
+gcloud container clusters get-credentials "${CLUSTER_NAME}"
 kubectl config current-context
 
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL=$PROXY_HOST:$PROXY_PORT
+  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
   echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
@@ -331,11 +325,11 @@ function ingress_setup() {
 
 if [ "$GCS_BUCKET" != "" ]; then
   echo -e "Creating GCS bucket: $GCS_BUCKET"
-  gsutil mb gs://${GCS_BUCKET}
+  gsutil mb "gs://${GCS_BUCKET}"
   ML_MODEL_STORE="gcs"
 fi
 
-kubectl rollout status deployment/${RELEASE}-query-pipeline -n ${NAMESPACE} --timeout=10s > /dev/null 2>&1
+kubectl rollout status "deployment/${RELEASE}-query-pipeline" -n "${NAMESPACE}" --timeout=10s > /dev/null 2>&1
 rollout_status=$?
 if [ $rollout_status == 0 ]; then
   if [ "$UPGRADE" == "0" ]; then
@@ -347,7 +341,7 @@ fi
 
 if [ "$UPGRADE" == "0" ]; then
   kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin \
-    --user=$(gcloud config get-value core/account)
+    --user="$(gcloud config get-value core/account)"
 fi
 
 # see if Tiller is deployed ...
@@ -366,72 +360,79 @@ lw_helm_repo=lucidworks
 echo -e "\nAdding the Lucidworks chart repo to helm repo list"
 helm repo list | grep "https://charts.lucidworks.com"
 if [ $? ]; then
-  helm repo add ${lw_helm_repo} https://charts.lucidworks.com
+  helm repo add "${lw_helm_repo}" https://charts.lucidworks.com
 fi
 
-if [ ! -f $MY_VALUES ]; then
-  tee $MY_VALUES << END
-cx-ui:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: "200m"
-      memory: 64Mi
-    requests:
-      cpu: "100m"
-      memory: 64Mi
 
-cx-api:
-  replicaCount: 1
-  volumeClaimTemplates:
-    storageSize: "5Gi"
+if [ ${#CUSTOM_MY_VALUES[@]} -eq 0  ]; then
+  DEFAULT_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+  MY_VALUES=( "${DEFAULT_VALUES}" )
+  if [ ! -f "${DEFAULT_VALUES}" ]; then
+    tee "${DEFAULT_VALUES}" << END
+  cx-ui:
+    replicaCount: 1
+    resources:
+      limits:
+        cpu: "200m"
+        memory: 64Mi
+      requests:
+        cpu: "100m"
+        memory: 64Mi
 
-kafka:
-  replicaCount: 1
-  resources: {}
-  kafkaHeapOptions: "-Xmx512m"
+  cx-api:
+    replicaCount: 1
+    volumeClaimTemplates:
+      storageSize: "5Gi"
 
-sql-service:
-  replicaCount: 0
-  service:
-    thrift:
-      type: "ClusterIP"
+  kafka:
+    replicaCount: 1
+    resources: {}
+    kafkaHeapOptions: "-Xmx512m"
 
-solr:
-  image:
-    tag: 8.2.0
-  updateStrategy:
-    type: "RollingUpdate"
-  javaMem: "-Xmx3g"
-  volumeClaimTemplates:
-    storageSize: "50Gi"
-  replicaCount: ${SOLR_REPLICAS}
-  resources: {}
-  zookeeper:
+  sql-service:
+    replicaCount: 0
+    service:
+      thrift:
+        type: "ClusterIP"
+
+  solr:
+    image:
+      tag: 8.2.0
+    updateStrategy:
+      type: "RollingUpdate"
+    javaMem: "-Xmx3g"
+    volumeClaimTemplates:
+      storageSize: "50Gi"
     replicaCount: ${SOLR_REPLICAS}
     resources: {}
-    env:
-      ZK_HEAP_SIZE: 1G
+    zookeeper:
+      replicaCount: ${SOLR_REPLICAS}
+      resources: {}
+      env:
+        ZK_HEAP_SIZE: 1G
 
-ml-model-service:
-  modelRepository:
-    impl: ${ML_MODEL_STORE}
-    gcs:
-      bucketName: ${GCS_BUCKET}
-      baseDirectoryName: dev
+  ml-model-service:
+    modelRepository:
+      impl: ${ML_MODEL_STORE}
+      gcs:
+        bucketName: ${GCS_BUCKET}
+        baseDirectoryName: dev
 
-fusion-admin:
-  readinessProbe:
-    initialDelaySeconds: 180
+  fusion-admin:
+    readinessProbe:
+      initialDelaySeconds: 180
 
-fusion-indexing:
-  readinessProbe:
-    initialDelaySeconds: 180
+  fusion-indexing:
+    readinessProbe:
+      initialDelaySeconds: 180
 
-query-pipeline:
-  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+  query-pipeline:
+    javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
+  fi
+else
+  MY_VALUES=("${CUSTOM_MY_VALUES[@]}")
 fi
 
 helm repo update
@@ -466,19 +467,23 @@ api-gateway:
 END
 fi
 
-if [ "$UPGRADE" == "1" ]; then
-  if [ ! -f "${MY_VALUES}" ]; then
+VALUES_STRING=""
+for v in "${MY_VALUES[@]}"; do
+  if [ ! -f "${v}" ]; then
     echo -e "\nERROR: Custom values file ${MY_VALUES} not found! Please provide the values yaml you used to create the cluster!\n"
     exit 1
   fi
+  VALUES_STRING="${VALUES_STRING} --values ${v}"
+done
 
+if [ "$UPGRADE" == "1" ]; then
   if [ "${DRY_RUN}" == "" ]; then
-    echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
+    echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES[*]}"
   else
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace ..."
   fi
 
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
+  helm upgrade "${RELEASE}" "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_STRING} ${ADDITIONAL_VALUES} ${DRY_RUN} --version "${CHART_VERSION}"
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
@@ -488,10 +493,10 @@ if [ "$UPGRADE" == "1" ]; then
   exit $upgrade_status
 fi
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${lw_helm_repo}/fusion --version ${CHART_VERSION}
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
+echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES[*]}"
+helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} ${ADDITIONAL_VALUES} "${lw_helm_repo}/fusion" --version "${CHART_VERSION}"
+kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
+kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
 
 if [ "${TLS_ENABLED}" == "1" ]; then
   ingress_setup

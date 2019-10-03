@@ -1,0 +1,215 @@
+admin-ui:
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+api-gateway:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "1Gi"
+    requests:
+      cpu: "1"
+      memory: "1Gi"
+
+auth-ui:
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+classic-rest-service:
+  resources:
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+cx-api:
+  resources:
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
+      cpu: "250m"
+      memory: 1Gi
+
+cx-scheduler:
+  resources:
+    limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
+      cpu: "250m"
+      memory: 1.5Gi
+
+cx-ui:
+  resources:
+    limits:
+      cpu: "200m"
+      memory: 150Mi
+    requests:
+      cpu: "50m"
+      memory: 100Mi
+
+devops-ui:
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+fusion-admin:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "1.5Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+fusion-indexing:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "1.5Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+insights:
+  resources:
+    limits:
+      cpu: "1"
+      memory: "1.5Gi"
+    requests:
+      cpu: "200m"
+      memory: "1Gi"
+
+job-launcher:
+  resources:
+    requests:
+      memory: 600Mi
+      cpu: 250m
+    limits:
+      memory: 750Mi
+      cpu: 1
+
+job-rest-server:
+  resources:
+      requests:
+        memory: 400Mi
+        cpu: 250m
+      limits:
+        memory: 500Mi
+        cpu: 1
+
+kafka:
+  resources:
+    requests:
+      memory: 250Mi
+      cpu: 250m
+    limits:
+      memory: 1Gi
+      cpu: 1
+
+ml-model-service:
+  pythonService:
+    resources:
+      requests:
+        memory: 1Gi
+        cpu: 1
+      limits:
+        memory: 4Gi
+        cpu: 4
+  javaService:
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: 1
+      limits:
+        memory: 4Gi
+        cpu: 4
+
+query-pipeline:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+rest-service:
+  resources:
+    limits:
+      cpu: "1"
+      memory: 3Gi
+    requests:
+      cpu: "200m"
+      memory: 2Gi
+
+rpc-service:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "200m"
+      memory: "2Gi"
+
+rules-ui:
+  resources:
+    limits:
+      cpu: "250m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+solr:
+  javaMem: "-Xms4g -Xmx6g"
+  resources:
+    requests:
+      memory: 10Gi
+      cpu: 3
+    limits:
+      memory: 12Gi
+      cpu: 4
+  zookeeper:
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: 250m
+      limits:
+        memory: 4Gi
+        cpu: 1
+
+sql-service:
+  resources:
+    limits:
+      cpu: "1"
+      memory: 4Gi
+    requests:
+      cpu: "200m"
+      memory: 2Gi
+
+webapps:
+  resources:
+    limits:
+      cpu: "1"
+      memory: "500Mi"
+    requests:
+      cpu: "500m"
+      memory: "400Mi"
