@@ -66,14 +66,14 @@ brew install kubernetes-helm
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
 [[cluster-create]]
-=== Setup Fusion on GKE
+=== Set up Fusion on GKE
 
-Run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
+Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
 ```
 ./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -r <release> -n <namespace>
 ```
 
-Use the `-help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
 If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.0 but is not sufficient for production workloads.
 
