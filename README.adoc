@@ -7,7 +7,7 @@ This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The sc
 
 // tag::body[]
 
-==== Release Name and Namespace
+== Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
 
@@ -25,7 +25,7 @@ These are the high-level steps, explained in detail later in this topic:
 . One time only: link:#sdk-setup[Set up the Google Cloud SDK].
 . link:#cluster-create[Create a Fusion cluster in GKE].
 
-==== New to Google Cloud?
+=== New to Google Cloud?
 You need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
 
 If you've already installed the `gcloud` command-line tools, you can skip to the next section.
@@ -34,7 +34,7 @@ If you're new to Google Cloud Platform (GCP), then you need to setup a few comma
 Please refer to the gcloud getting started guide to install the required tools: https://cloud.google.com/sdk/docs/quickstarts[Google Cloud SDK^]
 
 [[sdk-setup]]
-==== Set up the Google Cloud SDK (one time only)
+=== Set up the Google Cloud SDK (one time only)
 
 These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
 
@@ -324,4 +324,3 @@ kubectl get svc
 
 
 // end::body[]
-
