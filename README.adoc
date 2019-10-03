@@ -25,7 +25,7 @@ These are the high-level steps, explained in detail later in this topic:
 . One time only: link:#sdk-setup[Set up the Google Cloud SDK].
 . link:#cluster-create[Create a Fusion cluster in GKE].
 
-=== New to Google Cloud?
+==== New to Google Cloud?
 You need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
 
 If you've already installed the `gcloud` command-line tools, you can skip to the next section.
@@ -116,6 +116,10 @@ Fusion 5 Gateway service exposed at: 198.51.100.16:6764
 ==== Create a three-node regional cluster to withstand a zone outage
 
 With a three-node regional cluster, nodes are deployed across three separate availability zones.
+
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> --create multi_az
+```
 
 In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
 
