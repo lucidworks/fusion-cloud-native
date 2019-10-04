@@ -1,3 +1,10 @@
+# This file controls the replicaCount and autoscaling policies of all fusion components
+# For all components that can easily be run with multiple instances we set the initial
+# replicas to 2, apart from solr and zookeeper that are set with 3.
+# Autoscaling policies are enabled for all components that support them, to a
+# basic CPU based scaling metric. Other metrics can be enabled, see:
+# https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics
+
 admin-ui:
   replicaCount: 2
   autoscaling:

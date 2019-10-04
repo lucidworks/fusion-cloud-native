@@ -271,7 +271,7 @@ if [ "$cluster_status" != "0" ]; then
       --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "1" --max-nodes "2" \
+      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "1" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \

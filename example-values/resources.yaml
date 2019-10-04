@@ -1,3 +1,7 @@
+# This file contains the configuration for resources limits/requests for fusion
+# components. In general these resources allow for overprovisioning of a node
+# If this is not desired then change the requested values to match the limits.
+
 admin-ui:
   resources:
     limits:
@@ -8,10 +12,11 @@ admin-ui:
       memory: "8Mi"
 
 api-gateway:
+  # javaToolOptions: ""
   resources:
     limits:
       cpu: "2"
-      memory: "1Gi"
+      memory: "2Gi"
     requests:
       cpu: "1"
       memory: "1Gi"
@@ -26,13 +31,14 @@ auth-ui:
       memory: "8Mi"
 
 classic-rest-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
+      cpu: "4"
+      memory: "3Gi"
+    requests:
       cpu: "1"
       memory: "2Gi"
-    requests:
-      cpu: "500m"
-      memory: "1Gi"
 
 cx-api:
   resources:
@@ -55,7 +61,7 @@ cx-scheduler:
 cx-ui:
   resources:
     limits:
-      cpu: "200m"
+      cpu: "250m"
       memory: 150Mi
     requests:
       cpu: "50m"
@@ -71,22 +77,24 @@ devops-ui:
       memory: "8Mi"
 
 fusion-admin:
+  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
     limits:
       cpu: "2"
-      memory: "1.5Gi"
+      memory: "3Gi"
     requests:
-      cpu: "500m"
-      memory: "1Gi"
+      cpu: "1"
+      memory: "2Gi"
 
 fusion-indexing:
+  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
     limits:
       cpu: "2"
-      memory: "1.5Gi"
+      memory: "3Gi"
     requests:
-      cpu: "500m"
-      memory: "1Gi"
+      cpu: "1"
+      memory: "2Gi"
 
 insights:
   resources:
@@ -98,6 +106,7 @@ insights:
       memory: "1Gi"
 
 job-launcher:
+  #javaToolOptions: ""
   resources:
     requests:
       memory: 600Mi
@@ -107,24 +116,27 @@ job-launcher:
       cpu: 1
 
 job-rest-server:
+  #javaToolOptions: "-Xmx1024m -Xms256m"
   resources:
       requests:
-        memory: 400Mi
+        memory: 1Gi
         cpu: 250m
       limits:
-        memory: 500Mi
+        memory: 1.5Gi
         cpu: 1
 
 kafka:
+  #kafkaHeapOptions: "-Xmx1G -Xms1G"
   resources:
     requests:
-      memory: 250Mi
+      memory: 1Gi
       cpu: 250m
     limits:
-      memory: 1Gi
+      memory: 1.5Gi
       cpu: 1
 
 ml-model-service:
+  #javaToolOptions: ""
   pythonService:
     resources:
       requests:
@@ -143,15 +155,17 @@ ml-model-service:
         cpu: 4
 
 query-pipeline:
+  #javaToolOptions: ""
   resources:
     limits:
       cpu: "2"
       memory: "2Gi"
     requests:
-      cpu: "500m"
+      cpu: "1"
       memory: "1Gi"
 
 rest-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
       cpu: "1"
@@ -161,6 +175,7 @@ rest-service:
       memory: 2Gi
 
 rpc-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
       cpu: "2"
@@ -197,15 +212,17 @@ solr:
         cpu: 1
 
 sql-service:
+  #jvmOptions: "-XX:+UseG1GC -XX:+PrintGC -Xloggc:/work/sql-gc-%t.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -Xms4g -Xmx4g"
   resources:
     limits:
       cpu: "1"
-      memory: 4Gi
+      memory: 5Gi
     requests:
       cpu: "200m"
       memory: 2Gi
 
 webapps:
+  #javaToolOptions: ""
   resources:
     limits:
       cpu: "1"

@@ -1,3 +1,16 @@
+# This file sets affinity rules for all of the fusion components when running in
+# a cloud environment where the cluster is spread over multiple availability zones.
+# All components have the same affinity setup which follows the following logic:
+# - When scheduling, prefer to put a pod on a node that is in an availability zone
+#   that doesn't already have a running instance of this component
+# - Require that pods are all deployed on a host that doesn't have a running instance
+#   of the component that is being scheduled.
+# This means that the loss of a host will bring down at most one component but there
+# Is the trade off that the cluster will be at least as large as the number of
+# replicas in the largest deployment. If a large number of a certain type of component
+# should be run then it may make sense to relax the required to a preferred on hostname.
+
+
 admin-ui:
   affinity:
     podAntiAffinity:
@@ -757,6 +770,43 @@ solr:
               values:
               - solr
           topologyKey: kubernetes.io/hostname
+  zookeeper:
+    affinity:
+      podAntiAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+              - key: "app.kubernetes.io/instance"
+                operator: In
+                values:
+                - "{{ .Release.Name }}"
+              - key: "app.kubernetes.io/component"
+                operator: In
+                values:
+                - server
+              - key: "app.kubernetes.io/name"
+                operator: In
+                values:
+                - solr
+            topologyKey: failure-domain.beta.kubernetes.io/zone
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: "app.kubernetes.io/instance"
+                operator: In
+                values:
+                - "{{ .Release.Name }}"
+              - key: "app.kubernetes.io/component"
+                operator: In
+                values:
+                - server
+              - key: "app.kubernetes.io/name"
+                operator: In
+                values:
+                - solr
+            topologyKey: kubernetes.io/hostname
 
 sql-service:
   affinity:
