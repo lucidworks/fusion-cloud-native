@@ -69,7 +69,7 @@ If you have already created a project, for example in the https://console.cloud.
 When you run `setup_f5_gke.sh` to create a demo cluster, the script creates a `default_fusion_values.yaml` file from which it reads parameters for creating your Fusion cluster in GKE.
 
 The values in the `default_fusion_values.yaml` file are suitable for a single-node demo cluster only.  For multi-node clusters, you need to customize the file, then run `setup_f5_gke.sh` with the `--values` flag and specify the path to your file.
-The `--values` flag can be specified multiple times, each ponting to a different file. If a configuration property is specified in multiple files then the value from the latest file in the list will take priority.
+The `--values` flag can be specified multiple times, each pointing to a different file. If a configuration property is specified in multiple files then the value from the latest file in the list will take priority.
 Some example values files that can be used as a base are provided in the `example-values` folder.
 
 The steps below show you how to create several kinds of Fusion clusters.
