@@ -150,6 +150,16 @@ cp customize_fusion_values.yaml.example <release>_<namespace>_fusion_values.yaml
 ```
 where `<release>` is the name you give to your Fusion release, such as `f5` and `<namespace>` is the Kubernetes namespace where you want to install Fusion, such as `default`.
 
+There are some example values files that can be used as a starting point for
+resources, affinity and replica count configuration in the `example-values` folder.
+These can be passed to the install script using the `--values` option, for example:
+```
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values example-values/affinity.yaml --values example-values/resources.yaml
+```
+The `--values` option can be passed multiple times, if the same configuration property
+is contained within multiple `values` files then the values from the latest file passed as a `--values` option
+are used.
+
 === Use Helm to Install Fusion
 
 After making changes to the custom values yaml file, install Fusion using the following commands:

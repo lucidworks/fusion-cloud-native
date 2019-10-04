@@ -7,15 +7,6 @@
 
 admin-ui:
   replicaCount: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 5
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: 70
 
 api-gateway:
   replicaCount: 2
@@ -31,15 +22,6 @@ api-gateway:
 
 auth-ui:
   replicaCount: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 5
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          targetAverageUtilization: 70
 
 classic-rest-service:
   replicaCount: 1
@@ -73,6 +55,12 @@ cx-ui:
 
 devops-ui:
   replicaCount: 2
+
+fusion-admin:
+  replicaCount: 2
+
+fusion-indexing:
+  replicaCount: 2
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -82,12 +70,6 @@ devops-ui:
         resource:
           name: cpu
           targetAverageUtilization: 70
-
-fusion-admin:
-  replicaCount: 2
-
-fusion-indexing:
-  replicaCount: 2
 
 insights:
   replicaCount: 2
@@ -160,15 +142,6 @@ rpc-service:
 
 rules-ui:
   replicaCount: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 3
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          targetAverageUtilization: 70
 
 solr:
   replicaCount: 3
