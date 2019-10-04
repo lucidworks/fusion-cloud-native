@@ -3,7 +3,7 @@
 :toclevels: 4
 :toc-title:
 
-This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s)
+This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only. We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
 
 // tag::body[]
 
@@ -19,28 +19,19 @@ However, do not install more than one Fusion release in the same namespace.
 
 // tag::gke[]
 
-See the prerequisites and setup information below, then run the `setup_f5_gke.sh` script to install Fusion 5.x in a GKE cluster. Use the `-help` option to see script usage.
-
-__Note: If not provided the script generates a custom values file named <release>_<namespace>_fusion_values.yaml which you can use to customize the Fusion chart.__
-
 These are the high-level steps, explained in detail later in this topic:
 
 .How to deploy Fusion on GKE
 . One time only: link:#sdk-setup[Set up the Google Cloud SDK].
 . link:#cluster-create[Create a Fusion cluster in GKE].
 
-=== Prerequisites
+=== New to Google Cloud?
+You need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
 
-You need an account on each of these cloud services before you can begin deploying Fusion on GKE:
+If you've already installed the `gcloud` command-line tools, you can skip to the next section.
 
-* https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^]
-* https://hub.docker.com/signup[Docker Hub^]
-
-You also need these tools, installed _on your local machine_:
-
-* https://cloud.google.com/sdk/docs/quickstarts[Google Cloud SDK^]
-* https://kubernetes.io/docs/tasks/tools/install-kubectl/[`kubectl`^]
-* https://helm.sh/docs/using_helm/#installing-helm[Helm^]
+If you're new to Google Cloud Platform (GCP), then you need to setup a few command-line tools before installing Fusion.
+Please refer to the gcloud getting started guide to install the required tools: https://cloud.google.com/sdk/docs/quickstarts[Google Cloud SDK^]
 
 [[sdk-setup]]
 === Set up the Google Cloud SDK (one time only)
@@ -61,16 +52,34 @@ If you are working with regional clusters instead of zone clusters, use `gcloud 
 +
 If you have already created a project, for example in the https://console.cloud.google.com/[Google Cloud Platform console^], then skip to the next step.
 .. `gcloud config set project <project-name>`
-.. `gcloud auth configure-docker`
+
+Make sure you install the Kubernetes command-line tool `kubectl` using:
+```
+gcloud components install kubectl
+gcloud components update
+```
+
+You should also install `Helm`. On MacOS, you can do:
+```
+brew install kubernetes-helm
+```
+For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
 [[cluster-create]]
-=== How to create a Fusion cluster in GKE
+=== Set up Fusion on GKE
 
-When you run `setup_f5_gke.sh` to create a demo cluster, the script creates a `default_fusion_values.yaml` file from which it reads parameters for creating your Fusion cluster in GKE.
+Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
+```
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -r <release> -n <namespace>
+```
 
-The values in the `default_fusion_values.yaml` file are suitable for a single-node demo cluster only.  For multi-node clusters, you need to customize the file, then run `setup_f5_gke.sh` with the `--values` flag and specify the path to your file.
-The `--values` flag can be specified multiple times, each pointing to a different file. If a configuration property is specified in multiple files then the value from the latest file in the list will take priority.
-Some example values files that can be used as a base are provided in the `example-values` folder.
+Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+
+If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.0 but is not sufficient for production workloads.
+
+__Note: If not provided the script generates a custom values file named `<release>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+
+After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
 The steps below show you how to create several kinds of Fusion clusters.
 
@@ -84,7 +93,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 . Run the setup script:
 +
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name>
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> --create demo
 ```
 +
 --
@@ -97,35 +106,32 @@ Run `gcloud config get-value project` to get this value, or see the link:#sdk-se
 Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --
 +
-Upon success, the script shows you where to find the Fusion UI.  For example:
+Upon success, the script shows you where to find the Fusion UI. For example:
 +
 ```
 Fusion 5 Gateway service exposed at: 198.51.100.16:6764
 ```
 . Access the link:/fusion-server/{version}/getting-started/fusion-server-ui/index.html[Fusion UI] by pointing your browser to the IP address and port specified in the setup script's output.
 
-
 ==== Create a three-node regional cluster to withstand a zone outage
 
 With a three-node regional cluster, nodes are deployed across three separate availability zones.
+
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> --create multi_az
+```
 
 In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
 
 When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
 
-With this setup, you should install a Solr auto-scaling policy that distributes replicas across different zones.
+=== Upgrade Fusion on GKE
 
-// TODO: Install a zone aware auto-scaling policy for this type of cluster
-
-==== Multiple node pools for workload isolation
-
-This configuration requires a minimum of seven nodes across three node pools:
-
-* 2 system pools
-* 2 analytics pools
-* 3 search pools
-
-// TODO: Need to document nodeSelectors for each service
+During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings. After making changes to this file, you need to run the following command:
+```
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
+```
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
 
 // end::gke[]
 
@@ -160,40 +166,6 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 
 For more information, please see the Fusion documentation: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/index.html
 
-====  Upgrade Existing Installation
-
-To update an existing installation, do:
-```
-helm repo update
-helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
-```
-
-Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy, e.g.:
-```
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-```
-
-Zookeepers use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
-Thus, after performing the upgrade, to get changes to Zookeeper to apply, you need to manually delete the pods, e.g.
-```
-kubectl delete po f5-zookeeper-0
-```
-Do this one-by-one for each pod and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
-
-Alternatively, you can set the `updateStrategy` under the zookeeper section in your `${RELEASE}_${NAMESPACE}_fusion_values.yaml` file:
-
-```
-solr:
-  ...
-  zookeeper:
-    updateStrategy:
-      type: "RollingUpdate"
-```
-
 ==== Don't want to use Tiller? (Helm v2)
 
 Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns].
@@ -227,6 +199,128 @@ ${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" lucidworks/fu
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
+===  Upgrade Existing Installation
+
+To update an existing installation, do:
+```
+helm repo update
+helm upgrade ${RELEASE} "lucidworks/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+```
+
+Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy, e.g.:
+```
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+```
+
+Zookeepers use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
+Thus, after performing the upgrade, to get changes to Zookeeper to apply, you need to manually delete the pods, e.g.
+```
+kubectl delete po f5-zookeeper-0
+```
+Do this one-by-one for each pod and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
+
+Alternatively, you can set the `updateStrategy` under the zookeeper section in your `${RELEASE}_${NAMESPACE}_fusion_values.yaml` file:
+
+```
+solr:
+  ...
+  zookeeper:
+    updateStrategy:
+      type: "RollingUpdate"
+```
+
 // end::other[]
+
+// tag::verify[]
+
+[[verifying]]
+== Verifying the Fusion Installation
+
+In this section, we provide some tips on how to verify the Fusion installation.
+
+=== Useful kubectl commands
+
+When working with Kubernetes on the command-line, it's useful to create a shell alias for `kubectl`, e.g.:
+```
+alias k=kubectl
+```
+
+Set the namespace for `kubectl` if not using the default:
+```
+kubectl config set-context --current --namespace=<NAMESPACE>
+```
+__This saves you from having to pass `-n` with every command.__
+
+Get a list of running pods: `k get pods`
+
+Get logs for a pod using a label: `k logs –l app.kubernetes.io/component=query-pipeline`
+
+Get pod deployment spec and details: `k get pods <pod_id> -o yaml`
+
+Get details about a pod events: `k describe po <pod_id>`
+
+Port forward to a specific pod: `k port-forward <pod_id> 8983:8983`
+
+SSH into a pod: `k exec -it <pod_id> -- /bin/bash`
+
+CPU/Memory usage report for pods: `k top pods`
+
+Forcefully kill a pod: `k delete po <pod_id> --force --grace-period 0`
+
+Scale up (or down) a deployment: `k scale deployment.v1.apps/<id> --replicas=N`
+
+=== Check Fusion Pods and Services
+
+Once the install script completes, you can check that all pods and services are available using:
+```
+kubectl get pods
+```
+
+If all goes well, you should see a list of pods similar to:
+```
+NAME                                     READY   STATUS    RESTARTS   AGE
+f5-admin-ui-564b7d7d4b-6ksdq             1/1     Running   0          11m
+f5-api-gateway-7b497bbbdc-vtghx          1/1     Running   0          11m
+f5-auth-ui-7cbc457db7-hrqmz              1/1     Running   0          11m
+f5-classic-rest-service-0                1/1     Running   1          11m
+f5-cx-api-0                              1/1     Running   0          11m
+f5-cx-scheduler-64cc788dfd-brszp         1/1     Running   0          11m
+f5-cx-script-executor-587bb5959c-qxl47   1/1     Running   0          11m
+f5-cx-ui-7dbd9fb449-q4lkp                1/1     Running   0          11m
+f5-devops-ui-7cd6d66f98-n8lp4            1/1     Running   0          11m
+f5-fusion-admin-64b8578944-94t2c         1/1     Running   1          11m
+f5-fusion-indexing-cb5c7b449-bgtbv       1/1     Running   1          11m
+f5-insights-7dd4cfc5b8-m8c5d             1/1     Running   0          11m
+f5-job-launcher-7ffc8cc999-lrt7c         1/1     Running   1          11m
+f5-job-rest-server-85c46c4bf7-dgkc2      1/1     Running   1          11m
+f5-kafka-0                               1/1     Running   1          11m
+f5-ml-model-service-78cb897f8d-stq58     2/2     Running   2          11m
+f5-query-pipeline-889f554d9-9pkkm        1/1     Running   0          11m
+f5-rest-service-6cbb798d7f-6h7gd         1/1     Running   0          11m
+f5-rpc-service-767999dc87-pjqrw          1/1     Running   0          11m
+f5-rules-ui-5d565b9c85-fzm6f             1/1     Running   0          11m
+f5-solr-0                                1/1     Running   0          11m
+f5-sql-service-cm-5949c89f4c-k9m7v       1/1     Running   0          11m
+f5-sql-service-cr-6c77759498-ztrnt       1/1     Running   0          11m
+f5-webapps-5c4cbb4576-fv7x2              1/1     Running   2          11m
+f5-zookeeper-0                           1/1     Running   0          11m
+```
+The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in `<release>_<namespace>_fusion_values.yaml`.
+Also, don't worry if you see some pods having been restarted as that just means they were too slow to come up and Kubernetes killed and restarted them.
+You do want to see at least one pod running for every service. If a pod is not running after waiting a sufficient amount of time,
+use `kubectl logs <pod_id>` to see the logs for that pod; to see the logs for previous versions of a pod, use: `kubectl logs <pod_id> -p`.
+You can also look at the actions Kubernetes performed on the pod using `kubectl describe po <pod_id>`.
+
+To see a list of Fusion services, do:
+```
+kubectl get svc
+```
+
+// end::verify[]
+
 
 // end::body[]
