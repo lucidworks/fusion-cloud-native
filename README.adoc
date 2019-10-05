@@ -7,34 +7,39 @@ This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The sc
 
 // tag::body[]
 
-== Release Name and Namespace
+== Prerequisites
+
+=== Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
 
 You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
 Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
-However, do not install more than one Fusion release in the same namespace.
+However, please [.underline]#do not# install more than one Fusion release in the same namespace.
+
+=== Install Helm
+
+Regardless of which Kubernetes platform you're using, e.g. GKE, EKS, OpenShift, you need to install `Helm` as it is required to install Fusion for any K8s platform.
+On MacOS, you can do:
+```
+brew install kubernetes-helm
+```
+For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
 == Google Kubernetes Engine (GKE)
 
 // tag::gke[]
 
-These are the high-level steps, explained in detail later in this topic:
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] provided in this repo is strictly optional.
+The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
+If you're already familiar with K8s, Helm, and GKE, then you can skip the script and just use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
 
-.How to deploy Fusion on GKE
-. One time only: link:#sdk-setup[Set up the Google Cloud SDK].
-. link:#cluster-create[Create a Fusion cluster in GKE].
-
-=== New to Google Cloud?
-You need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
-
-If you've already installed the `gcloud` command-line tools, you can skip to the next section.
-
-If you're new to Google Cloud Platform (GCP), then you need to setup a few command-line tools before installing Fusion.
-Please refer to the gcloud getting started guide to install the required tools: https://cloud.google.com/sdk/docs/quickstarts[Google Cloud SDK^]
+If you're new to Google Cloud Platform (GCP), then you need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
 
 [[sdk-setup]]
 === Set up the Google Cloud SDK (one time only)
+
+If you've already installed the `gcloud` command-line tools, you can skip to <<cluster-create,Create a Fusion cluster in GKE>>.
 
 These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
 
@@ -58,12 +63,6 @@ Make sure you install the Kubernetes command-line tool `kubectl` using:
 gcloud components install kubectl
 gcloud components update
 ```
-
-You should also install `Helm`. On MacOS, you can do:
-```
-brew install kubernetes-helm
-```
-For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
 [[cluster-create]]
 === Set up Fusion on GKE
@@ -125,6 +124,16 @@ In this configuration, we want a ZooKeeper and Solr instance on each node, which
 
 When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
 
+==== GKE Ingress and TLS
+
+The Fusion proxy service provides authentication and serves as an API gateway for accessing all other Fusion services. It's typical to use an Ingress for TLS termination in front of the proxy service.
+
+The `setup_f5_gke.sh` supports creating an Ingress with an TLS cert for a domain you own by passing: `-t -h <domain_name>`
+
+After the script runs, you need to create an A record in GCP's DNS service to map your domain name to the Ingress IP. Once this occurs, our script setup uses https://letsencrypt.org/[Let's Encrypt] to issue a TLS cert for your Ingress.
+
+Please refer to the Kubernetes documentation on configuring an Ingress for GKE: https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer[Setting up HTTP Load Balancing with Ingress]
+
 === Upgrade Fusion on GKE
 
 During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings. After making changes to this file, you need to run the following command:
@@ -134,6 +143,42 @@ During installation, the script generates a file named `<release>_<namespace>_fu
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
 
 // end::gke[]
+
+== Amazon Elastic Kubernetes Service (EKS)
+
+// tag::eks[]
+
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] provided in this repo is strictly optional.
+The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
+If you're already familiar with K8s, Helm, and EKS, then you can skip the script and just use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
+
+If you're new to Amazon Web Services (AWS), then please visit the Amazon Web Services https://aws.amazon.com/getting-started/[Getting Started Center] to setup an account.
+
+[[eks-setup]]
+=== Set up the aws cli tools
+
+Before launching an EKS cluster, you need to install and configure `kubectl`, `aws`, `eksctl`, `aws-iam-authenticator` using the links provided below:
+
+.Required AWS Command-line Tools:
+. kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/[Install kubectl]
+. aws: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html[Installing the AWS CLI]
+. eksctl: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html[Getting Started with eksctl]
+. aws-iam-authenticator: https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html[AWS IAM Authenticator for Kubernetes]
+
+Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure, defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
+
+[[eks-cluster-create]]
+=== Set up Fusion on EKS
+
+Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] to install Fusion 5.x in a EKS cluster. To create a new cluster and install Fusion, simply do:
+```
+./setup_f5_eks.sh -c <cluster_name> -p <aws_account_profile>
+```
+
+Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
+If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+
+// end::eks[]
 
 == Other Kubernetes Platforms
 
@@ -150,6 +195,7 @@ cp customize_fusion_values.yaml.example <release>_<namespace>_fusion_values.yaml
 ```
 where `<release>` is the name you give to your Fusion release, such as `f5` and `<namespace>` is the Kubernetes namespace where you want to install Fusion, such as `default`.
 
+[[helm-only]]
 === Use Helm to Install Fusion
 
 After making changes to the custom values yaml file, install Fusion using the following commands:
