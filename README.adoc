@@ -398,6 +398,8 @@ To see a list of Fusion services, do:
 kubectl get svc
 ```
 
+For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/microservices.html
+
 // end::verify[]
 
 
