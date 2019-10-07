@@ -205,10 +205,11 @@ After running the `setup_f5_eks.sh` script, proceed to the <<verifying,Verifying
 ==== EKS cluster overview
 
 The EKS cluster is created using `eksctl` (https://eksctl.io/). By default it will setup the following resources in your AWS account:
-  - A dedicated VPC for the EKS cluster in the specified region with CIDR: `192.168.0.0/16`
-  - 3 Public and 3 Private subnets within the created VPC, each with a `/19` CIDR range, along with the corresponding route tables.
-  - A NAT gateway in each Public subnet
-  - An Auto Scaling Group of the instance type specified by the script, which defaults to `m5.2xlarge`, with 3 instances spanning the public subnets.
+
+- A dedicated VPC for the EKS cluster in the specified region with CIDR: `192.168.0.0/16`
+- 3 Public and 3 Private subnets within the created VPC, each with a `/19` CIDR range, along with the corresponding route tables.
+- A NAT gateway in each Public subnet
+- An Auto Scaling Group of the instance type specified by the script, which defaults to `m5.2xlarge`, with 3 instances spanning the public subnets.
 
 See https://eksctl.io/usage/vpc-networking/ for more information on the networking setup.
 
