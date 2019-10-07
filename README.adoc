@@ -174,6 +174,8 @@ If you're already familiar with K8s, Helm, and EKS, then you can skip the script
 
 If you're new to Amazon Web Services (AWS), then please visit the Amazon Web Services https://aws.amazon.com/getting-started/[Getting Started Center] to setup an account.
 
+If you're new to Kubernetes and EKS, then we recommend going through Amazon's https://eksworkshop.com/introduction/[EKS Workshop] before proceeding with Fusion.
+
 [[eks-setup]]
 === Set up the aws cli tools
 
@@ -217,6 +219,14 @@ See https://eksctl.io/usage/vpc-networking/ for more information on the networki
 
 The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo / getting started purposes, however you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
 See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
+
+=== Upgrade Fusion on EKS
+
+During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings. After making changes to this file, you need to run the following command:
+```
+./setup_f5_eks.sh -c <existing_cluster> -p <aws_account_profile> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
+```
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
 
 // end::eks[]
 
