@@ -380,4 +380,8 @@ helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
 
+
+#Creating serviceaccount for providing s3 read access
+eksctl create iamserviceaccount --name ${CLUSTER_NAME}-read-only --namespace ${NAMESPACE} --cluster ${CLUSTER_NAME} --attach-policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess --approve --override-existing-serviceaccounts
+
 proxy_url

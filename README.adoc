@@ -189,6 +189,8 @@ Before launching an EKS cluster, you need to install and configure `kubectl`, `a
 
 Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure, defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
 
+NOTE: When working in ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures.
+
 [[eks-cluster-create]]
 === Set up Fusion on EKS
 
@@ -201,6 +203,8 @@ Use the `--help` option to see script usage. If you want the script to create a 
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
 #WARNING# The `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+
+#WARNING# The `setup_f5_eks.sh` script creates a service account that provides S3 read-only permissions to the created pods.
 
 After running the `setup_f5_eks.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
@@ -227,6 +231,35 @@ During installation, the script generates a file named `<release>_<namespace>_fu
 ./setup_f5_eks.sh -c <existing_cluster> -p <aws_account_profile> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
+
+=== Provide access to the EKS cluster to other users
+
+Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions a `ConfigMap` should be created to allow access to IAM users or roles.
+
+For providing these permissions, use the following yaml file as a template replacing the required values:
+
+aws-auth.yaml
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-auth
+  namespace: kube-system
+data:
+  mapRoles: |
+    - rolearn: <node_instance_role_arn>
+      username: system:node:{{EC2PrivateDNSName}}
+      groups:
+        - system:bootstrappers
+        - system:nodes
+  mapUsers: |
+    - userarn: arn:aws:iam::<account_id>:user/<username>
+      username: <username>
+      groups:
+        - system:masters
+```
+
+Use the following command for applying the yaml file: `kubectl apply -f aws-auth.yaml`
 
 // end::eks[]
 
