@@ -21,6 +21,7 @@ However, please [.underline]#do not# install more than one Fusion release in the
 
 === Install Helm
 
+Helm is a package manager for Kubernetes that helps you install and manage applications on your Kubernetes cluster.
 Regardless of which Kubernetes platform you're using, e.g. GKE, EKS, OpenShift, you need to install `Helm` as it is required to install Fusion for any K8s platform.
 On MacOS, you can do:
 ```
@@ -93,6 +94,8 @@ Use the `--help` option to see script usage. If you want the script to create a 
 If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.0 but is not sufficient for production workloads.
 
 __Note: If not provided the script generates a custom values file named `<release>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+
+#WARNING# The `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
 
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
@@ -195,6 +198,8 @@ Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/mast
 Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
+#WARNING# The `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+
 After running the `setup_f5_eks.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
 ==== EKS cluster overview
@@ -259,6 +264,8 @@ helm fetch --untar lucidworks/fusion
 helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
 kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
 ```
+
+Alternatively, you can run tiller locally using the steps described here: https://docs.aws.amazon.com/eks/latest/userguide/helm.html
 
 ==== Helm v3 beta3 instructions without Tiller
 

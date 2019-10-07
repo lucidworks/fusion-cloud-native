@@ -207,6 +207,7 @@ fi
 echo -e "\nLogged in as: $who_am_i\n"
 
 if [ "$PURGE" == "1" ]; then
+  aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
   current=$(kubectl config current-context)
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
   if [ "$confirm" == "y" ]; then
@@ -267,6 +268,10 @@ function proxy_url() {
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
 }
+
+aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
+current_cluster=$(kubectl config current-context)
+echo -e "\nConfigured to use EKS cluster: ${current_cluster}"
 
 kubectl rollout status "deployment/${RELEASE}-query-pipeline" -n "${NAMESPACE}" --timeout=10s > /dev/null 2>&1
 rollout_status=$?
