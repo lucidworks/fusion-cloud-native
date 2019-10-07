@@ -28,6 +28,8 @@ brew install kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
+The fusion helm chart requires that helm is greater than version `2.12.0`. Please ensure that your version is greater than this, you can check by running `helm version`.
+
 === Customize Fusion Chart Settings
 
 Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
