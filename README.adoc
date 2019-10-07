@@ -9,6 +9,8 @@ This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The sc
 
 == Prerequisites
 
+This section covers prerequisites and background knowledge needed to help you understand the structure of this document and how the Fusion installation process works with Kubernetes.
+
 === Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
@@ -25,6 +27,18 @@ On MacOS, you can do:
 brew install kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
+
+=== Customize Fusion Chart Settings
+
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
+
+If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create this file for you the first time you run it. Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
+
+If you're working with Helm directly and not using one of our setup scripts, then simply copy the example file provided in this repo:
+```
+cp customize_fusion_values.yaml.example <release>_<namespace>_fusion_values.yaml
+```
+where `<release>` is the name you give to your Fusion release, such as `f5` and `<namespace>` is the Kubernetes namespace where you want to install Fusion, such as `default`.
 
 == Google Kubernetes Engine (GKE)
 
@@ -108,7 +122,7 @@ Run `gcloud config get-value compute/zone` to get this value, or see the link:#s
 Upon success, the script shows you where to find the Fusion UI. For example:
 +
 ```
-Fusion 5 Gateway service exposed at: 198.51.100.16:6764
+Fusion 5 Gateway service exposed at: <some-external-ip>:6764
 ```
 . Access the link:/fusion-server/{version}/getting-started/fusion-server-ui/index.html[Fusion UI] by pointing your browser to the IP address and port specified in the setup script's output.
 
@@ -126,7 +140,8 @@ When running in a multi-zone cluster, each Solr node has the `solr_zone` system 
 
 ==== GKE Ingress and TLS
 
-The Fusion proxy service provides authentication and serves as an API gateway for accessing all other Fusion services. It's typical to use an Ingress for TLS termination in front of the proxy service.
+The Fusion proxy service provides authentication and serves as an API gateway for accessing all other Fusion services.
+It's typical to use an Ingress for TLS termination in front of the proxy service.
 
 The `setup_f5_gke.sh` supports creating an Ingress with an TLS cert for a domain you own by passing: `-t -h <domain_name>`
 
@@ -178,26 +193,31 @@ Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/mast
 Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
+After running the `setup_f5_eks.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+==== EKS Ingress
+
+The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo / getting started purposes, however you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
+See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
+
 // end::eks[]
 
 == Other Kubernetes Platforms
 
 // tag::other[]
 
-If you're not running on GKE, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+If you're not running on managed K8s platform like GKE or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
-=== Customize Fusion Chart Settings
+[[helm-only]]
+=== Use Helm to Install Fusion
 
-Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
-To begin, copy the example file provided in this repo:
+Start by copying the example custom values yaml file provided in this repo:
 ```
 cp customize_fusion_values.yaml.example <release>_<namespace>_fusion_values.yaml
 ```
 where `<release>` is the name you give to your Fusion release, such as `f5` and `<namespace>` is the Kubernetes namespace where you want to install Fusion, such as `default`.
 
-[[helm-only]]
-=== Use Helm to Install Fusion
-
+Review the settings in the custom values yaml file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
 After making changes to the custom values yaml file, install Fusion using the following commands:
 
 ```
@@ -223,8 +243,7 @@ NAMESPACE=default
 
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
-helm fetch lucidworks/fusion
-find . -name "fusion-5.*.tgz" -exec tar zxf {} \;
+helm fetch --untar lucidworks/fusion
 helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
 kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
 ```
@@ -232,16 +251,17 @@ kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NA
 ==== Helm v3 beta3 instructions without Tiller
 
 - Download the helm v3 beta from here: https://github.com/helm/helm/releases
-- Extract it to a directory: IE: ~/Downloads/darwin-amd64
-- Then run the following commands (assuming you put the helm binary in the same location as I did)
+- Extract it to a directory such as: `/usr/local/helm3`
+- Then run the following commands
 
 ```
-HELM3_HOME=~/Downloads/darwin-amd64
+HELM3_HOME=/usr/local/helm3
 RELEASE=f5
 NAMESPACE=default
+
 ${HELM3_HOME}/helm repo add lucidworks https://charts.lucidworks.com
 ${HELM3_HOME}/helm repo update
-${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" lucidworks/fusion --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+${HELM3_HOME}/helm install "${RELEASE}" --namespace "${NAMESPACE}" --values "${RELEASE}_${NAMESPACE}_fusion_values.yaml" lucidworks/fusion
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
@@ -286,7 +306,7 @@ solr:
 [[verifying]]
 == Verifying the Fusion Installation
 
-In this section, we provide some tips on how to verify the Fusion installation.
+In this section, we provide some tips on how to verify the Fusion installation. First, let's review some useful kubectl commands.
 
 === Useful kubectl commands
 
