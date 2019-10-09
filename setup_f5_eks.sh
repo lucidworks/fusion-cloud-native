@@ -269,6 +269,13 @@ function proxy_url() {
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
 }
 
+#Gets node instance role from the created stack
+NODE_INSTANCE_ROLE=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stacks --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --query "Stacks[0].Outputs[?OutputKey=='InstanceRoleARN'].OutputValue" --output text |  cut -f 2 -d '/')
+
+#Provides S3 read only policy to the node instance role
+aws --profile "${AWS_ACCOUNT}" iam attach-role-policy --role-name ${NODE_INSTANCE_ROLE} --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+#Updates kubeconfig
 aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
 current_cluster=$(kubectl config current-context)
 echo -e "\nConfigured to use EKS cluster: ${current_cluster}"
