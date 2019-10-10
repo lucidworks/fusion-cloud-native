@@ -16,6 +16,7 @@ function print_usage() {
   echo -e "  -n          Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z          AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
+  echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.0\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
@@ -36,6 +37,7 @@ PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
 CHART_VERSION="5.0.0"
 SOLR_REPLICAS=3
+AMI="auto"
 CUSTOM_MY_VALUES=""
 
 if [ $# -gt 0 ]; then
@@ -89,6 +91,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             INSTANCE_TYPE="$2"
+            shift 2
+        ;;
+        -a)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -a parameter!"
+              exit 1
+            fi
+            AMI="$2"
             shift 2
         ;;
         --version)
@@ -232,12 +242,28 @@ if [ "$cluster_status" != "0" ]; then
   echo -e "\nLaunching an EKS cluster ${CLUSTER_NAME} ($CREATE_MODE) in project ${AWS_ACCOUNT} for deploying Lucidworks Fusion 5 ...\n"
   if [ "$CREATE_MODE" == "demo" ] || [ "${CREATE_MODE}"  == "multi_az" ]; then
      #Creates EKS cluster
-     eksctl create cluster --profile "${AWS_ACCOUNT}" --name "${CLUSTER_NAME}" \
-      --region "${REGION}" --version 1.14 --nodegroup-name standard-workers \
-      --node-type "${INSTANCE_TYPE}" --nodes 3 \
-      --nodes-min 3 \
-      --nodes-max 6 \
-      --node-ami auto
+     cat << EOF | eksctl create cluster --profile "${AWS_ACCOUNT}" --config-file - 
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${CLUSTER_NAME}
+  region: ${REGION}
+
+nodeGroups:
+  - name: standard-workers
+    instanceType: ${INSTANCE_TYPE}
+    desiredCapacity: 3
+    iam:
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+    ami: ${AMI}
+    maxSize: 6
+    minSize: 0
+
+EOF
+
   else
     echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
     echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
@@ -268,12 +294,6 @@ function proxy_url() {
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
 }
-
-#Gets node instance role from the created stack
-NODE_INSTANCE_ROLE=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stacks --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --query "Stacks[0].Outputs[?OutputKey=='InstanceRoleARN'].OutputValue" --output text |  cut -f 2 -d '/')
-
-#Provides S3 read only policy to the node instance role
-aws --profile "${AWS_ACCOUNT}" iam attach-role-policy --role-name ${NODE_INSTANCE_ROLE} --policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
 #Updates kubeconfig
 aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
@@ -386,11 +406,5 @@ echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NA
 helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" "${lw_helm_repo}/fusion" --version "${CHART_VERSION}"
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
-
-#Associates the oidc provider to iam, to create service accounts
-eksctl utils associate-iam-oidc-provider --profile "${AWS_ACCOUNT}" --region=${REGION} --name=${CLUSTER_NAME} --approve
-
-#Creating serviceaccount for providing s3 read access
-eksctl create iamserviceaccount --profile "${AWS_ACCOUNT}" --name ${RELEASE}-job-launcher --namespace ${NAMESPACE} --cluster ${CLUSTER_NAME} --attach-policy-arn arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess --approve --override-existing-serviceaccounts
 
 proxy_url
