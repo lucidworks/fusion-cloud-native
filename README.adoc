@@ -170,14 +170,14 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 
 The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] provided in this repo is strictly optional.
 The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
-If you're already familiar with K8s, Helm, and EKS, then you can skip the script and just use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
+If you're already familiar with K8s, Helm, and EKS, then you use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
 
-If you're new to Amazon Web Services (AWS), then please visit the Amazon Web Services https://aws.amazon.com/getting-started/[Getting Started Center] to setup an account.
+If you're new to Amazon Web Services (AWS), then please visit the Amazon Web Services https://aws.amazon.com/getting-started/[Getting Started Center] to set up an account.
 
 If you're new to Kubernetes and EKS, then we recommend going through Amazon's https://eksworkshop.com/introduction/[EKS Workshop] before proceeding with Fusion.
 
 [[eks-setup]]
-=== Set up the aws cli tools
+=== Set up the AWS CLI tools
 
 Before launching an EKS cluster, you need to install and configure `kubectl`, `aws`, `eksctl`, `aws-iam-authenticator` using the links provided below:
 
@@ -187,9 +187,9 @@ Before launching an EKS cluster, you need to install and configure `kubectl`, `a
 . eksctl: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html[Getting Started with eksctl]
 . aws-iam-authenticator: https://docs.aws.amazon.com/eks/latest/userguide/install-aws-iam-authenticator.html[AWS IAM Authenticator for Kubernetes]
 
-Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure, defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
+Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure in this step, which defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
 
-NOTE: When working in ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures.
+NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures.
 
 [[eks-cluster-create]]
 === Set up Fusion on EKS
@@ -199,8 +199,10 @@ Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/mast
 ./setup_f5_eks.sh -c <cluster_name> -p <aws_account_profile>
 ```
 
-Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
+If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+
+Use the `--help` option to see full script usage. 
 
 #WARNING# The `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
 
@@ -221,12 +223,12 @@ See https://eksctl.io/usage/vpc-networking/ for more information on the networki
 
 ==== EKS Ingress
 
-The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo / getting started purposes, however you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
+The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo or getting started purposes. However, you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
 See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
 
 === Upgrade Fusion on EKS
 
-During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings. After making changes to this file, you need to run the following command:
+During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
 ./setup_f5_eks.sh -c <existing_cluster> -p <aws_account_profile> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
 ```
@@ -234,9 +236,9 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 
 === Provide access to the EKS cluster to other users
 
-Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions a `ConfigMap` should be created to allow access to IAM users or roles.
+Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions, a `ConfigMap` should be created to allow access to IAM users or roles.
 
-For providing these permissions, use the following yaml file as a template replacing the required values:
+For providing these permissions, use the following yaml file as a template, replacing the required values:
 
 aws-auth.yaml
 ```
