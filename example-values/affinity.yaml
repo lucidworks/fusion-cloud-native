@@ -770,43 +770,6 @@ solr:
               values:
               - solr
           topologyKey: kubernetes.io/hostname
-  zookeeper:
-    affinity:
-      podAntiAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-              - key: "app.kubernetes.io/instance"
-                operator: In
-                values:
-                - "{{ .Release.Name }}"
-              - key: "app.kubernetes.io/component"
-                operator: In
-                values:
-                - server
-              - key: "app.kubernetes.io/name"
-                operator: In
-                values:
-                - solr
-            topologyKey: failure-domain.beta.kubernetes.io/zone
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: "app.kubernetes.io/instance"
-                operator: In
-                values:
-                - "{{ .Release.Name }}"
-              - key: "app.kubernetes.io/component"
-                operator: In
-                values:
-                - server
-              - key: "app.kubernetes.io/name"
-                operator: In
-                values:
-                - solr
-            topologyKey: kubernetes.io/hostname
 
 sql-service:
   affinity:
