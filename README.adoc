@@ -156,11 +156,18 @@ Please refer to the Kubernetes documentation on configuring an Ingress for GKE: 
 
 === Upgrade Fusion on GKE
 
-During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings. After making changes to this file, you need to run the following command:
+During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings.
+After making changes to this file, you need to run the following command:
 ```
 ./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
+
+After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
+To see the versions of running pods, do:
+```
+kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
+```
 
 // end::gke[]
 
@@ -403,6 +410,8 @@ CPU/Memory usage report for pods: `k top pods`
 Forcefully kill a pod: `k delete po <pod_id> --force --grace-period 0`
 
 Scale up (or down) a deployment: `k scale deployment.v1.apps/<id> --replicas=N`
+
+Get a list of pod versions: `k get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq`
 
 === Check Fusion Pods and Services
 

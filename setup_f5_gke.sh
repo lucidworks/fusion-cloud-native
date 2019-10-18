@@ -19,8 +19,8 @@ function print_usage() {
   echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --gke       GKE Master version; defaults to 1.13.7-gke.24\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.0\n"
+  echo -e "  --gke       GKE Master version; defaults to 1.13.10-gke.0\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-1\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
@@ -40,11 +40,10 @@ GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.1"
-SOLR_REPLICAS=3
+CHART_VERSION="5.0.2-1"
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
-GKE_MASTER_VERSION="1.13.7-gke.24"
+GKE_MASTER_VERSION="1.13.10-gke.0"
 DRY_RUN=""
 
 if [ $# -gt 0 ]; then
@@ -267,7 +266,6 @@ if [ "$cluster_status" != "0" ]; then
   echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
-    SOLR_REPLICAS=1
     # have to cut off the zone part for the --subnetwork arg
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
@@ -369,7 +367,10 @@ if [ $? ]; then
   helm repo add ${lw_helm_repo} https://charts.lucidworks.com
 fi
 
-if [ ! -f $MY_VALUES ]; then
+if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
+
+  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
+
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -432,6 +433,7 @@ query-pipeline:
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
+  echo -e "\nCreated $MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
 fi
 
 helm repo update
@@ -467,18 +469,20 @@ END
 fi
 
 if [ "$UPGRADE" == "1" ]; then
+
+  VALUES_ARG="--values ${MY_VALUES}"
   if [ ! -f "${MY_VALUES}" ]; then
-    echo -e "\nERROR: Custom values file ${MY_VALUES} not found! Please provide the values yaml you used to create the cluster!\n"
-    exit 1
+    echo -e "\nWARNING: Custom values file ${MY_VALUES} not found! Upgrade will use --reuse-values flag to apply previously supplied values.\n"
+    VALUES_ARG="--reuse-values"
   fi
 
   if [ "${DRY_RUN}" == "" ]; then
-    echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
+    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   else
-    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace ..."
+    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
 
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup

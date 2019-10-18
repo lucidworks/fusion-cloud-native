@@ -17,7 +17,7 @@ function print_usage() {
   echo -e "  -z          AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
-  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.0\n"
+  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.2-1\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
@@ -35,8 +35,7 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.1"
-SOLR_REPLICAS=3
+CHART_VERSION="5.0.2-1"
 AMI="auto"
 CUSTOM_MY_VALUES=""
 
@@ -270,10 +269,6 @@ EOF
     exit 1
   fi
 
-  if [[ "${CREATE_MODE}" == "demo" ]]; then
-    SOLR_REPLICAS=1
-  fi
-
   echo -e "\nCluster '${CLUSTER_NAME}' deployed ... testing if it is healthy"
   cluster_status=$(aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" describe-cluster --name "${CLUSTER_NAME}" --query "cluster.status" )
   if [ "$cluster_status" != '"ACTIVE"' ]; then
@@ -334,7 +329,9 @@ if [ $? ]; then
   helm repo add "${lw_helm_repo}" https://charts.lucidworks.com
 fi
 
-if [ ! -f "${MY_VALUES}" ]; then
+if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
+  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
+
   tee "${MY_VALUES}" << END
 cx-ui:
   replicaCount: 1
@@ -395,8 +392,20 @@ fi
 helm repo update
 
 if [ "$UPGRADE" == "1" ]; then
-  echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
-  helm upgrade "${RELEASE}" "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version "${CHART_VERSION}"
+
+  VALUES_ARG="--values ${MY_VALUES}"
+  if [ ! -f "${MY_VALUES}" ]; then
+    echo -e "\nWARNING: Custom values file ${MY_VALUES} not found! Upgrade will use --reuse-values flag to apply previously supplied values.\n"
+    VALUES_ARG="--reuse-values"
+  fi
+
+  if [ "${DRY_RUN}" == "" ]; then
+    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} using ${VALUES_ARG}"
+  else
+    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG}"
+  fi
+
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   proxy_url
   exit $upgrade_status

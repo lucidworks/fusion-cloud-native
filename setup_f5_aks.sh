@@ -19,7 +19,7 @@ function print_usage() {
   echo -e "  -y          Azure Kubernetes Service node count, defaults to '4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.1\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-1\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
@@ -38,8 +38,7 @@ MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 PURGE=0
 INSTANCE_TYPE="Standard_B4ms"
-CHART_VERSION="5.0.1"
-SOLR_REPLICAS=1
+CHART_VERSION="5.0.2-1"
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
 NODE_COUNT=4
@@ -331,7 +330,8 @@ if [ $? ]; then
 
 fi
 
-if [ ! -f $MY_VALUES ]; then
+if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
+  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -394,6 +394,7 @@ query-pipeline:
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
+  echo -e "\nCreated $MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
 fi
 
 ${helm} repo update
@@ -429,8 +430,20 @@ END
 fi
 
 if [ "$UPGRADE" == "1" ]; then
-  echo -e "\nUpgrading the Fusion 5.0 release  ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
-  ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+
+  VALUES_ARG="--values ${MY_VALUES}"
+  if [ ! -f "${MY_VALUES}" ]; then
+    echo -e "\nWARNING: Custom values file ${MY_VALUES} not found! Upgrade will use --reuse-values flag to apply previously supplied values.\n"
+    VALUES_ARG="--reuse-values"
+  fi
+
+  if [ "${DRY_RUN}" == "" ]; then
+    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
+  else
+    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
+  fi
+
+  ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
