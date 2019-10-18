@@ -266,6 +266,12 @@ if [ "$cluster_status" != "0" ]; then
   echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
+
+    if [ "$GCLOUD_ZONE" == "us-west1" ]; then
+      echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
+      GCLOUD_ZONE="us-west1-a"
+    fi
+
     # have to cut off the zone part for the --subnetwork arg
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
@@ -472,12 +478,12 @@ if [ "$UPGRADE" == "1" ]; then
 
   VALUES_ARG="--values ${MY_VALUES}"
   if [ ! -f "${MY_VALUES}" ]; then
-    echo -e "\nWARNING: Custom values file ${MY_VALUES} not found! Upgrade will use --reuse-values flag to apply previously supplied values.\n"
-    VALUES_ARG="--reuse-values"
+    echo -e "\nWARNING: Custom values file ${MY_VALUES} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
+    exit 1
   fi
 
   if [ "${DRY_RUN}" == "" ]; then
-    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
+    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} to version ${CHART_VERSION} using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   else
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
