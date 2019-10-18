@@ -19,7 +19,7 @@ function print_usage() {
   echo -e "  -y          Azure Kubernetes Service node count, defaults to '4'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-1\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-2\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
@@ -38,7 +38,7 @@ MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 PURGE=0
 INSTANCE_TYPE="Standard_B4ms"
-CHART_VERSION="5.0.2-1"
+CHART_VERSION="5.0.2-2"
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
 NODE_COUNT=4
