@@ -20,7 +20,7 @@ function print_usage() {
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
   echo -e "  --gke       GKE Master version; defaults to 1.13.10-gke.0\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-1\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-2\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
@@ -40,7 +40,7 @@ GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.2-1"
+CHART_VERSION="5.0.2-2"
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
 GKE_MASTER_VERSION="1.13.10-gke.0"
