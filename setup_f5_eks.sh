@@ -17,7 +17,7 @@ function print_usage() {
   echo -e "  -z          AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
-  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.2-2\n"
+  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.2-3\n"
   echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
@@ -35,7 +35,7 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.2-2"
+CHART_VERSION="5.0.2-3"
 AMI="auto"
 CUSTOM_MY_VALUES=""
 
