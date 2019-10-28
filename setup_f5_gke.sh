@@ -26,6 +26,7 @@ function print_usage() {
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
+  echo -e "  --force     Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace"
 }
 
 SCRIPT_CMD="$0"
@@ -39,6 +40,7 @@ UPGRADE=0
 GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
+FORCE=0
 INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.2-3"
 ML_MODEL_STORE="fs"
@@ -163,6 +165,10 @@ if [ $# -gt 0 ]; then
             PURGE=1
             shift 1
         ;;
+        --force)
+            FORCE=1
+            shift 1
+        ;;
         -help|-usage)
             print_usage "$SCRIPT_CMD"
             exit 0
@@ -221,6 +227,8 @@ if [ "$who_am_i" == "" ]; then
   exit 1
 fi
 
+OWNER_LABEL="${who_am_i//@/-}"
+
 echo -e "\nLogged in as: $who_am_i\n"
 
 hash kubectl
@@ -240,10 +248,44 @@ fi
 gcloud config set compute/zone $GCLOUD_ZONE
 gcloud config set project $GCLOUD_PROJECT
 
-if [ "$PURGE" == "1" ]; then
-  gcloud container clusters get-credentials $CLUSTER_NAME
-  current=$(kubectl config current-context)
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} in: $current? This operation cannot be undone! y/n " confirm
+# Make sure that the cluster is running, and set our kubectl context to use
+# this cluster
+gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME} > /dev/null 2>&1
+cluster_status=$?
+if [ "$cluster_status" != "0" ]; then
+  echo -e "GKE Cluster '${CLUSTER_NAME}' does not exist, please use an existing cluster or ask an admin to create one\n"
+  exit 1
+fi
+gcloud container clusters get-credentials $CLUSTER_NAME
+current=$(kubectl config current-context)
+
+
+if kubectl get namespace "${NAMESPACE}"; then
+  echo "namespace ${NAMESPACE} already exists in the fusion cluster"
+else
+  kubectl create namespace "${NAMESPACE}"
+  kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+fi
+
+if [ "${UPGRADE}" == "1" ]; then
+    # Check if the owner label on the namespace is the same as we are, so we cannot
+    # accidentally upgrade a release from someone elses namespace
+    namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+    if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+      echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to upgrade this namespace"
+      exit 1
+    fi
+
+elif [ "$PURGE" == "1" ]; then
+  # Check if the owner label on the namespace is the same as we are, so we cannot
+  # accidentally purge someone elses release
+  namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+    echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to purge this namespace"
+    exit 1
+  fi
+
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
   if [ "$confirm" == "y" ]; then
     helm del --purge ${RELEASE}
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
@@ -254,66 +296,24 @@ if [ "$PURGE" == "1" ]; then
     kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
   fi
   exit 0
-fi
-
-gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME} > /dev/null 2>&1
-cluster_status=$?
-if [ "$cluster_status" != "0" ]; then
-  if [ "$CREATE_MODE" == "" ]; then
-    CREATE_MODE="multi_az" # the default ...
-  fi
-
-  echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
-
-  if [ "$CREATE_MODE" == "demo" ]; then
-
-    if [ "$GCLOUD_ZONE" == "us-west1" ]; then
-      echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
-      GCLOUD_ZONE="us-west1-a"
-    fi
-
-    # have to cut off the zone part for the --subnetwork arg
-    GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" --image-type "COS" \
-      --disk-type "pd-standard" --disk-size "100" \
-      --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
-      --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
-      --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
-      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "2" \
-      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
-  elif [ "$CREATE_MODE" == "multi_az" ]; then
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" \
-      --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true \
-      --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
-      --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
-      --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
-      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_ZONE}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "2" \
-      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
-  else
-    echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
-    echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
-    exit 1
-  fi
-
-  echo -e "\nCluster '${CLUSTER_NAME}' deployed ... testing if it is healthy"
-  gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME}
-  cluster_status=$?
-  if [ "$cluster_status" != "0" ]; then
-    echo -e "\nERROR: Status of GKE cluster ${CLUSTER_NAME} is suspect, check the Google Cloud console before proceeding!\n"
-    exit 1
-  fi
 else
-  if [ "$UPGRADE" == "0" ]; then
-    echo -e "\nGKE Cluster '${CLUSTER_NAME}' already exists, proceeding with Fusion 5 install ...\n"
+  # Check if there is already a release for helm with the release name that we want
+  if helm status "${RELEASE}" 2>&1 > /dev/null; then
+      echo -e "\nThere is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release"
+      exit 1
   fi
+
+  # There isn't let's check if there is a fusion deployment in the namespace already
+  if ! kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" 2>&1 | grep -q "No resources"; then
+      # There is a fusion deployed into this namespace, try and protect against two releases being installed into
+      # The same namespace
+      instance=$(kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
+      echo -e "\nThere is already a fusion deployment in this namespace with release name: ${instance}, please choose a new namespace"
+      exit 1
+  fi
+  # We should be good to install now
 fi
 
-gcloud container clusters get-credentials $CLUSTER_NAME
-kubectl config current-context
 
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -339,32 +339,6 @@ if [ "$GCS_BUCKET" != "" ]; then
   ML_MODEL_STORE="gcs"
 fi
 
-kubectl rollout status deployment/${RELEASE}-query-pipeline -n ${NAMESPACE} --timeout=10s > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status == 0 ]; then
-  if [ "$UPGRADE" == "0" ]; then
-    echo -e "\nLooks like Fusion is already running ..."
-    proxy_url
-    exit 0
-  fi
-fi
-
-if [ "$UPGRADE" == "0" ]; then
-  kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin \
-    --user=$(gcloud config get-value core/account)
-fi
-
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account tiller --wait
-  helm version
-fi
-
 lw_helm_repo=lucidworks
 
 echo -e "\nAdding the Lucidworks chart repo to helm repo list"
@@ -375,7 +349,7 @@ fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
 
-  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
+  SOLR_REPLICAS=1
 
   tee $MY_VALUES << END
 cx-ui:
