@@ -253,16 +253,61 @@ gcloud config set project $GCLOUD_PROJECT
 gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME} > /dev/null 2>&1
 cluster_status=$?
 if [ "$cluster_status" != "0" ]; then
-  echo -e "GKE Cluster '${CLUSTER_NAME}' does not exist, please use an existing cluster or ask an admin to create one\n"
-  exit 1
+  if [ "$CREATE_MODE" == "" ]; then
+    CREATE_MODE="multi_az" # the default ...
+  fi
+
+  echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
+
+  if [ "$CREATE_MODE" == "demo" ]; then
+
+    if [ "$GCLOUD_ZONE" == "us-west1" ]; then
+      echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
+      GCLOUD_ZONE="us-west1-a"
+    fi
+
+    # have to cut off the zone part for the --subnetwork arg
+    GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
+      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" --image-type "COS" \
+      --disk-type "pd-standard" --disk-size "100" \
+      --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
+      --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
+      --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
+      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
+      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "2" \
+      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
+  elif [ "$CREATE_MODE" == "multi_az" ]; then
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
+      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" \
+      --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true \
+      --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
+      --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
+      --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
+      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_ZONE}/subnetworks/default" \
+      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "2" \
+      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
+  else
+    echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
+    echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
+    exit 1
+  fi
+
+  echo -e "\nCluster '${CLUSTER_NAME}' deployed ... testing if it is healthy"
+  gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME}
+  cluster_status=$?
+  if [ "$cluster_status" != "0" ]; then
+    echo -e "\nERROR: Status of GKE cluster ${CLUSTER_NAME} is suspect, check the Google Cloud console before proceeding!\n"
+    exit 1
+  fi
+else
+  echo -e "Cluster '${CLUSTER_NAME}' exists, starting to install Lucidworks Fusion"
 fi
+
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
 
-
-if kubectl get namespace "${NAMESPACE}"; then
-  echo "namespace ${NAMESPACE} already exists in the fusion cluster"
-else
+if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
   kubectl create namespace "${NAMESPACE}"
   kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
 fi
@@ -298,7 +343,7 @@ elif [ "$PURGE" == "1" ]; then
   exit 0
 else
   # Check if there is already a release for helm with the release name that we want
-  if helm status "${RELEASE}" 2>&1 > /dev/null; then
+  if helm status "${RELEASE}" > /dev/null 2>&1 ; then
       echo -e "\nThere is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release"
       exit 1
   fi
@@ -308,7 +353,7 @@ else
       # There is a fusion deployed into this namespace, try and protect against two releases being installed into
       # The same namespace
       instance=$(kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
-      echo -e "\nThere is already a fusion deployment in this namespace with release name: ${instance}, please choose a new namespace"
+      echo -e "\nThere is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace"
       exit 1
   fi
   # We should be good to install now
@@ -341,9 +386,9 @@ fi
 
 lw_helm_repo=lucidworks
 
-echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-helm repo list | grep "https://charts.lucidworks.com"
-if [ $? ]; then
+
+if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
+  echo -e "\nAdding the Lucidworks chart repo to helm repo list"
   helm repo add ${lw_helm_repo} https://charts.lucidworks.com
 fi
 
