@@ -30,6 +30,7 @@ function print_usage() {
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
+  echo -e "  --force     Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace"
 }
 
 SCRIPT_CMD="$0"
@@ -42,6 +43,7 @@ UPGRADE=0
 GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
+FORCE=0
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
 DRY_RUN=""
@@ -161,6 +163,10 @@ if [ $# -gt 0 ]; then
             PURGE=1
             shift 1
         ;;
+        --force)
+            FORCE=1
+            shift 1
+        ;;
         -help|-usage|--help|--usage)
             print_usage "$SCRIPT_CMD"
             exit 0
@@ -221,6 +227,8 @@ if [ "$who_am_i" == "" ]; then
   exit 1
 fi
 
+OWNER_LABEL="${who_am_i//@/-}"
+
 echo -e "\nLogged in as: $who_am_i\n"
 
 hash kubectl
@@ -240,25 +248,8 @@ fi
 gcloud config set compute/zone $GCLOUD_ZONE
 gcloud config set project $GCLOUD_PROJECT
 
-if [ "$PURGE" == "1" ]; then
-  gcloud container clusters get-credentials $CLUSTER_NAME
-  current=$(kubectl config current-context)
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} in: $current? This operation cannot be undone! y/n " confirm
-  if [ "$confirm" == "y" ]; then
-    helm del --purge ${RELEASE}
-    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
-    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
-    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    if [ "${GCS_BUCKET}" != "" ]; then
-      gsutil rm -rf gs://${GCS_BUCKET}
-    fi
-  fi
-  exit 0
-fi
-
+# Make sure that the cluster is running, and set our kubectl context to use
+# this cluster
 gcloud beta container clusters list --filter=${CLUSTER_NAME} | grep ${CLUSTER_NAME} > /dev/null 2>&1
 cluster_status=$?
 if [ "$cluster_status" != "0" ]; then
@@ -277,8 +268,6 @@ if [ "$cluster_status" != "0" ]; then
 
     # have to cut off the zone part for the --subnetwork arg
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
-
-    echo "GCLOUD_REGION=${GCLOUD_REGION}"
 
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth --cluster-version ${GKE_MASTER_VERSION} --machine-type ${INSTANCE_TYPE} --image-type "COS" \
@@ -312,14 +301,77 @@ if [ "$cluster_status" != "0" ]; then
     echo -e "\nERROR: Status of GKE cluster ${CLUSTER_NAME} is suspect, check the Google Cloud console before proceeding!\n"
     exit 1
   fi
+
 else
-  if [ "$UPGRADE" == "0" ]; then
-    echo -e "\nGKE Cluster '${CLUSTER_NAME}' already exists, proceeding with Fusion 5 install ...\n"
-  fi
+  echo -e "\nCluster '${CLUSTER_NAME}' exists, starting to install Lucidworks Fusion"
 fi
 
 gcloud container clusters get-credentials $CLUSTER_NAME
-kubectl config current-context
+current=$(kubectl config current-context)
+
+# see if Tiller is deployed ...
+kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+rollout_status=$?
+if [ $rollout_status != 0 ]; then
+  echo -e "\nSetting up Helm Tiller ..."
+  kubectl create serviceaccount --namespace kube-system tiller
+  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  helm init --service-account tiller --wait
+  helm version
+fi
+
+if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
+  kubectl create namespace "${NAMESPACE}"
+  kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+fi
+
+if [ "${UPGRADE}" == "1" ]; then
+    # Check if the owner label on the namespace is the same as we are, so we cannot
+    # accidentally upgrade a release from someone elses namespace
+    namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+    if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+      echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to upgrade this namespace"
+      exit 1
+    fi
+
+elif [ "$PURGE" == "1" ]; then
+  # Check if the owner label on the namespace is the same as we are, so we cannot
+  # accidentally purge someone elses release
+  namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+    echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to purge this namespace"
+    exit 1
+  fi
+
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
+  if [ "$confirm" == "y" ]; then
+    helm del --purge ${RELEASE}
+    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
+    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
+    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+  fi
+  exit 0
+else
+  # Check if there is already a release for helm with the release name that we want
+  if helm status "${RELEASE}" > /dev/null 2>&1 ; then
+      echo -e "\nThere is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release"
+      exit 1
+  fi
+
+  # There isn't let's check if there is a fusion deployment in the namespace already
+  if ! kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" 2>&1 | grep -q "No resources"; then
+      # There is a fusion deployed into this namespace, try and protect against two releases being installed into
+      # The same namespace
+      instance=$(kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
+      echo -e "\nThere is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace"
+      exit 1
+  fi
+  # We should be good to install now
+fi
+
 
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -350,43 +402,17 @@ if [ "$GCS_BUCKET" != "" ]; then
   gsutil iam ch serviceAccount:${GCP_SERVICE_ACCOUNT}:roles/storage.objectAdmin gs://${GCS_BUCKET}
 fi
 
-kubectl rollout status deployment/${RELEASE}-query-pipeline -n ${NAMESPACE} --timeout=10s > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status == 0 ]; then
-  if [ "$UPGRADE" == "0" ]; then
-    echo -e "\nLooks like Fusion is already running ..."
-    proxy_url
-    exit 0
-  fi
-fi
-
-if [ "$UPGRADE" == "0" ]; then
-  kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin \
-    --user=$(gcloud config get-value core/account)
-fi
-
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account tiller --wait
-  helm version
-fi
-
 lw_helm_repo=lucidworks
 
-echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-helm repo list | grep "https://charts.lucidworks.com"
-if [ $? ]; then
+
+if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
+  echo -e "\nAdding the Lucidworks chart repo to helm repo list"
   helm repo add ${lw_helm_repo} https://charts.lucidworks.com
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
 
-  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
+  SOLR_REPLICAS=1
 
   tee $MY_VALUES << END
 cx-ui:
