@@ -3,6 +3,7 @@
 INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.2-3"
 GKE_MASTER_VERSION="-"
+NODE_POOL="default-pool"
 
 function print_usage() {
   CMD="$1"
@@ -357,7 +358,7 @@ elif [ "$PURGE" == "1" ]; then
 else
   # Check if there is already a release for helm with the release name that we want
   if helm status "${RELEASE}" > /dev/null 2>&1 ; then
-      echo -e "\nThere is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release"
+      echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release\n"
       exit 1
   fi
 
@@ -366,12 +367,17 @@ else
       # There is a fusion deployed into this namespace, try and protect against two releases being installed into
       # The same namespace
       instance=$(kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
-      echo -e "\nThere is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace"
+      echo -e "\nERROR: There is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace\n"
       exit 1
   fi
   # We should be good to install now
 fi
 
+function report_ns() {
+  if [ "${NAMESPACE}" != "default" ]; then
+    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}"
+  fi
+}
 
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -380,6 +386,7 @@ function proxy_url() {
   echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+  report_ns
 }
 
 function ingress_setup() {
@@ -389,21 +396,24 @@ function ingress_setup() {
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
+  report_ns
 }
 
 if [ "$GCS_BUCKET" != "" ]; then
   echo -e "Creating GCS bucket: $GCS_BUCKET"
   gsutil mb gs://${GCS_BUCKET}
-  ML_MODEL_STORE="gcs"
-  GCP_SERVICE_ACCOUNT_ID=$(gcloud projects list --filter="${GCLOUD_PROJECT}" --format="value(PROJECT_NUMBER)")
-  GCP_SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT_ID}-compute@developer.gserviceaccount.com"
-  echo -e "Granting default GCP service account ${GCP_SERVICE_ACCOUNT} access to GCS bucket: gs://${GCS_BUCKET}"
-  gsutil bucketpolicyonly set on gs://${GCS_BUCKET}
-  gsutil iam ch serviceAccount:${GCP_SERVICE_ACCOUNT}:roles/storage.objectAdmin gs://${GCS_BUCKET}
+  mb_outcome=$?
+  if [ "$mb_outcome" == "0" ]; then
+    ML_MODEL_STORE="gcs"
+    GCP_SERVICE_ACCOUNT_ID=$(gcloud projects list --filter="${GCLOUD_PROJECT}" --format="value(PROJECT_NUMBER)")
+    GCP_SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT_ID}-compute@developer.gserviceaccount.com"
+    echo -e "Granting default GCP service account ${GCP_SERVICE_ACCOUNT} access to GCS bucket: gs://${GCS_BUCKET}"
+    gsutil bucketpolicyonly set on gs://${GCS_BUCKET}
+    gsutil iam ch serviceAccount:${GCP_SERVICE_ACCOUNT}:roles/storage.objectAdmin gs://${GCS_BUCKET}
+  fi
 fi
 
 lw_helm_repo=lucidworks
-
 
 if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
   echo -e "\nAdding the Lucidworks chart repo to helm repo list"
@@ -415,34 +425,37 @@ if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   SOLR_REPLICAS=1
 
   tee $MY_VALUES << END
-cx-ui:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: "200m"
-      memory: 64Mi
-    requests:
-      cpu: "100m"
-      memory: 64Mi
-
 cx-api:
-  replicaCount: 1
-  volumeClaimTemplates:
-    storageSize: "5Gi"
+  enabled: false
+cx-scheduler:
+  enabled: false
+cx-script-executor:
+  enabled: false
+cx-ui:
+  enabled: false
+cx-user-prefs:
+  enabled: false
 
 kafka:
+  enabled: false
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   replicaCount: 1
   resources: {}
   kafkaHeapOptions: "-Xmx512m"
 
 sql-service:
   enabled: false
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   replicaCount: 0
   service:
     thrift:
       type: "ClusterIP"
 
 solr:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   image:
     tag: 8.2.0
   updateStrategy:
@@ -453,26 +466,92 @@ solr:
   replicaCount: ${SOLR_REPLICAS}
   resources: {}
   zookeeper:
+    nodeSelector:
+      cloud.google.com/gke-nodepool: ${NODE_POOL}
     replicaCount: ${SOLR_REPLICAS}
     resources: {}
     env:
       ZK_HEAP_SIZE: 1G
 
 ml-model-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   modelRepoImpl: ${ML_MODEL_STORE}
   gcsBucketName: ${GCS_BUCKET}
-  gcsBaseDirectoryName: dev
+  gcsBaseDirectoryName: ${RELEASE}
 
 fusion-admin:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   readinessProbe:
     initialDelaySeconds: 180
 
 fusion-indexing:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   readinessProbe:
     initialDelaySeconds: 180
 
 query-pipeline:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+
+admin-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+api-gateway:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+auth-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+classic-rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+devops-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+fusion-resources:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+insights:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+job-launcher:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+job-rest-server:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+logstash:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+rpc-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+rules-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
+
+webapps:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: ${NODE_POOL}
 
 END
 
