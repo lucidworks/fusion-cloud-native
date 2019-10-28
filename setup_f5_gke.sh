@@ -1,5 +1,9 @@
 #!/bin/bash
 
+INSTANCE_TYPE="n1-standard-4"
+CHART_VERSION="5.0.2-3"
+GKE_MASTER_VERSION="-"
+
 function print_usage() {
   CMD="$1"
   ERROR_MSG="$2"
@@ -16,12 +20,12 @@ function print_usage() {
   echo -e "  -n          Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z          GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
   echo -e "  -b          GCS Bucket for storing ML models\n"
-  echo -e "  -i          Instance type, defaults to 'n1-standard-4'\n"
+  echo -e "  -i          Instance type, defaults to '${INSTANCE_TYPE}'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --gke       GKE Master version; defaults to 1.13.10-gke.0\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as 5.0.2-3\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --gke       GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
+  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to gke_<cluster>_<release>_<namespace>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
@@ -34,16 +38,12 @@ GCLOUD_ZONE=us-west1
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
-INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.2-3"
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
-GKE_MASTER_VERSION="1.13.10-gke.0"
 DRY_RUN=""
 
 if [ $# -gt 0 ]; then
@@ -71,7 +71,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -p)
@@ -88,7 +87,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -z)
@@ -163,7 +161,7 @@ if [ $# -gt 0 ]; then
             PURGE=1
             shift 1
         ;;
-        -help|-usage)
+        -help|-usage|--help|--usage)
             print_usage "$SCRIPT_CMD"
             exit 0
         ;;
@@ -197,6 +195,8 @@ if [ "$GCLOUD_PROJECT" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the GCP project name using: -p <project>"
   exit 1
 fi
+
+MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_${NAMESPACE}_fusion_values.yaml"
 
 if [ -n "$CUSTOM_MY_VALUES" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES
@@ -252,6 +252,9 @@ if [ "$PURGE" == "1" ]; then
     kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    if [ "${GCS_BUCKET}" != "" ]; then
+      gsutil rm -rf gs://${GCS_BUCKET}
+    fi
   fi
   exit 0
 fi
@@ -263,7 +266,7 @@ if [ "$cluster_status" != "0" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
 
-  echo -e "\nLaunching GKE cluster ${CLUSTER_NAME} (mode: $CREATE_MODE) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
+  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (gke: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
 
@@ -274,8 +277,11 @@ if [ "$cluster_status" != "0" ]; then
 
     # have to cut off the zone part for the --subnetwork arg
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
+
+    echo "GCLOUD_REGION=${GCLOUD_REGION}"
+
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" --image-type "COS" \
+      --no-enable-basic-auth --cluster-version ${GKE_MASTER_VERSION} --machine-type ${INSTANCE_TYPE} --image-type "COS" \
       --disk-type "pd-standard" --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
@@ -285,7 +291,7 @@ if [ "$cluster_status" != "0" ]; then
       --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version "${GKE_MASTER_VERSION}" --machine-type "${INSTANCE_TYPE}" \
+      --no-enable-basic-auth --cluster-version ${GKE_MASTER_VERSION} --machine-type ${INSTANCE_TYPE} \
       --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
@@ -337,6 +343,11 @@ if [ "$GCS_BUCKET" != "" ]; then
   echo -e "Creating GCS bucket: $GCS_BUCKET"
   gsutil mb gs://${GCS_BUCKET}
   ML_MODEL_STORE="gcs"
+  GCP_SERVICE_ACCOUNT_ID=$(gcloud projects list --filter="${GCLOUD_PROJECT}" --format="value(PROJECT_NUMBER)")
+  GCP_SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT_ID}-compute@developer.gserviceaccount.com"
+  echo -e "Granting default GCP service account ${GCP_SERVICE_ACCOUNT} access to GCS bucket: gs://${GCS_BUCKET}"
+  gsutil bucketpolicyonly set on gs://${GCS_BUCKET}
+  gsutil iam ch serviceAccount:${GCP_SERVICE_ACCOUNT}:roles/storage.objectAdmin gs://${GCS_BUCKET}
 fi
 
 kubectl rollout status deployment/${RELEASE}-query-pipeline -n ${NAMESPACE} --timeout=10s > /dev/null 2>&1
@@ -399,6 +410,7 @@ kafka:
   kafkaHeapOptions: "-Xmx512m"
 
 sql-service:
+  enabled: false
   replicaCount: 0
   service:
     thrift:
@@ -421,11 +433,9 @@ solr:
       ZK_HEAP_SIZE: 1G
 
 ml-model-service:
-  modelRepository:
-    impl: ${ML_MODEL_STORE}
-    gcs:
-      bucketName: ${GCS_BUCKET}
-      baseDirectoryName: dev
+  modelRepoImpl: ${ML_MODEL_STORE}
+  gcsBucketName: ${GCS_BUCKET}
+  gcsBaseDirectoryName: dev
 
 fusion-admin:
   readinessProbe:
@@ -439,6 +449,7 @@ query-pipeline:
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
+
   echo -e "\nCreated $MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
 fi
 
