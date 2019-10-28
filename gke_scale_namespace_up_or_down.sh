@@ -185,11 +185,11 @@ if [ "$ACTION" == "down" ]; then
 fi
 
 # bring back the statefulsets and then the deployments
-echo -e "\nBringing ${NUM_REPLICAS} Zookeeper pods back up on ${NUM_NODES} nodes ... will wait up to 3 minutes to see ZK re-establish quorum"
+echo -e "\nBringing ${NUM_REPLICAS} Zookeeper pods back up ..."
 kubectl scale statefulsets/${RELEASE}-zookeeper --replicas=${NUM_REPLICAS} -n ${NAMESPACE}
-kubectl rollout status statefulset/${RELEASE}-zookeeper -n ${NAMESPACE} --timeout=180s
+sleep 20
 
-echo -e "\nBringing ${NUM_REPLICAS} Solr pods back up on ${NUM_NODES} nodes ... will wait up to 3 minutes to see Solr come back online"
+echo -e "\nBringing ${NUM_REPLICAS} Solr pods back up ... will wait up to 3 minutes to see Solr come back online"
 kubectl scale statefulsets/${RELEASE}-solr --replicas=${NUM_REPLICAS} -n ${NAMESPACE}
 kubectl rollout status statefulset/${RELEASE}-solr -n ${NAMESPACE} --timeout=180s
 
