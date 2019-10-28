@@ -300,12 +300,25 @@ if [ "$cluster_status" != "0" ]; then
     echo -e "\nERROR: Status of GKE cluster ${CLUSTER_NAME} is suspect, check the Google Cloud console before proceeding!\n"
     exit 1
   fi
+
 else
-  echo -e "Cluster '${CLUSTER_NAME}' exists, starting to install Lucidworks Fusion"
+  echo -e "\nCluster '${CLUSTER_NAME}' exists, starting to install Lucidworks Fusion"
 fi
 
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
+
+
+# see if Tiller is deployed ...
+kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+rollout_status=$?
+if [ $rollout_status != 0 ]; then
+  echo -e "\nSetting up Helm Tiller ..."
+  kubectl create serviceaccount --namespace kube-system tiller
+  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+  helm init --service-account tiller --wait
+  helm version
+fi
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
   kubectl create namespace "${NAMESPACE}"
