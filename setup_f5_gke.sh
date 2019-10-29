@@ -365,7 +365,7 @@ elif [ "$PURGE" == "1" ]; then
 
   confirm="Y"
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
-  if [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
+  if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
     helm del --purge ${RELEASE}
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
