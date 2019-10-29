@@ -298,6 +298,7 @@ if [ "$LISTOUT" == "[]" ]; then
       --resource-group ${AZURE_RESOURCE_GROUP} \
       --name ${CLUSTER_NAME} \
       --node-count ${NODE_COUNT} \
+      --nodepool-name ${CLUSTER_NAME} \
       --node-vm-size ${INSTANCE_TYPE} \
       --kubernetes-version ${AKS_MASTER_VERSION} \
       --generate-ssh-keys
@@ -379,6 +380,10 @@ fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
+  if [ $SOLR_REPLICAS -eq 0 ]; then
+      echo "Hmmn, didn't get a proper count of nodes, will set SOLR_REPLICAS to 1 just to play safe"
+      SOLR_REPLICAS=1
+  fi 
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
