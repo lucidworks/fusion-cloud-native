@@ -422,6 +422,7 @@ solr:
     resources: {}
     env:
       ZK_HEAP_SIZE: 1G
+      ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
   modelRepository:
