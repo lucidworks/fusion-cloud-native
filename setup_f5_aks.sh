@@ -27,7 +27,7 @@ function print_usage() {
   echo -e "  --aks       AKS Kubernetes version; defaults to ${AKS_MASTER_VERSION}\n"
   echo -e "  --preview   Enable PREVIEW mode when creating the cluster to experiment with unreleased options\n"
   echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to aks_<cluster>_<release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to aks_<cluster>_<release>_fusion_values.yaml\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
 }
@@ -185,7 +185,7 @@ if [ "$AZURE_RESOURCE_GROUP" == "" ]; then
   exit 1
 fi
 
-MY_VALUES="aks_${CLUSTER_NAME}_${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+MY_VALUES="aks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 if [ -n "$CUSTOM_MY_VALUES" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES
 fi

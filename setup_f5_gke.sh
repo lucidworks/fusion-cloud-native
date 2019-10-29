@@ -3,7 +3,8 @@
 INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.2-3"
 GKE_MASTER_VERSION="-"
-NODE_POOL="default-pool"
+NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
+SOLR_REPLICAS=1
 
 function print_usage() {
   CMD="$1"
@@ -24,9 +25,11 @@ function print_usage() {
   echo -e "  -i          Instance type, defaults to '${INSTANCE_TYPE}'\n"
   echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --num-solr  Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --node-pool Node pool label to assign pods to specific nodes; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
   echo -e "  --gke       GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
   echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to gke_<cluster>_<release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to gke_<cluster>_<release>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
@@ -128,6 +131,22 @@ if [ $# -gt 0 ]; then
             GKE_MASTER_VERSION="$2"
             shift 2
         ;;
+        --num-solr)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-solr parameter!"
+              exit 1
+            fi
+            SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --node-pool)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
+              exit 1
+            fi
+            NODE_POOL="$2"
+            shift 2
+        ;;        
         --version)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --version parameter!"
@@ -203,7 +222,7 @@ if [ "$GCLOUD_PROJECT" == "" ]; then
   exit 1
 fi
 
-MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_${NAMESPACE}_fusion_values.yaml"
+MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 if [ -n "$CUSTOM_MY_VALUES" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES
@@ -344,8 +363,9 @@ elif [ "$PURGE" == "1" ]; then
     exit 1
   fi
 
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
-  if [ "$confirm" == "y" ]; then
+  confirm="Y"
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
+  if [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
     helm del --purge ${RELEASE}
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
@@ -375,7 +395,7 @@ fi
 
 function report_ns() {
   if [ "${NAMESPACE}" != "default" ]; then
-    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}"
+    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
   fi
 }
 
@@ -404,13 +424,13 @@ if [ "$GCS_BUCKET" != "" ]; then
   gsutil mb gs://${GCS_BUCKET}
   mb_outcome=$?
   if [ "$mb_outcome" == "0" ]; then
-    ML_MODEL_STORE="gcs"
     GCP_SERVICE_ACCOUNT_ID=$(gcloud projects list --filter="${GCLOUD_PROJECT}" --format="value(PROJECT_NUMBER)")
     GCP_SERVICE_ACCOUNT="${GCP_SERVICE_ACCOUNT_ID}-compute@developer.gserviceaccount.com"
     echo -e "Granting default GCP service account ${GCP_SERVICE_ACCOUNT} access to GCS bucket: gs://${GCS_BUCKET}"
     gsutil bucketpolicyonly set on gs://${GCS_BUCKET}
     gsutil iam ch serviceAccount:${GCP_SERVICE_ACCOUNT}:roles/storage.objectAdmin gs://${GCS_BUCKET}
   fi
+  ML_MODEL_STORE="gcs"
 fi
 
 lw_helm_repo=lucidworks
@@ -421,8 +441,6 @@ if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-
-  SOLR_REPLICAS=1
 
   tee $MY_VALUES << END
 cx-api:
@@ -439,7 +457,7 @@ cx-user-prefs:
 kafka:
   enabled: false
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   replicaCount: 1
   resources: {}
   kafkaHeapOptions: "-Xmx512m"
@@ -447,7 +465,7 @@ kafka:
 sql-service:
   enabled: false
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   replicaCount: 0
   service:
     thrift:
@@ -455,7 +473,7 @@ sql-service:
 
 solr:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   image:
     tag: 8.2.0
   updateStrategy:
@@ -467,8 +485,10 @@ solr:
   resources: {}
   zookeeper:
     nodeSelector:
-      cloud.google.com/gke-nodepool: ${NODE_POOL}
+      ${NODE_POOL}
     replicaCount: ${SOLR_REPLICAS}
+    persistence:
+      size: 15Gi
     resources: {}
     env:
       ZK_HEAP_SIZE: 1G
@@ -476,83 +496,83 @@ solr:
 
 ml-model-service:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   modelRepoImpl: ${ML_MODEL_STORE}
   gcsBucketName: ${GCS_BUCKET}
   gcsBaseDirectoryName: ${RELEASE}
 
 fusion-admin:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   readinessProbe:
     initialDelaySeconds: 180
 
 fusion-indexing:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   readinessProbe:
     initialDelaySeconds: 180
 
 query-pipeline:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 admin-ui:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 api-gateway:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 auth-ui:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 classic-rest-service:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 devops-ui:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 fusion-resources:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 insights:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 job-launcher:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 job-rest-server:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 logstash:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 rest-service:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 rpc-service:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 rules-ui:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 webapps:
   nodeSelector:
-    cloud.google.com/gke-nodepool: ${NODE_POOL}
+    ${NODE_POOL}
 
 END
 

@@ -18,7 +18,7 @@ function print_usage() {
   echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.2-3\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to eks_<cluster>_<release>_fusion_values.yaml\n"
   echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster\n"
@@ -30,7 +30,6 @@ REGION=us-west-2
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 CREATE_MODE=
 PURGE=0
@@ -56,7 +55,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -p)
@@ -73,7 +71,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -z)
@@ -166,6 +163,8 @@ if [ "$AWS_ACCOUNT" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the AWS project name using: -p <project>"
   exit 1
 fi
+
+MY_VALUES="eks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 if [ -n "$CUSTOM_MY_VALUES" ]; then
   MY_VALUES=$CUSTOM_MY_VALUES

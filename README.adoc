@@ -93,7 +93,7 @@ Use the `--help` option to see script usage. If you want the script to create a 
 
 If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.0 but is not sufficient for production workloads.
 
-__Note: If not provided the script generates a custom values file named `<release>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+__Note: If not provided the script generates a custom values file named `gke_<cluster>_<release>_fusion_values.yaml` which you can use to customize the Fusion chart.__
 
 #WARNING# The `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
 
@@ -156,10 +156,10 @@ Please refer to the Kubernetes documentation on configuring an Ingress for GKE: 
 
 === Upgrade Fusion on GKE
 
-During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`; use this file to customize Fusion settings.
+During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
 After making changes to this file, you need to run the following command:
 ```
-./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
 
@@ -235,9 +235,9 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 
 === Upgrade Fusion on EKS
 
-During installation, the script generates a file named `<release>_<namespace>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
+During installation, the script generates a file named `eks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
-./setup_f5_eks.sh -c <existing_cluster> -p <aws_account_profile> -r <release> -n <namespace> --values <release>_<namespace>_fusion_values.yaml --upgrade
+./setup_f5_eks.sh -c <existing_cluster> -p <aws_account_profile> -r <release> -n <namespace> --values eks_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
 
@@ -449,7 +449,7 @@ f5-sql-service-cr-6c77759498-ztrnt       1/1     Running   0          11m
 f5-webapps-5c4cbb4576-fv7x2              1/1     Running   2          11m
 f5-zookeeper-0                           1/1     Running   0          11m
 ```
-The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in `<release>_<namespace>_fusion_values.yaml`.
+The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in your custom values yaml file.
 Also, don't worry if you see some pods having been restarted as that just means they were too slow to come up and Kubernetes killed and restarted them.
 You do want to see at least one pod running for every service. If a pod is not running after waiting a sufficient amount of time,
 use `kubectl logs <pod_id>` to see the logs for that pod; to see the logs for previous versions of a pod, use: `kubectl logs <pod_id> -p`.

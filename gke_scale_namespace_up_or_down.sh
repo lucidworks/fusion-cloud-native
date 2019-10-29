@@ -156,6 +156,8 @@ gcloud config set project $GCLOUD_PROJECT
 gcloud container clusters get-credentials $CLUSTER_NAME
 kubectl config current-context
 
+kubectl config set-context --current --namespace=${NAMESPACE}
+
 declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "insights" "job-launcher" "job-rest-server" "ml-model-service" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "sql-service-cm" "sql-service-cr" "webapps" "cx-scheduler" "cx-script-executor" "cx-ui" "cx-user-prefs")
 
 if [ "$ACTION" == "down" ]; then
@@ -209,5 +211,6 @@ do
 done
 
 kubectl get pods -n ${NAMESPACE}
+kubectl config set-context --current --namespace=${NAMESPACE}
 
 
