@@ -281,14 +281,24 @@ else
   fi
 fi
 
-function proxy_url() {
-  export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-  export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+function report_ns() {
+  if [ "${NAMESPACE}" != "default" ]; then
+    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
+  fi
+}
 
-  echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
-  echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
-  echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+function proxy_url() {
+  PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+  PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
+  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  if [ "$PROXY_URL" != ":" ]; then
+    echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
+    echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
+    echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+    report_ns
+   else
+    echo -e "\n\nFailed to get Fusion Gateway service URL! Check console for previous errors.\n"
+   fi
 }
 
 #Updates kubeconfig
@@ -426,9 +436,9 @@ echo -e "\nNOTE: If this will be a long-running cluster for production purposes,
 
 if [ "$is_helm_v3" != "" ]; then
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
-  ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
+  helm install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
 else
-  ${helm} install ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
+  helm install ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
 fi
 
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
