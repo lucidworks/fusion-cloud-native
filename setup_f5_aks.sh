@@ -425,6 +425,8 @@ solr:
   zookeeper:
     replicaCount: ${SOLR_REPLICAS}
     resources: {}
+    persistence:
+      size: 15Gi
     env:
       ZK_HEAP_SIZE: 1G
       ZK_PURGE_INTERVAL: 1
@@ -432,9 +434,6 @@ solr:
 ml-model-service:
   modelRepository:
     impl: ${ML_MODEL_STORE}
-    gcs:
-      bucketName: ${GCS_BUCKET}
-      baseDirectoryName: dev
 
 fusion-admin:
   readinessProbe:

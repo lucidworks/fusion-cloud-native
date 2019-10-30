@@ -371,6 +371,8 @@ solr:
   zookeeper:
     replicaCount: ${SOLR_REPLICAS}
     resources: {}
+    persistence:
+      size: 15Gi
     env:
       ZK_HEAP_SIZE: 1G
       ZK_PURGE_INTERVAL: 1
