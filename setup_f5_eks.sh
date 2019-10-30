@@ -217,8 +217,9 @@ echo -e "\nLogged in as: $who_am_i\n"
 if [ "$PURGE" == "1" ]; then
   aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
   current=$(kubectl config current-context)
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
-  if [ "$confirm" == "y" ]; then
+  confirm="Y"
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
+  if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
     helm del --purge "${RELEASE}"
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
@@ -283,7 +284,8 @@ fi
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
   export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL=$PROXY_HOST:$PROXY_PORT
+  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+
   echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
   echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
   echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
@@ -309,15 +311,21 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account tiller --wait
-  helm version
+is_helm_v3=$(helm version --short | grep v3)
+
+if [ "${is_helm_v3}" == "" ]; then
+  # see if Tiller is deployed ...
+  kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  rollout_status=$?
+  if [ $rollout_status != 0 ]; then
+    echo -e "\nSetting up Helm Tiller ..."
+    kubectl create serviceaccount --namespace kube-system tiller
+    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    helm init --service-account tiller --wait
+    helm version
+  fi
+else
+  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
 fi
 
 lw_helm_repo=lucidworks
@@ -407,14 +415,22 @@ if [ "$UPGRADE" == "1" ]; then
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG}"
   fi
 
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${DRY_RUN} --version ${CHART_VERSION}
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   proxy_url
   exit $upgrade_status
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" "${lw_helm_repo}/fusion" --version "${CHART_VERSION}"
+echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+
+if [ "$is_helm_v3" != "" ]; then
+  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
+  ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
+else
+  ${helm} install ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" --version ${CHART_VERSION}
+fi
+
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
 
