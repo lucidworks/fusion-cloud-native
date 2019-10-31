@@ -289,9 +289,14 @@ if [ "$LISTOUT" == "[]" ]; then
 
   PREVIEW_OPTS=""
   if [ "${PREVIEW}" == "1" ]; then
-    PREVIEW_OPTS="--enable-vmss --node-zones 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
+    PREVIEW_OPTS="--enable-vmss --node-zones 1 2 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
     echo -e "\nEnabling AKS preview extension with the following PREVIEW options: ${PREVIEW_OPTS}\n"
     az extension add --name aks-preview
+    az extension update --name aks-preview > /dev/null 2>&1
+    az feature register --name AvailabilityZonePreview --namespace Microsoft.ContainerService
+    az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AvailabilityZonePreview')].{Name:name,State:properties.state}"
+    az provider register --namespace Microsoft.ContainerService
+    echo -e "\nEnabled the AvailabilityZonePreview feature\n"
   fi
 
   az aks create ${PREVIEW_OPTS} \
@@ -299,7 +304,6 @@ if [ "$LISTOUT" == "[]" ]; then
       --resource-group ${AZURE_RESOURCE_GROUP} \
       --name ${CLUSTER_NAME} \
       --node-count ${NODE_COUNT} \
-      --nodepool-name ${CLUSTER_NAME} \
       --node-vm-size ${INSTANCE_TYPE} \
       --kubernetes-version ${AKS_MASTER_VERSION} \
       --generate-ssh-keys
@@ -335,7 +339,7 @@ function report_ns() {
 function proxy_url() {
   PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  PROXY_URL="$PROXY_HOST:$PROXY_PORT"
   if [ "$PROXY_URL" != ":" ]; then
     echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
     echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://docs.microsoft.com/en-us/azure/aks/ingress-basic"
@@ -348,7 +352,7 @@ function proxy_url() {
 
 function ingress_setup() {
   # XXX:BDW: UNTESTED
-  export INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   # Patch yaml for now, until fix gets into helm charts
   kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
