@@ -348,7 +348,10 @@ fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
-
+  if [ $SOLR_REPLICAS -eq 0 ]; then
+      echo "Hmmn, didn't get a proper count of nodes, will set SOLR_REPLICAS to 1 just to play safe"
+      SOLR_REPLICAS=1
+  fi
   tee "${MY_VALUES}" << END
 cx-ui:
   replicaCount: 1
