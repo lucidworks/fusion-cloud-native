@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.2-3"
+CHART_VERSION="5.0.2-4"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 SOLR_REPLICAS=1
@@ -443,19 +443,22 @@ fi
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
 
   tee $MY_VALUES << END
-cx-api:
-  enabled: false
-cx-scheduler:
-  enabled: false
-cx-script-executor:
-  enabled: false
 cx-ui:
-  enabled: false
-cx-user-prefs:
-  enabled: false
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: "200m"
+      memory: 64Mi
+    requests:
+      cpu: "100m"
+      memory: 64Mi
+
+cx-api:
+  replicaCount: 1
+  volumeClaimTemplates:
+    storageSize: "5Gi"
 
 kafka:
-  enabled: false
   nodeSelector:
     ${NODE_POOL}
   replicaCount: 1
