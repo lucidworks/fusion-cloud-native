@@ -420,6 +420,7 @@ function ingress_setup() {
       export INGRESS_IP="${ingressIp}"
       break
     fi
+    loops=$(( loops - 1 ))
     echo -ne "."
     sleep 5
   done
