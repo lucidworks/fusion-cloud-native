@@ -1,6 +1,6 @@
 #!/bin/bash
 
-INSTANCE_TYPE="Standard_DS3_v2"
+INSTANCE_TYPE="Standard_D4_v3"
 CHART_VERSION="5.0.2-4"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
@@ -401,11 +401,8 @@ if [ $? ]; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
-  if [ $SOLR_REPLICAS -eq 0 ]; then
-      echo "Hmmn, didn't get a proper count of nodes, will set SOLR_REPLICAS to 1 just to play safe"
-      SOLR_REPLICAS=1
-  fi 
+  SOLR_REPLICAS=1
+
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
