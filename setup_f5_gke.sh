@@ -146,7 +146,7 @@ if [ $# -gt 0 ]; then
             fi
             NODE_POOL="$2"
             shift 2
-        ;;        
+        ;;
         --version)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --version parameter!"
@@ -410,9 +410,19 @@ function proxy_url() {
 }
 
 function ingress_setup() {
-  export INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   # Patch yaml for now, until fix gets into helm charts
   kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
+  echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
+  loops=10
+  while (( loops > 0 )); do
+    ingressIp=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    if [[ ! -z ${ingressIp} ]]; then
+      export INGRESS_IP="${ingressIp}"
+      break
+    fi
+    echo -ne "."
+    sleep 5
+  done
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
