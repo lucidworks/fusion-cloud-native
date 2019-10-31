@@ -413,7 +413,7 @@ function ingress_setup() {
   # Patch yaml for now, until fix gets into helm charts
   kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
   echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
-  loops=10
+  loops=24
   while (( loops > 0 )); do
     ingressIp=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     if [[ ! -z ${ingressIp} ]]; then
