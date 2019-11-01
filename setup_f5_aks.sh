@@ -1,7 +1,7 @@
 #!/bin/bash
 
-INSTANCE_TYPE="Standard_DS3_v2"
-CHART_VERSION="5.0.2-3"
+INSTANCE_TYPE="Standard_D4_v3"
+CHART_VERSION="5.0.2-4"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -290,9 +290,14 @@ if [ "$LISTOUT" == "[]" ]; then
 
   PREVIEW_OPTS=""
   if [ "${PREVIEW}" == "1" ]; then
-    PREVIEW_OPTS="--enable-vmss --node-zones 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
+    PREVIEW_OPTS="--enable-vmss --node-zones 1 2 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
     echo -e "\nEnabling AKS preview extension with the following PREVIEW options: ${PREVIEW_OPTS}\n"
     az extension add --name aks-preview
+    az extension update --name aks-preview > /dev/null 2>&1
+    az feature register --name AvailabilityZonePreview --namespace Microsoft.ContainerService
+    az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AvailabilityZonePreview')].{Name:name,State:properties.state}"
+    az provider register --namespace Microsoft.ContainerService
+    echo -e "\nEnabled the AvailabilityZonePreview feature\n"
   fi
 
   az aks create ${PREVIEW_OPTS} \
@@ -300,7 +305,6 @@ if [ "$LISTOUT" == "[]" ]; then
       --resource-group ${AZURE_RESOURCE_GROUP} \
       --name ${CLUSTER_NAME} \
       --node-count ${NODE_COUNT} \
-      --nodepool-name ${CLUSTER_NAME} \
       --node-vm-size ${INSTANCE_TYPE} \
       --kubernetes-version ${AKS_MASTER_VERSION} \
       --generate-ssh-keys
@@ -336,7 +340,7 @@ function report_ns() {
 function proxy_url() {
   PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  PROXY_URL="$PROXY_HOST:$PROXY_PORT"
   if [ "$PROXY_URL" != ":" ]; then
     echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
     echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://docs.microsoft.com/en-us/azure/aks/ingress-basic"
@@ -396,11 +400,7 @@ if [ $? ]; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
-  if [ $SOLR_REPLICAS -eq 0 ]; then
-      echo "Hmmn, didn't get a proper count of nodes, will set SOLR_REPLICAS to 1 just to play safe"
-      SOLR_REPLICAS=1
-  fi
+  SOLR_REPLICAS=1
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -565,7 +565,7 @@ if [ "$is_helm_v3" != "" ]; then
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
   ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 else
-  ${helm} install ${lw_helm_repo}/fusion --timeout 240s --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  ${helm} install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 fi
 
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
