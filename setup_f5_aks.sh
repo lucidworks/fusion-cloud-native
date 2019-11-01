@@ -4,7 +4,8 @@ INSTANCE_TYPE="Standard_D4_v3"
 CHART_VERSION="5.0.2-4"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
-
+CERT_CLUSTER_ISSUER="letsencrypt"
+AKS_KUBE_CONFIG="${KUBECONFIG:-~/.kube/config}"
 function print_usage() {
   CMD="$1"
   ERROR_MSG="$2"
@@ -255,7 +256,7 @@ if [ "$AZURE_LOCATION" == "" ]; then
 fi
 
 if [ "$PURGE" == "1" ]; then
-  az aks get-credentials -n ${CLUSTER_NAME} -g ${AZURE_RESOURCE_GROUP}
+  az aks get-credentials -n "${CLUSTER_NAME}" -g "${AZURE_RESOURCE_GROUP}" -f "${AKS_KUBE_CONFIG}"
   getcreds=$?
   if [ "$getcreds" != "0" ]; then
     echo -e "\nERROR: Can't find kubernetes cluster: ${CLUSTER_NAME} in Azure resource group ${AZURE_RESOURCE_GROUP} to purge!"
@@ -327,7 +328,7 @@ else
   fi
 fi
 
-az aks get-credentials -n ${CLUSTER_NAME} -g ${AZURE_RESOURCE_GROUP} --admin
+az aks get-credentials -n "${CLUSTER_NAME}" -g "${AZURE_RESOURCE_GROUP}" -f "${AKS_KUBE_CONFIG}" --admin
 kubectl config current-context
 
 function report_ns() {
@@ -351,10 +352,8 @@ function proxy_url() {
 }
 
 function ingress_setup() {
-  # XXX:BDW: UNTESTED
-  INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  # Patch yaml for now, until fix gets into helm charts
-  kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
+
+  export INGRESS_IP=$(kubectl --namespace "${ingress_namespace}" get service "nginx-ingress-controller-controller" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated, this may take up to an hour after DNS has updated to be issued"
@@ -402,7 +401,6 @@ fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   SOLR_REPLICAS=1
-
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -473,16 +471,6 @@ ${helm} repo update
 
 ADDITIONAL_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
-  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: networking.gke.io/v1beta1
-kind: ManagedCertificate
-metadata:
-  name: "${RELEASE}-managed-certificate"
-spec:
-  domains:
-  - "${INGRESS_HOSTNAME}"
-EOF
-
   TLS_VALUES="tls-values.yaml"
   ADDITIONAL_VALUES="${ADDITIONAL_VALUES} --values tls-values.yaml"
   tee "${TLS_VALUES}" << END
@@ -490,15 +478,68 @@ api-gateway:
   service:
     type: "NodePort"
   ingress:
+    path: "/"
     enabled: true
     host: "${INGRESS_HOSTNAME}"
     tls:
       enabled: true
     annotations:
-      "networking.gke.io/managed-certificates": "${RELEASE}-managed-certificate"
-      "kubernetes.io/ingress.class": "gce"
+      kubernetes.io/ingress.class: nginx
+      certmanager.k8s.io/cluster-issuer: ${CERT_CLUSTER_ISSUER}
 
 END
+
+  ingress_namespace="internal-ingress"
+  # First we install the nginx ingress controller
+  if ! kubectl get namespace "${ingress_namespace}"; then
+    kubectl create namespace "${ingress_namespace}"
+    if [ "$is_helm_v3" != "" ]; then
+      helm install "nginx-ingress-controller" stable/nginx-ingress \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    else
+      helm install stable/nginx-ingress --name "nginx-ingress-controller" \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    fi
+  fi
+
+  certmanager_namespace="cert-manager"
+  if ! kubectl get namespace "${certmanager_namespace}"; then
+    kubectl create namespace "${certmanager_namespace}"
+    kubectl label namespace "${certmanager_namespace}" certmanager.k8s.io/disable-validation=true
+
+    kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
+
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    if [ "$is_helm_v3" != "" ]; then
+      helm install --wait cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    else
+      helm install --wait -n cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    fi
+    echo -e "Waiting for certmanager to be registered"
+    sleep 10
+
+    cat <<EOF | kubectl -n "${certmanager_namespace}" apply -f -
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: ClusterIssuer
+metadata:
+  name: "${CERT_CLUSTER_ISSUER}"
+  namespace: "${certmanager_namespace}"
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: "${who_am_i}"
+    privateKeySecretRef:
+      name: "${CERT_CLUSTER_ISSUER}"
+    http01: {}
+EOF
+  fi
 fi
 
 if [ "$UPGRADE" == "1" ]; then
@@ -514,8 +555,11 @@ if [ "$UPGRADE" == "1" ]; then
   else
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
-
-  ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ "$is_helm_v3" != "" ]; then
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  else
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  fi
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
@@ -529,6 +573,9 @@ echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NA
 echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
 
 if [ "$is_helm_v3" != "" ]; then
+  if ! kubectl get namespace "${NAMESPACE}"; then
+    kubectl create namespace "${NAMESPACE}"
+  fi
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
   ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 else
