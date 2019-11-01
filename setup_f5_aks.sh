@@ -493,11 +493,19 @@ END
   # First we install the nginx ingress controller
   if ! kubectl get namespace "${ingress_namespace}"; then
     kubectl create namespace "${ingress_namespace}"
-    helm install "nginx-ingress-controller" stable/nginx-ingress \
-      --namespace "${ingress_namespace}" \
-      --set controller.replicaCount=2 \
-      --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
-      --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    if [ "$is_helm_v3" != "" ]; then
+      helm install "nginx-ingress-controller" stable/nginx-ingress \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    else
+      helm install stable/nginx-ingress --name "nginx-ingress-controller" \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    fi
   fi
 
   certmanager_namespace="cert-manager"
@@ -509,8 +517,11 @@ END
 
     helm repo add jetstack https://charts.jetstack.io
     helm repo update
-    helm install --wait cert-manager --namespace "${certmanager_namespace}"   --version v0.8.0   jetstack/cert-manager
-
+    if [ "$is_helm_v3" != "" ]; then
+      helm install --wait cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    else
+      helm install --wait -n cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    fi
     echo -e "Waiting for certmanager to be registered"
     sleep 10
 
