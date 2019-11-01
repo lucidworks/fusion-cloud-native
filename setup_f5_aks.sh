@@ -476,7 +476,7 @@ if [ "${TLS_ENABLED}" == "1" ]; then
   tee "${TLS_VALUES}" << END
 api-gateway:
   service:
-    type: "ClusterIP"
+    type: "NodePort"
   ingress:
     path: "/"
     enabled: true
@@ -555,8 +555,11 @@ if [ "$UPGRADE" == "1" ]; then
   else
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
-
-  ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ "$is_helm_v3" != "" ]; then
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  else
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  fi
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
