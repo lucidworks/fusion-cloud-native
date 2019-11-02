@@ -1,11 +1,12 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.0.2-4"
+CHART_VERSION="5.0.2-3"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
 AKS_KUBE_CONFIG="${KUBECONFIG:-~/.kube/config}"
+
 function print_usage() {
   CMD="$1"
   ERROR_MSG="$2"
@@ -45,7 +46,6 @@ UPGRADE=0
 PURGE=0
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
-NODE_COUNT=3
 PREVIEW=0
 AZURE_LOCATION=""
 
@@ -290,7 +290,15 @@ if [ "$LISTOUT" == "[]" ]; then
 
   PREVIEW_OPTS=""
   if [ "${PREVIEW}" == "1" ]; then
-    PREVIEW_OPTS="--enable-vmss --node-zones 1 2 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
+
+    min_count=3
+    if [ "${NODE_COUNT}" == "1" ]; then
+      min_count=1
+    elif [ "${NODE_COUNT}" == "2" ]; then
+      min_count=2
+    fi
+
+    PREVIEW_OPTS="--enable-vmss --node-zones 1 2 3 --enable-cluster-autoscaler --min-count ${min_count} --max-count 3"
     echo -e "\nEnabling AKS preview extension with the following PREVIEW options: ${PREVIEW_OPTS}\n"
     az extension add --name aks-preview
     az extension update --name aks-preview > /dev/null 2>&1
@@ -400,7 +408,18 @@ if [ $? ]; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  SOLR_REPLICAS=1
+
+  CREATED_MY_VALUES=1
+  SOLR_REPLICAS=3
+  ZK_REPLICAS=3
+  if [ "$NODE_COUNT" == "1" ]; then
+    SOLR_REPLICAS=1
+    ZK_REPLICAS=1
+  elif [ "$NODE_COUNT" == "2" ]; then
+    SOLR_REPLICAS=2
+    ZK_REPLICAS=1
+  fi
+
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -440,7 +459,7 @@ solr:
   replicaCount: ${SOLR_REPLICAS}
   resources: {}
   zookeeper:
-    replicaCount: ${SOLR_REPLICAS}
+    replicaCount: ${ZK_REPLICAS}
     resources: {}
     persistence:
       size: 15Gi
@@ -570,7 +589,10 @@ if [ "$UPGRADE" == "1" ]; then
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+
+if [ -n "$CREATED_MY_VALUES" ]; then
+  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+fi
 
 if [ "$is_helm_v3" != "" ]; then
   if ! kubectl get namespace "${NAMESPACE}"; then
