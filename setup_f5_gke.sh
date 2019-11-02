@@ -452,6 +452,8 @@ fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
 
+  CREATED_MY_VALUES=1
+
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -649,7 +651,10 @@ if [ "$UPGRADE" == "1" ]; then
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+
+if [ -n "$CREATED_MY_VALUES" ]; then
+  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+fi
 
 if [ "$is_helm_v3" != "" ]; then
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
