@@ -542,22 +542,30 @@ END
       helm install --wait -n cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
     fi
     echo -e "Waiting for certmanager to be registered"
-    sleep 10
-
-    cat <<EOF | kubectl -n "${certmanager_namespace}" apply -f -
-apiVersion: certmanager.k8s.io/v1alpha1
-kind: ClusterIssuer
-metadata:
-  name: "${CERT_CLUSTER_ISSUER}"
-  namespace: "${certmanager_namespace}"
-spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: "${who_am_i}"
-    privateKeySecretRef:
-      name: "${CERT_CLUSTER_ISSUER}"
-    http01: {}
+    loops=24
+    while (( loops > 0 )); do
+      cat <<EOF | kubectl -n "${certmanager_namespace}" apply -f -
+  apiVersion: certmanager.k8s.io/v1alpha1
+  kind: ClusterIssuer
+  metadata:
+    name: "${CERT_CLUSTER_ISSUER}"
+    namespace: "${certmanager_namespace}"
+  spec:
+    acme:
+      server: https://acme-v02.api.letsencrypt.org/directory
+      email: "${who_am_i}"
+      privateKeySecretRef:
+        name: "${CERT_CLUSTER_ISSUER}"
+      http01: {}
 EOF
+      rc=$?
+      if (( ${rc} == 0 )); then
+        echo "ClusterIssuer setup"
+        break
+      fi
+      loops=$(( loops - 1 ))
+      sleep 10
+    done
   fi
 fi
 
