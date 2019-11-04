@@ -329,15 +329,21 @@ fi
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
 
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account tiller --wait
-  helm version
+is_helm_v3=$(helm version --short | grep v3)
+
+if [ "${is_helm_v3}" == "" ]; then
+  # see if Tiller is deployed ...
+  kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  rollout_status=$?
+  if [ $rollout_status != 0 ]; then
+    echo -e "\nSetting up Helm Tiller ..."
+    kubectl create serviceaccount --namespace kube-system tiller
+    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    helm init --service-account tiller --wait
+    helm version
+  fi
+else
+  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
 fi
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
@@ -402,11 +408,15 @@ function report_ns() {
 function proxy_url() {
   export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL=$PROXY_HOST:$PROXY_PORT
-  echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
-  echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
-  echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
-  report_ns
+  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  if [ "$PROXY_URL" != ":" ]; then
+    echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
+    echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
+    echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+    report_ns
+  else
+    echo -e "\n\nFailed to get Fusion Gateway service URL! Check console for previous errors.\n"
+  fi
 }
 
 function ingress_setup() {
@@ -452,6 +462,8 @@ if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
+
+  CREATED_MY_VALUES=1
 
   tee $MY_VALUES << END
 cx-ui:
@@ -639,7 +651,7 @@ if [ "$UPGRADE" == "1" ]; then
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
 
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
@@ -650,7 +662,17 @@ if [ "$UPGRADE" == "1" ]; then
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${lw_helm_repo}/fusion --version ${CHART_VERSION}
+
+if [ -n "$CREATED_MY_VALUES" ]; then
+  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+fi
+
+if [ "$is_helm_v3" != "" ]; then
+  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
+  helm install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+else
+  helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+fi
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
 

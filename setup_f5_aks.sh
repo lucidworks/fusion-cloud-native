@@ -1,9 +1,11 @@
 #!/bin/bash
 
-INSTANCE_TYPE="Standard_DS3_v2"
-CHART_VERSION="5.0.2-4"
+INSTANCE_TYPE="Standard_D4_v3"
+CHART_VERSION="5.0.2-3"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
+CERT_CLUSTER_ISSUER="letsencrypt"
+AKS_KUBE_CONFIG="${KUBECONFIG:-~/.kube/config}"
 
 function print_usage() {
   CMD="$1"
@@ -44,7 +46,6 @@ UPGRADE=0
 PURGE=0
 ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=""
-NODE_COUNT=3
 PREVIEW=0
 AZURE_LOCATION=""
 
@@ -255,7 +256,7 @@ if [ "$AZURE_LOCATION" == "" ]; then
 fi
 
 if [ "$PURGE" == "1" ]; then
-  az aks get-credentials -n ${CLUSTER_NAME} -g ${AZURE_RESOURCE_GROUP}
+  az aks get-credentials -n "${CLUSTER_NAME}" -g "${AZURE_RESOURCE_GROUP}" -f "${AKS_KUBE_CONFIG}"
   getcreds=$?
   if [ "$getcreds" != "0" ]; then
     echo -e "\nERROR: Can't find kubernetes cluster: ${CLUSTER_NAME} in Azure resource group ${AZURE_RESOURCE_GROUP} to purge!"
@@ -263,8 +264,9 @@ if [ "$PURGE" == "1" ]; then
   fi
 
   current=$(kubectl config current-context)
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} in: $current? This operation cannot be undone! y/n " confirm
-  if [ "$confirm" == "y" ]; then
+  confirm="Y"
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
+  if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
     ${helm} del --purge ${RELEASE}
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
@@ -288,9 +290,22 @@ if [ "$LISTOUT" == "[]" ]; then
 
   PREVIEW_OPTS=""
   if [ "${PREVIEW}" == "1" ]; then
-    PREVIEW_OPTS="--enable-vmss --node-zones 3 --enable-cluster-autoscaler --min-count 1 --max-count 4"
+
+    min_count=3
+    if [ "${NODE_COUNT}" == "1" ]; then
+      min_count=1
+    elif [ "${NODE_COUNT}" == "2" ]; then
+      min_count=2
+    fi
+
+    PREVIEW_OPTS="--enable-vmss --node-zones 1 2 3 --enable-cluster-autoscaler --min-count ${min_count} --max-count 3"
     echo -e "\nEnabling AKS preview extension with the following PREVIEW options: ${PREVIEW_OPTS}\n"
     az extension add --name aks-preview
+    az extension update --name aks-preview > /dev/null 2>&1
+    az feature register --name AvailabilityZonePreview --namespace Microsoft.ContainerService
+    az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/AvailabilityZonePreview')].{Name:name,State:properties.state}"
+    az provider register --namespace Microsoft.ContainerService
+    echo -e "\nEnabled the AvailabilityZonePreview feature\n"
   fi
 
   az aks create ${PREVIEW_OPTS} \
@@ -298,7 +313,6 @@ if [ "$LISTOUT" == "[]" ]; then
       --resource-group ${AZURE_RESOURCE_GROUP} \
       --name ${CLUSTER_NAME} \
       --node-count ${NODE_COUNT} \
-      --nodepool-name ${CLUSTER_NAME} \
       --node-vm-size ${INSTANCE_TYPE} \
       --kubernetes-version ${AKS_MASTER_VERSION} \
       --generate-ssh-keys
@@ -322,23 +336,32 @@ else
   fi
 fi
 
-az aks get-credentials -n ${CLUSTER_NAME} -g ${AZURE_RESOURCE_GROUP} --admin
+az aks get-credentials -n "${CLUSTER_NAME}" -g "${AZURE_RESOURCE_GROUP}" -f "${AKS_KUBE_CONFIG}" --admin
 kubectl config current-context
 
+function report_ns() {
+  if [ "${NAMESPACE}" != "default" ]; then
+    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
+  fi
+}
+
 function proxy_url() {
-  export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL=$PROXY_HOST:$PROXY_PORT
-  echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
-  echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://docs.microsoft.com/en-us/azure/aks/ingress-basic"
-  echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+  PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
+  PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  if [ "$PROXY_URL" != ":" ]; then
+    echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
+    echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://docs.microsoft.com/en-us/azure/aks/ingress-basic"
+    echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+    report_ns
+  else
+    echo -e "\n\nFailed to get Fusion Gateway service URL! Check console for previous errors.\n"
+  fi
 }
 
 function ingress_setup() {
-  # XXX:BDW: UNTESTED
-  export INGRESS_IP=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  # Patch yaml for now, until fix gets into helm charts
-  kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
+
+  export INGRESS_IP=$(kubectl --namespace "${ingress_namespace}" get service "nginx-ingress-controller-controller" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated, this may take up to an hour after DNS has updated to be issued"
@@ -358,15 +381,21 @@ if [ "$UPGRADE" == "0" ]; then
   kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${who_am_i}
 fi
 
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  ${helm} init --service-account tiller --wait
-  ${helm} version
+is_helm_v3=$(${helm} version --short | grep v3)
+
+if [ "${is_helm_v3}" == "" ]; then
+  # see if Tiller is deployed if using Helm V2
+  kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  rollout_status=$?
+  if [ $rollout_status != 0 ]; then
+    echo -e "\nSetting up Helm Tiller ..."
+    kubectl create serviceaccount --namespace kube-system tiller
+    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    ${helm} init --service-account tiller --wait
+    ${helm} version
+  fi
+else
+  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
 fi
 
 lw_helm_repo=lucidworks
@@ -379,11 +408,18 @@ if [ $? ]; then
 fi
 
 if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  SOLR_REPLICAS=$(kubectl get nodes | grep "$CLUSTER_NAME" | wc -l)
-  if [ $SOLR_REPLICAS -eq 0 ]; then
-      echo "Hmmn, didn't get a proper count of nodes, will set SOLR_REPLICAS to 1 just to play safe"
-      SOLR_REPLICAS=1
-  fi 
+
+  CREATED_MY_VALUES=1
+  SOLR_REPLICAS=3
+  ZK_REPLICAS=3
+  if [ "$NODE_COUNT" == "1" ]; then
+    SOLR_REPLICAS=1
+    ZK_REPLICAS=1
+  elif [ "$NODE_COUNT" == "2" ]; then
+    SOLR_REPLICAS=2
+    ZK_REPLICAS=1
+  fi
+
   tee $MY_VALUES << END
 cx-ui:
   replicaCount: 1
@@ -423,7 +459,7 @@ solr:
   replicaCount: ${SOLR_REPLICAS}
   resources: {}
   zookeeper:
-    replicaCount: ${SOLR_REPLICAS}
+    replicaCount: ${ZK_REPLICAS}
     resources: {}
     persistence:
       size: 15Gi
@@ -454,16 +490,6 @@ ${helm} repo update
 
 ADDITIONAL_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
-  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: networking.gke.io/v1beta1
-kind: ManagedCertificate
-metadata:
-  name: "${RELEASE}-managed-certificate"
-spec:
-  domains:
-  - "${INGRESS_HOSTNAME}"
-EOF
-
   TLS_VALUES="tls-values.yaml"
   ADDITIONAL_VALUES="${ADDITIONAL_VALUES} --values tls-values.yaml"
   tee "${TLS_VALUES}" << END
@@ -471,15 +497,76 @@ api-gateway:
   service:
     type: "NodePort"
   ingress:
+    path: "/"
     enabled: true
     host: "${INGRESS_HOSTNAME}"
     tls:
       enabled: true
     annotations:
-      "networking.gke.io/managed-certificates": "${RELEASE}-managed-certificate"
-      "kubernetes.io/ingress.class": "gce"
+      kubernetes.io/ingress.class: nginx
+      certmanager.k8s.io/cluster-issuer: ${CERT_CLUSTER_ISSUER}
 
 END
+
+  ingress_namespace="internal-ingress"
+  # First we install the nginx ingress controller
+  if ! kubectl get namespace "${ingress_namespace}"; then
+    kubectl create namespace "${ingress_namespace}"
+    if [ "$is_helm_v3" != "" ]; then
+      helm install "nginx-ingress-controller" stable/nginx-ingress \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    else
+      helm install stable/nginx-ingress --name "nginx-ingress-controller" \
+        --namespace "${ingress_namespace}" \
+        --set controller.replicaCount=2 \
+        --set controller.nodeSelector."beta\.kubernetes\.io/os"=linux \
+        --set defaultBackend.nodeSelector."beta\.kubernetes\.io/os"=linux
+    fi
+  fi
+
+  certmanager_namespace="cert-manager"
+  if ! kubectl get namespace "${certmanager_namespace}"; then
+    kubectl create namespace "${certmanager_namespace}"
+    kubectl label namespace "${certmanager_namespace}" certmanager.k8s.io/disable-validation=true
+
+    kubectl apply -f https://raw.githubusercontent.com/jetstack/cert-manager/release-0.8/deploy/manifests/00-crds.yaml
+
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    if [ "$is_helm_v3" != "" ]; then
+      helm install --wait cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    else
+      helm install --wait -n cert-manager --namespace "${certmanager_namespace}" --version v0.8.0 jetstack/cert-manager
+    fi
+    echo -e "Waiting for certmanager to be registered"
+    loops=24
+    while (( loops > 0 )); do
+      cat <<EOF | kubectl -n "${certmanager_namespace}" apply -f -
+  apiVersion: certmanager.k8s.io/v1alpha1
+  kind: ClusterIssuer
+  metadata:
+    name: "${CERT_CLUSTER_ISSUER}"
+    namespace: "${certmanager_namespace}"
+  spec:
+    acme:
+      server: https://acme-v02.api.letsencrypt.org/directory
+      email: "${who_am_i}"
+      privateKeySecretRef:
+        name: "${CERT_CLUSTER_ISSUER}"
+      http01: {}
+EOF
+      rc=$?
+      if (( ${rc} == 0 )); then
+        echo "ClusterIssuer setup"
+        break
+      fi
+      loops=$(( loops - 1 ))
+      sleep 10
+    done
+  fi
 fi
 
 if [ "$UPGRADE" == "1" ]; then
@@ -495,8 +582,11 @@ if [ "$UPGRADE" == "1" ]; then
   else
     echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace using ${VALUES_ARG} ${ADDITIONAL_VALUES}"
   fi
-
-  ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ "$is_helm_v3" != "" ]; then
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  else
+    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  fi
   upgrade_status=$?
   if [ "${TLS_ENABLED}" == "1" ]; then
     ingress_setup
@@ -507,8 +597,21 @@ if [ "$UPGRADE" == "1" ]; then
 fi
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control."
-${helm} install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} ${lw_helm_repo}/fusion --version ${CHART_VERSION}
+
+if [ -n "$CREATED_MY_VALUES" ]; then
+  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+fi
+
+if [ "$is_helm_v3" != "" ]; then
+  if ! kubectl get namespace "${NAMESPACE}"; then
+    kubectl create namespace "${NAMESPACE}"
+  fi
+  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
+  ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+else
+  ${helm} install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+fi
+
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
 
