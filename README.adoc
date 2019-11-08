@@ -259,7 +259,7 @@ Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/mast
 If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
-Use the `--help` option to see full script usage. 
+Use the `--help` option to see full script usage.
 
 #WARNING# The `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
 
@@ -331,7 +331,7 @@ The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_aks.s
 The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
 If you're already familiar with K8s, Helm, and AKS, then you use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
 
-If you're new to Azure, then please visit https://azure.microsoft.com/en-us/free/search/ to set up an account.
+If you're new to Azure, then please visit https://azure.microsoft.com/en-us/free/search/[^] to set up an account.
 
 [[aks-setup]]
 === Set up the AKS CLI tools
@@ -339,28 +339,28 @@ If you're new to Azure, then please visit https://azure.microsoft.com/en-us/free
 Before launching an AKS cluster, you need to install and configure `kubectl` and `az` using the links provided below:
 
 .Required AKS Command-line Tools:
-. kubectl: https://kubernetes.io/docs/tasks/tools/install-kubectl/[Install kubectl]
-. az: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest[Installing the Azure CLI]
+. `kubectl`: https://kubernetes.io/docs/tasks/tools/install-kubectl/[Install kubectl]
+. `az`: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest[Installing the Azure CLI]
 
 To confirm your account access and command-line tools are set up correctly, run the `az login` command (`az login –help` to see available options).
 
 === Azure Prerequisites
 
 To launch a cluster in AKS (or pretty much do anything with Azure) you need to setup a Resource Group. Resource Groups are a way of organizing and managing related resources in Azure.
-For more information about resource groups, see: https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview#resource-groups
+For more information about resource groups, see https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview#resource-groups[^].
 
-You also need to choose a location where you want to spin up your AKS cluster, such as `westus2`. For a list of locations you can choose, see: https://azure.microsoft.com/en-us/global-infrastructure/locations/
+You also need to choose a location where you want to spin up your AKS cluster, such as `westus2`. For a list of locations you can choose, see https://azure.microsoft.com/en-us/global-infrastructure/locations/[^].
 
-Use the Azure console in your browser to create a resource group or simply do:
+Use the Azure console in your browser to create a resource group, or simply do:
 ```
 az group create -g $AZURE_RESOURCE_GROUP -l $AZURE_LOCATION
 ```
 
 .To recap, you should have the following requirements in place:
-. Azure Account setup
-. azure-cli (az) command-line tools installed
-. az login working
-. Created an Azure Resource Group and selected a location to launch the cluster
+. Azure Account set up.
+. `azure-cli` (`az`) command-line tools installed.
+. `az` login working.
+. Created an Azure Resource Group and selected a location to launch the cluster.
 
 [[aks-cluster-create]]
 === Set up Fusion on AKS
@@ -377,13 +377,16 @@ By default, our script installs Fusion into the default namespace; think of a K8
 
 You can override the namespace using the `-n` option. In addition, our script uses f5 for the Helm release name; you can customize this using the `-r` option. Helm uses the release name you provide to track a specific instance of an installation, allowing you to perform updates and rollback changes for that specific release only.
 
-You can also pass the `--preview` option to the script, which enables soon-to-be-released features for AKS, such as deploying a multi-zone cluster across 3 availability zones for higher availability guarantees. For more information about the Availability Zone feature, see https://docs.microsoft.com/en-us/azure/aks/availability-zones.
+You can also pass the `--preview` option to the script, which enables soon-to-be-released features for AKS, such as deploying a multi-zone cluster across 3 availability zones for higher availability guarantees. For more information about the Availability Zone feature, see https://docs.microsoft.com/en-us/azure/aks/availability-zones[^].
 
-It takes a while for AKS to spin-up the new cluster. The cluster will have three Standard_D4_v3 nodes which have 4 CPU and 16 GB of memory. Behind the scenes, our script just calls the az aks create command
+It takes a while for AKS to spin up the new cluster. The cluster will have three Standard_D4_v3 nodes which have 4 CPU cores and 16 GB of memory. Behind the scenes, our script calls the `az aks create` command.
 
-#WARNING# The `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+WARNING: The `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role.
+ifdef::env-github[]
+If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+endif::[]
 
-After running the `setup_f5_aks.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+After running the `setup_f5_aks.sh` script, proceed to <<verifying,Verifying the Fusion Installation>>.
 
 ==== AKS Ingress
 
@@ -393,9 +396,9 @@ Use the `-t` and `-h <hostname>` options to have our script create an Ingress wi
 
 ==== Upgrades and Ingress
 
-*IMPORTANT* If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
+IMPORTANT: If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
 
-To make things easier for you when upgrading, you should add the settings from this file into your main custom values yaml file, e.g.:
+To make things easier for you when upgrading, you should add the settings from this file into your main custom values yaml file.  For example:
 ```
 api-gateway:
   service:
@@ -409,7 +412,7 @@ api-gateway:
       "networking.gke.io/managed-certificates": "<RELEASE>-managed-certificate"
       "kubernetes.io/ingress.class": "gce"
 ```
-This way you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
+This way, you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
 
 === Upgrade Fusion on AKS
 
@@ -418,7 +421,7 @@ During installation, the script generates a file named `aks_<cluster>_<release>_
 ./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
   --values aks_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion.
 
 // end::aks[]
 
@@ -426,7 +429,7 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 
 // tag::other[]
 
-If you're not running on managed K8s platform like GKE, AKS or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
 [[helm-only]]
 === Use Helm v2 to Install Fusion
@@ -439,8 +442,8 @@ where `<provider>` is the K8s platform you're running on, such as `gke`, `<clust
 
 This file is referred to as `${MY_VALUES}` in the commands below, be sure to replace it with the correct file name for your environment.
 
-Review the settings in the custom values yaml file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
-After making changes to the custom values yaml file, install Fusion using the following commands:
+Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
+After making changes to the custom values YAML file, install Fusion using the following commands:
 
 ```
 RELEASE=f5
@@ -452,11 +455,13 @@ helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
+ifdef::env-github[]
 For more information, please see the Fusion documentation: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/index.html
+endif::[]
 
 ==== Don't want to use Tiller? (Helm v2)
 
-Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns].
+Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns^].
 If your K8s administrators do not allow the use of Tiller for installing Helm charts, then you can use Helm 3 (currently in beta) or use Helm's template command to render the Fusion chart into a single K8s manifest file:
 ```
 RELEASE=f5
@@ -476,7 +481,7 @@ Helm v3 does not have a server-side Tiller component. For more information about
 
 __NOTE: Our `setup_f5_*.sh` scripts also support Helm v3 if it is in your PATH before Helm v2.__
 
-- Download the latest helm v3 beta (e.g. `Helm v3.0.0-rc.3`) from here: https://github.com/helm/helm/releases
+- https://github.com/helm/helm/releases[Download the latest helm v3 beta^] (for example, `Helm v3.0.0-rc.3`).
 - Extract it to a directory such as: `/usr/local/helm3`
 - Run the following commands:
 
