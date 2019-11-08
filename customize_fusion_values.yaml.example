@@ -1,24 +1,18 @@
-cx-ui:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: "200m"
-      memory: 64Mi
-    requests:
-      cpu: "100m"
-      memory: 64Mi
-
 cx-api:
-  replicaCount: 1
-  volumeClaimTemplates:
-    storageSize: "5Gi"
-
+  enabled: false
+cx-scheduler:
+  enabled: false
+cx-script-executor:
+  enabled: false
+cx-ui:
+  enabled: false
+cx-user-prefs:
+  enabled: false
 kafka:
-  replicaCount: 1
-  resources: {}
-  kafkaHeapOptions: "-Xmx512m"
+  enabled: false
 
 sql-service:
+  enabled: false
   replicaCount: 0
   service:
     thrift:
@@ -29,23 +23,27 @@ solr:
     tag: 8.2.0
   updateStrategy:
     type: "RollingUpdate"
-  javaMem: "-Xmx8g"
+  javaMem: "-Xmx3g"
   volumeClaimTemplates:
-    storageSize: "100Gi"
-  replicaCount: 3 
+    storageSize: "50Gi"
+  replicaCount: 1
   resources: {}
   zookeeper:
-    replicaCount: 3 
+    replicaCount: 1
+    persistence:
+      size: 15Gi
     resources: {}
     env:
       ZK_HEAP_SIZE: 1G
+      ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
-  modelRepository:
-    impl: fs
-    gcs:
-      bucketName: 
-      baseDirectoryName: dev
+  image:
+    imagePullPolicy: "IfNotPresent"
+  modelRepoImpl: fusion
+  fs:
+    enabled: true
+  javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
 
 fusion-admin:
   readinessProbe:

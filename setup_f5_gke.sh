@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.2-4"
+CHART_VERSION="5.0.2-6"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 SOLR_REPLICAS=1
@@ -265,6 +265,8 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+
+
 gcloud config set compute/zone $GCLOUD_ZONE
 gcloud config set project $GCLOUD_PROJECT
 
@@ -379,6 +381,7 @@ elif [ "$PURGE" == "1" ]; then
     kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete serviceaccount --namespace "${NAMESPACE}" ${RELEASE}-api-gateway-jks-create
   fi
   exit 0
 else
@@ -521,6 +524,8 @@ solr:
       ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
   nodeSelector:
     ${NODE_POOL}
   modelRepoImpl: ${ML_MODEL_STORE}
