@@ -35,6 +35,11 @@ For other OS, please refer to the Helm installation docs: https://helm.sh/docs/u
 
 The fusion helm chart requires that helm is greater than version `2.12.0`. Please ensure that your version is greater than this, you can check by running `helm version`.
 
+==== Helm v3 User?
+
+Helm v3 is currently in beta, but has some exciting new features, especially not needing to install Tiller into your k8s cluster.
+In general, our scripts are Helm v3 aware if it is ahead of Helm v2 in your PATH. Alternatively, you can use <<helm-v3,Helm v3>> with the Fusion chart directly.
+
 === Customize Fusion Chart Settings
 
 Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
@@ -167,7 +172,7 @@ When running in a multi-zone cluster, each Solr node has the `solr_zone` system 
 The Fusion proxy service provides authentication and serves as an API gateway for accessing all other Fusion services.
 It's typical to use an Ingress for TLS termination in front of the proxy service.
 
-The `setup_f5_gke.sh` supports creating an Ingress with an TLS cert for a domain you own by passing: `-t -h <domain_name>`
+The `setup_f5_gke.sh` supports creating an Ingress with an TLS cert for a domain you own by passing: `-t -h <hostname>`
 
 After the script runs, you need to create an A record in GCP's DNS service to map your domain name to the Ingress IP. Once this occurs, our script setup uses https://letsencrypt.org/[Let's Encrypt] to issue a TLS cert for your Ingress.
 
@@ -203,9 +208,10 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
 After making changes to this file, you need to run the following command:
 ```
-./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
+  --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
 
 After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
 To see the versions of running pods, do:
@@ -281,9 +287,10 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 
 During installation, the script generates a file named `eks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
-./setup_f5_eks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> --values eks_<cluster>_<release>_fusion_values.yaml --upgrade
+./setup_f5_eks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
+  --values eks_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.1.
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
 
 === Provide access to the EKS cluster to other users
 
@@ -408,7 +415,8 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 
 During installation, the script generates a file named `aks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
-./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> --values aks_<cluster>_<release>_fusion_values.yaml --upgrade
+./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
+  --values aks_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
 
@@ -461,15 +469,17 @@ helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${MY_VALUES}"
 kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
 ```
 
+[[helm-v3]]
 === Helm v3 (no Tiller)
 
 Helm v3 does not have a server-side Tiller component. For more information about Helm v3, see: https://v3.helm.sh/
 
-_NOTE: Our `setup_f5_*.sh` scripts also support Helm v3 if it is in your PATH before Helm v2._
+__NOTE: Our `setup_f5_*.sh` scripts also support Helm v3 if it is in your PATH before Helm v2.__
 
 - Download the latest helm v3 beta (e.g. `Helm v3.0.0-rc.3`) from here: https://github.com/helm/helm/releases
 - Extract it to a directory such as: `/usr/local/helm3`
 - Run the following commands:
+
 ```
 HELM3_HOME=/usr/local/helm3
 RELEASE=f5
