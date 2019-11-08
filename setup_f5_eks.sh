@@ -34,9 +34,10 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.2-4"
+CHART_VERSION="5.0.2-6"
 AMI="auto"
 CUSTOM_MY_VALUES=""
+ML_MODEL_STORE="fusion"
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -377,6 +378,7 @@ kafka:
   kafkaHeapOptions: "-Xmx512m"
 
 sql-service:
+  enabled: false
   replicaCount: 0
   service:
     thrift:
@@ -400,6 +402,13 @@ solr:
     env:
       ZK_HEAP_SIZE: 1G
       ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
+  modelRepoImpl: ${ML_MODEL_STORE}
+  fs:
+    enabled: true
 
 fusion-admin:
   readinessProbe:

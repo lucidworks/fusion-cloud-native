@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.0.2-3"
+CHART_VERSION="5.0.2-6"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -44,7 +44,7 @@ RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 PURGE=0
-ML_MODEL_STORE="fs"
+ML_MODEL_STORE="fusion"
 CUSTOM_MY_VALUES=""
 PREVIEW=0
 AZURE_LOCATION=""
@@ -468,8 +468,11 @@ solr:
       ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
-  modelRepository:
-    impl: ${ML_MODEL_STORE}
+  image:
+    imagePullPolicy: "IfNotPresent"
+  modelRepoImpl: ${ML_MODEL_STORE}
+  fs:
+    enabled: true
 
 fusion-admin:
   readinessProbe:
