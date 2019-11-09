@@ -1,0 +1,136 @@
+cx-api:
+  enabled: false
+cx-scheduler:
+  enabled: false
+cx-script-executor:
+  enabled: false
+cx-ui:
+  enabled: false
+cx-user-prefs:
+  enabled: false
+
+kafka:
+  enabled: true
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 1
+  resources: {}
+  kafkaHeapOptions: "-Xmx512m"
+
+sql-service:
+  enabled: true
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 0
+  service:
+    thrift:
+      type: "ClusterIP"
+
+solr:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  image:
+    tag: 8.2.0
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx3g"
+  volumeClaimTemplates:
+    storageSize: "50Gi"
+  replicaCount: 1
+  resources: {}
+  zookeeper:
+    updateStrategy:
+      type: "RollingUpdate"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+    replicaCount: 1
+    persistence:
+      size: 15Gi
+    resources: {}
+    env:
+      ZK_HEAP_SIZE: 1G
+      ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  modelRepoImpl: fusion
+  gcsBucketName: 
+  gcsBaseDirectoryName: f5marc063
+  javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
+
+fusion-admin:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 180
+
+fusion-indexing:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 180
+
+query-pipeline:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+
+admin-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+api-gateway:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+auth-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+classic-rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+devops-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+fusion-resources:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+insights:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+job-launcher:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+job-rest-server:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+logstash:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rpc-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rules-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+webapps:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
