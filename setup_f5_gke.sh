@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.2-6"
+CHART_VERSION="5.0.2-7"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 SOLR_REPLICAS=1
