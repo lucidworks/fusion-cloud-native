@@ -357,26 +357,6 @@ if [ ! -f $MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   CREATED_MY_VALUES=1
 
   tee "${MY_VALUES}" << END
-cx-ui:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: "200m"
-      memory: 64Mi
-    requests:
-      cpu: "100m"
-      memory: 64Mi
-
-cx-api:
-  replicaCount: 1
-  volumeClaimTemplates:
-    storageSize: "5Gi"
-
-kafka:
-  replicaCount: 1
-  resources: {}
-  kafkaHeapOptions: "-Xmx512m"
-
 sql-service:
   enabled: false
   replicaCount: 0
