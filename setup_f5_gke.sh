@@ -655,6 +655,10 @@ if [ -n "$CREATED_MY_VALUES" ]; then
   echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
 fi
 
+# wait up to 60s to see the metrics server online
+metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+
 # let's exit immediately if the helm install command fails
 set -e
 if [ "$is_helm_v3" != "" ]; then
