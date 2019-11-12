@@ -17,8 +17,8 @@ function print_usage() {
   echo -e "  -z          AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
-  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.0\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml\n"
+  echo -e "  --version   Fusion Helm Chart version, defaults to 5.0.2-3\n"
+  echo -e "  --values    Custom values file containing config overrides; defaults to eks_<cluster>_<release>_fusion_values.yaml  (can be specified multiple times)\n"
   echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
   echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
   echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster\n"
@@ -30,15 +30,15 @@ REGION=us-west-2
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-MY_VALUES=${RELEASE}_${NAMESPACE}_fusion_values.yaml
 UPGRADE=0
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.1"
-SOLR_REPLICAS=3
+CHART_VERSION="5.0.2-6"
 AMI="auto"
-CUSTOM_MY_VALUES=""
+CUSTOM_MY_VALUES=()
+MY_VALUES=()
+ML_MODEL_STORE="fusion"
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -57,7 +57,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             NAMESPACE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -p)
@@ -74,7 +73,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
-            MY_VALUES="${RELEASE}_${NAMESPACE}_fusion_values.yaml"
             shift 2
         ;;
         -z)
@@ -114,7 +112,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            CUSTOM_MY_VALUES="$2"
+            CUSTOM_MY_VALUES+=("$2")
             shift 2
         ;;
         --create)
@@ -168,9 +166,7 @@ if [ "$AWS_ACCOUNT" == "" ]; then
   exit 1
 fi
 
-if [ -n "$CUSTOM_MY_VALUES" ]; then
-  MY_VALUES=$CUSTOM_MY_VALUES
-fi
+DEFAULT_MY_VALUES="eks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 hash kubectl
 has_prereq=$?
@@ -216,22 +212,6 @@ fi
 
 echo -e "\nLogged in as: $who_am_i\n"
 
-if [ "$PURGE" == "1" ]; then
-  aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
-  current=$(kubectl config current-context)
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! y/n " confirm
-  if [ "$confirm" == "y" ]; then
-    helm del --purge "${RELEASE}"
-    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
-    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
-    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l release="${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app.kubernetes.io/instance="${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-  fi
-  exit 0
-fi
-
 aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" list-clusters --query "clusters" |  grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
 if [ "$cluster_status" != "0" ]; then
@@ -242,7 +222,7 @@ if [ "$cluster_status" != "0" ]; then
   echo -e "\nLaunching an EKS cluster ${CLUSTER_NAME} ($CREATE_MODE) in project ${AWS_ACCOUNT} for deploying Lucidworks Fusion 5 ...\n"
   if [ "$CREATE_MODE" == "demo" ] || [ "${CREATE_MODE}"  == "multi_az" ]; then
      #Creates EKS cluster
-     cat << EOF | eksctl create cluster --profile "${AWS_ACCOUNT}" --config-file - 
+     cat << EOF | eksctl create cluster --profile "${AWS_ACCOUNT}" --config-file -
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
@@ -270,10 +250,6 @@ EOF
     exit 1
   fi
 
-  if [[ "${CREATE_MODE}" == "demo" ]]; then
-    SOLR_REPLICAS=1
-  fi
-
   echo -e "\nCluster '${CLUSTER_NAME}' deployed ... testing if it is healthy"
   cluster_status=$(aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" describe-cluster --name "${CLUSTER_NAME}" --query "cluster.status" )
   if [ "$cluster_status" != '"ACTIVE"' ]; then
@@ -286,18 +262,44 @@ else
   fi
 fi
 
-function proxy_url() {
-  export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-  export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  export PROXY_URL=$PROXY_HOST:$PROXY_PORT
-  echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
-  echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
-  echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
-}
-
-#Updates kubeconfig
 aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
 current_cluster=$(kubectl config current-context)
+
+if [ "$PURGE" == "1" ]; then
+  confirm="Y"
+  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current_cluster? This operation cannot be undone! Y/n " confirm
+  if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
+    helm del --purge "${RELEASE}"
+    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
+    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
+    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l release="${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l app.kubernetes.io/instance="${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+  fi
+  exit 0
+fi
+
+function report_ns() {
+  if [ "${NAMESPACE}" != "default" ]; then
+    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
+  fi
+}
+
+function proxy_url() {
+  PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+  PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
+  export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+  if [ "$PROXY_URL" != ":" ]; then
+    echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
+    echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/"
+    echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
+    report_ns
+   else
+    echo -e "\n\nFailed to get Fusion Gateway service URL! Check console for previous errors.\n"
+   fi
+}
+
 echo -e "\nConfigured to use EKS cluster: ${current_cluster}"
 
 kubectl rollout status "deployment/${RELEASE}-query-pipeline" -n "${NAMESPACE}" --timeout=10s > /dev/null 2>&1
@@ -315,15 +317,21 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
-# see if Tiller is deployed ...
-kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
-rollout_status=$?
-if [ $rollout_status != 0 ]; then
-  echo -e "\nSetting up Helm Tiller ..."
-  kubectl create serviceaccount --namespace kube-system tiller
-  kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-  helm init --service-account tiller --wait
-  helm version
+is_helm_v3=$(helm version --short | grep v3)
+
+if [ "${is_helm_v3}" == "" ]; then
+  # see if Tiller is deployed ...
+  kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  rollout_status=$?
+  if [ $rollout_status != 0 ]; then
+    echo -e "\nSetting up Helm Tiller ..."
+    kubectl create serviceaccount --namespace kube-system tiller
+    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    helm init --service-account tiller --wait
+    helm version
+  fi
+else
+  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
 fi
 
 lw_helm_repo=lucidworks
@@ -334,8 +342,13 @@ if [ $? ]; then
   helm repo add "${lw_helm_repo}" https://charts.lucidworks.com
 fi
 
-if [ ! -f "${MY_VALUES}" ]; then
-  tee "${MY_VALUES}" << END
+#If no custom values are passed, and we are not updating
+if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
+  if [ ! -f "${DEFAULT_MY_VALUES}" ]; then
+
+    CREATED_MY_VALUES=1
+
+    tee "${MY_VALUES}" << END
 cx-ui:
   replicaCount: 1
   resources:
@@ -357,6 +370,7 @@ kafka:
   kafkaHeapOptions: "-Xmx512m"
 
 sql-service:
+  enabled: false
   replicaCount: 0
   service:
     thrift:
@@ -375,8 +389,18 @@ solr:
   zookeeper:
     replicaCount: ${SOLR_REPLICAS}
     resources: {}
+    persistence:
+      size: 15Gi
     env:
       ZK_HEAP_SIZE: 1G
+      ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
+  modelRepoImpl: ${ML_MODEL_STORE}
+  fs:
+    enabled: true
 
 fusion-admin:
   readinessProbe:
@@ -390,20 +414,64 @@ query-pipeline:
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
 
 END
+    echo -e "\nCreated $DEFAULT_MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
+  else
+    echo -e "\nValues file $DEFAULT_MY_VALUES already exists, using this values file.\n"
+  fi
+  MY_VALUES=( ${DEFAULT_MY_VALUES} )
+fi
+
+if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
+  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
 fi
 
 helm repo update
 
 if [ "$UPGRADE" == "1" ]; then
-  echo -e "\nUpgrading the Fusion 5.0 release ${RELEASE} in namespace ${NAMESPACE} using custom values from ${MY_VALUES}"
-  helm upgrade "${RELEASE}" "${lw_helm_repo}/fusion" --timeout 180 --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version "${CHART_VERSION}"
+
+  VALUES_STRING=""
+  for v in "${MY_VALUES[@]}"; do
+    if [ ! -f "${v}" ]; then
+      echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
+      exit 1
+    fi
+    VALUES_STRING="${VALUES_STRING} --values ${v}"
+  done
+
+  if [ "${DRY_RUN}" == "" ]; then
+    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} to version ${CHART_VERSION} with custom values from ${MY_VALUES[*]}"
+  else
+    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace with custom values from ${MY_VALUES[*]}"
+  fi
+
+  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --namespace "${NAMESPACE}" ${VALUES_STRING} ${DRY_RUN} --version ${CHART_VERSION}
   upgrade_status=$?
   proxy_url
   exit $upgrade_status
 fi
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" "${lw_helm_repo}/fusion" --version "${CHART_VERSION}"
+echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES[*]}"
+
+VALUES_STRING=""
+for v in "${MY_VALUES[@]}"; do
+  if [ ! -f "${v}" ]; then
+    echo -e "\nWARNING: Custom values file ${v} not found!\nPlease check the path to the custom values file is correct.\n"
+    exit 1
+  fi
+  VALUES_STRING="${VALUES_STRING} --values ${v}"
+done
+
+if [ -n "$CREATED_MY_VALUES" ]; then
+  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+fi
+
+if [ "$is_helm_v3" != "" ]; then
+  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
+  helm install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version ${CHART_VERSION}
+else
+  helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version ${CHART_VERSION}
+fi
+
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
 
