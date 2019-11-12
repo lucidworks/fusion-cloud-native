@@ -589,6 +589,7 @@ if [ -n "$CREATED_MY_VALUES" ]; then
   echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
 fi
 
+set -e
 if [ "$is_helm_v3" != "" ]; then
   if ! kubectl get namespace "${NAMESPACE}"; then
     kubectl create namespace "${NAMESPACE}"
@@ -598,6 +599,7 @@ if [ "$is_helm_v3" != "" ]; then
 else
   ${helm} install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 fi
+set +e
 
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"

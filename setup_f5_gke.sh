@@ -658,6 +658,9 @@ fi
 # let's exit immediately if the helm install command fails
 set -e
 if [ "$is_helm_v3" != "" ]; then
+  if ! kubectl get namespace "${NAMESPACE}"; then
+    kubectl create namespace "${NAMESPACE}"
+  fi
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
   helm install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 else
