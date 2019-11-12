@@ -226,6 +226,8 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+is_helm_v3=$(${helm} version --short | grep v3)
+
 # check to see if the resource group exists
 LISTOUT=`az group list --query "[?name=='${AZURE_RESOURCE_GROUP}']"`
 rglist_worked=$?
@@ -267,7 +269,11 @@ if [ "$PURGE" == "1" ]; then
   confirm="Y"
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
   if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
-    ${helm} del --purge ${RELEASE}
+    if [ "$is_helm_v3" != "" ]; then
+      helm delete ${RELEASE}
+    else
+      helm del --purge ${RELEASE}
+    fi
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
     kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
@@ -380,8 +386,6 @@ fi
 if [ "$UPGRADE" == "0" ]; then
   kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${who_am_i}
 fi
-
-is_helm_v3=$(${helm} version --short | grep v3)
 
 if [ "${is_helm_v3}" == "" ]; then
   # see if Tiller is deployed if using Helm V2
