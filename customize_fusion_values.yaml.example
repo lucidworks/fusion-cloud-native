@@ -1,16 +1,3 @@
-cx-api:
-  enabled: false
-cx-scheduler:
-  enabled: false
-cx-script-executor:
-  enabled: false
-cx-ui:
-  enabled: false
-cx-user-prefs:
-  enabled: false
-kafka:
-  enabled: false
-
 sql-service:
   enabled: false
   replicaCount: 0

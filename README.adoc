@@ -121,6 +121,11 @@ __Note: If not provided the script generates a custom values file named `gke_<cl
 
 #WARNING# The `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
 
+If you see an error similar to the following, then wait a few seconds and try running the `setup_f5_gke.sh` script again with the same arguments as this is usually a transient issue:
+```
+Error: could not get apiVersions from Kubernetes: unable to retrieve the complete list of server APIs: metrics.k8s.io/v1beta1: the server is currently unable to handle the request
+```
+
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
 The steps below show you how to create several kinds of Fusion clusters.
@@ -212,6 +217,12 @@ After making changes to this file, you need to run the following command:
   --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
+
+If you're using the `default` namespace and see an error similar to the following, then simply pass the `--force` parameter when upgrading:
+```
+Namespace default is owned by: , by we are: OWNER please provide the --force parameter if you are sure you wish to upgrade this namespace
+```
+_This owner label check before upgrading is in place as a safeguard for shared clusters with Fusion deployed to multiple namespaces._
 
 After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
 To see the versions of running pods, do:
@@ -451,7 +462,7 @@ NAMESPACE=default
 
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks/fusion --values "${MY_VALUES}"
+helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks/fusion --values "${MY_VALUES}" --version 5.0.2-7
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
@@ -469,7 +480,7 @@ NAMESPACE=default
 
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
-helm fetch --untar lucidworks/fusion
+helm fetch --version 5.0.2-7 --untar lucidworks/fusion
 helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${MY_VALUES}" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
 kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
 ```
@@ -493,7 +504,7 @@ NAMESPACE=default
 ${HELM3_HOME}/helm version --short
 ${HELM3_HOME}/helm repo add lucidworks https://charts.lucidworks.com
 ${HELM3_HOME}/helm repo update
-${HELM3_HOME}/helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}"
+${HELM3_HOME}/helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2-7
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
