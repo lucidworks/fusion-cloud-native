@@ -262,6 +262,66 @@ NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative s
 [[eks-cluster-create]]
 === Set up Fusion on EKS
 
+
+To create a cluster in EKS the following IAM policies are required:
+
+* AmazonEC2FullAccess
+* AWSCloudFormationFullAccess
+* EKS Permissions:
+  ** eks:DeleteCluster
+  ** eks:UpdateClusterVersion
+  ** eks:ListUpdates
+  ** eks:DescribeUpdate
+  ** eks:DescribeCluster
+  ** eks:ListClusters
+  ** eks:CreateCluster
+* VPC Permissions:
+  ** ec2:DeleteSubnet
+  ** ec2:DeleteVpcEndpoints
+  ** ec2:CreateVpc
+  ** ec2:AttachInternetGateway
+  ** ec2:DetachInternetGateway
+  ** ec2:DisassociateSubnetCidrBlock
+  ** ec2:DescribeVpcAttribute
+  ** ec2:AssociateVpcCidrBlock
+  ** ec2:ModifySubnetAttribute
+  ** ec2:DisassociateVpcCidrBlock
+  ** ec2:CreateVpcEndpoint
+  ** ec2:DescribeVpcs
+  ** ec2:CreateInternetGateway
+  ** ec2:AssociateSubnetCidrBlock
+  ** ec2:ModifyVpcAttribute
+  ** ec2:DeleteInternetGateway
+  ** ec2:DeleteVpc
+  ** ec2:CreateSubnet
+  ** ec2:DescribeSubnets
+  ** ec2:ModifyVpcEndpoint
+* IAM Permissions:
+  ** iam:CreateInstanceProfile
+  ** iam:DeleteInstanceProfile
+  ** iam:GetRole
+  ** iam:GetPolicyVersion
+  ** iam:UntagRole
+  ** iam:GetInstanceProfile
+  ** iam:GetPolicy
+  ** iam:TagRole
+  ** iam:RemoveRoleFromInstanceProfile
+  ** iam:DeletePolicy
+  ** iam:CreateRole
+  ** iam:DeleteRole
+  ** iam:AttachRolePolicy
+  ** iam:PutRolePolicy
+  ** iam:ListInstanceProfiles
+  ** iam:AddRoleToInstanceProfile
+  ** iam:CreatePolicy
+  ** iam:ListInstanceProfilesForRole
+  ** iam:PassRole
+  ** iam:DetachRolePolicy
+  ** iam:DeleteRolePolicy
+  ** iam:CreatePolicyVersion
+  ** iam:GetRolePolicy
+  ** iam:DeletePolicyVersion
+
 Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] to install Fusion 5.x in a EKS cluster. To create a new cluster and install Fusion, simply do:
 ```
 ./setup_f5_eks.sh -c <cluster_name> -p <aks_resource_group>
