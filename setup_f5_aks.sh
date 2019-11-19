@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.0.2-6"
+CHART_VERSION="5.0.2-7"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -224,6 +224,8 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+is_helm_v3=$(${helm} version --short | grep v3)
+
 # check to see if the resource group exists
 LISTOUT=`az group list --query "[?name=='${AZURE_RESOURCE_GROUP}']"`
 rglist_worked=$?
@@ -265,7 +267,11 @@ if [ "$PURGE" == "1" ]; then
   confirm="Y"
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
   if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
-    ${helm} del --purge ${RELEASE}
+    if [ "$is_helm_v3" != "" ]; then
+      helm delete ${RELEASE}
+    else
+      helm del --purge ${RELEASE}
+    fi
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
     kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
@@ -378,8 +384,6 @@ fi
 if [ "$UPGRADE" == "0" ]; then
   kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --user=${who_am_i}
 fi
-
-is_helm_v3=$(${helm} version --short | grep v3)
 
 if [ "${is_helm_v3}" == "" ]; then
   # see if Tiller is deployed if using Helm V2
@@ -593,6 +597,11 @@ if [ -n "$CREATED_MY_VALUES" ]; then
   echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
 fi
 
+# wait up to 60s to see the metrics server online
+metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+
+set -e
 if [ "$is_helm_v3" != "" ]; then
   if ! kubectl get namespace "${NAMESPACE}"; then
     kubectl create namespace "${NAMESPACE}"
@@ -602,6 +611,7 @@ if [ "$is_helm_v3" != "" ]; then
 else
   ${helm} install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
 fi
+set +e
 
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"

@@ -34,7 +34,7 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.2-6"
+CHART_VERSION="5.0.2-7"
 AMI="auto"
 CUSTOM_MY_VALUES=()
 MY_VALUES=()
@@ -317,8 +317,6 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
-is_helm_v3=$(helm version --short | grep v3)
-
 if [ "${is_helm_v3}" == "" ]; then
   # see if Tiller is deployed ...
   kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
@@ -349,26 +347,6 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
     CREATED_MY_VALUES=1
 
     tee "${MY_VALUES}" << END
-cx-ui:
-  replicaCount: 1
-  resources:
-    limits:
-      cpu: "200m"
-      memory: 64Mi
-    requests:
-      cpu: "100m"
-      memory: 64Mi
-
-cx-api:
-  replicaCount: 1
-  volumeClaimTemplates:
-    storageSize: "5Gi"
-
-kafka:
-  replicaCount: 1
-  resources: {}
-  kafkaHeapOptions: "-Xmx512m"
-
 sql-service:
   enabled: false
   replicaCount: 0
@@ -465,12 +443,21 @@ if [ -n "$CREATED_MY_VALUES" ]; then
   echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
 fi
 
+# wait up to 60s to see the metrics server online
+metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+
+set -e
 if [ "$is_helm_v3" != "" ]; then
+  if ! kubectl get namespace "${NAMESPACE}"; then
+    kubectl create namespace "${NAMESPACE}"
+  fi
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
   helm install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version ${CHART_VERSION}
 else
   helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version ${CHART_VERSION}
 fi
+set +e
 
 kubectl rollout status "deployment/${RELEASE}-api-gateway" --timeout=600s --namespace "${NAMESPACE}"
 kubectl rollout status "deployment/${RELEASE}-fusion-admin" --timeout=600s --namespace "${NAMESPACE}"
