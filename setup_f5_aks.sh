@@ -187,7 +187,7 @@ if [ "$AZURE_RESOURCE_GROUP" == "" ]; then
   exit 1
 fi
 
-DEFAULT_MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
+DEFAULT_MY_VALUES="aks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
   print_usage "$SCRIPT_CMD" "if -t is specified -h must be specified and a domain that you can update to add an A record to point to the Loadbalancer IP"

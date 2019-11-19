@@ -40,33 +40,6 @@ classic-rest-service:
       cpu: "1"
       memory: "2Gi"
 
-cx-api:
-  resources:
-    limits:
-      cpu: "1"
-      memory: 2Gi
-    requests:
-      cpu: "250m"
-      memory: 1Gi
-
-cx-scheduler:
-  resources:
-    limits:
-      cpu: "1"
-      memory: 2Gi
-    requests:
-      cpu: "250m"
-      memory: 1.5Gi
-
-cx-ui:
-  resources:
-    limits:
-      cpu: "250m"
-      memory: 150Mi
-    requests:
-      cpu: "50m"
-      memory: 100Mi
-
 devops-ui:
   resources:
     limits:

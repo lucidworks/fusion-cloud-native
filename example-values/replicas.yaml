@@ -26,33 +26,6 @@ auth-ui:
 classic-rest-service:
   replicaCount: 1
 
-cx-api:
-  replicaCount: 1
-
-cx-scheduler:
-  replicaCount: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 5
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          targetAverageUtilization: 70
-
-cx-ui:
-  replicaCount: 2
-  autoscaling:
-    enabled: true
-    minReplicas: 2
-    maxReplicas: 5
-    metrics:
-      - type: Resource
-        resource:
-          name: cpu
-          targetAverageUtilization: 70
-
 devops-ui:
   replicaCount: 2
 
