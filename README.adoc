@@ -605,6 +605,16 @@ solr:
       type: "RollingUpdate"
 ```
 
+=== RedHat OpenShift
+
+We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infraestructure Provider^] (Red Hat Customer Portal account is required). OpenShift Online services are not supported.
+
+In case tiller is required, the cluster security needs to be relaxed to allow images to run with different UIDs:
+
+```
+oc adm policy add-scc-to-group anyuid system:authenticated
+```
+
 // end::other[]
 
 // tag::verify[]
