@@ -16,7 +16,7 @@ solr:
     type: "RollingUpdate"
   javaMem: "-Xmx3g"
   volumeClaimTemplates:
-    storageSize: "50Gi"
+    storageSize: "{SOLR_DISK_GB}Gi"
   replicaCount: {SOLR_REPLICAS}
   resources: {}
   exporter:

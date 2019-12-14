@@ -55,6 +55,7 @@ CUSTOM_MY_VALUES=()
 MY_VALUES=()
 ML_MODEL_STORE="fusion"
 DRY_RUN=""
+SOLR_DISK_GB=50
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -505,6 +506,7 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
     sed -i ''  -e "s|{GCS_BUCKET}|${GCS_BUCKET}|g" "$DEFAULT_MY_VALUES"
     sed -i ''  -e "s|{RELEASE}|${RELEASE}|g" "$DEFAULT_MY_VALUES"
     sed -i ''  -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$DEFAULT_MY_VALUES"
 
     echo -e "\nCreated $DEFAULT_MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
   else
