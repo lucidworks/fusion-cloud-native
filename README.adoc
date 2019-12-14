@@ -3,7 +3,8 @@
 :toclevels: 4
 :toc-title:
 
-This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only. We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
+This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only.
+We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
 
 // tag::body[]
 
@@ -34,7 +35,7 @@ brew upgrade kubernetes-helm
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
 The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm V3.
-Please ensure that your version is greater than this, you can check by running `helm version`.
+Check your Helm version by running `helm version`.
 
 === Customize Fusion Chart Settings
 
@@ -115,7 +116,7 @@ You can change the instance type using the `-i` parameter; see: https://cloud.go
 
 __Note: If not provided the script generates a custom values file named `gke_<cluster>_<release>_fusion_values.yaml` which you can use to customize the Fusion chart.__
 
-#WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+#WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 If you see an error similar to the following, then wait a few seconds and try running the `setup_f5_gke.sh` script again with the same arguments as this is usually a transient issue:
 ```
@@ -258,7 +259,6 @@ NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative s
 [[eks-cluster-create]]
 === Set up Fusion on EKS
 
-
 To create a cluster in EKS the following IAM policies are required:
 
 * AmazonEC2FullAccess
@@ -328,7 +328,7 @@ If you don't want the script to create a cluster, then you need to create a clus
 
 Use the `--help` option to see full script usage.
 
-#WARNING# If using Helm V2, the `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+#WARNING# If using Helm V2, the `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 #WARNING# The `setup_f5_eks.sh` script creates a service account that provides S3 read-only permissions to the created pods.
 
@@ -448,10 +448,7 @@ You can also pass the `--preview` option to the script, which enables soon-to-be
 
 It takes a while for AKS to spin up the new cluster. The cluster will have three Standard_D4_v3 nodes which have 4 CPU cores and 16 GB of memory. Behind the scenes, our script calls the `az aks create` command.
 
-WARNING: If using Helm V2, the `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role.
-ifdef::env-github[]
-If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
-endif::[]
+WARNING: If using Helm V2, the `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 After running the `setup_f5_aks.sh` script, proceed to <<verifying,Verifying the Fusion Installation>>.
 
@@ -502,7 +499,7 @@ If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use
 === Use Helm V3 to Install Fusion
 
 You should upgrade to the latest version of Helm V3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
-then just make sure Helm V3 is ahead of Helm V2 in your PATH before proceeding with this section.
+then just make sure Helm V3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
 
 Start by copying the example custom values yaml file provided in this repo:
 ```
