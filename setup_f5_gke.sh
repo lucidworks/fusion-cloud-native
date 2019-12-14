@@ -48,7 +48,7 @@ GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
 FORCE=0
-ML_MODEL_STORE="fs"
+ML_MODEL_STORE="fusion"
 CUSTOM_MY_VALUES=""
 DRY_RUN=""
 
@@ -264,7 +264,6 @@ if [ $has_prereq == 1 ]; then
   echo -e "\nERROR: Must install helm before proceeding with this script! See: https://helm.sh/docs/using_helm/#quickstart"
   exit 1
 fi
-
 
 
 gcloud config set compute/zone $GCLOUD_ZONE

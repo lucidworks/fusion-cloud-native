@@ -3,7 +3,8 @@
 :toclevels: 4
 :toc-title:
 
-This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only. We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
+This repo contains scripts for installing Fusion 5.x on Kubernetes (K8s). The scripts provide an option to create Kubernetes clusters that are suitable for demo / proof-of-concept purposes only.
+We assume that you'll want to control how your production clusters are provisioned, secured, and managed, as these are typically concerns we're not able to script for you.
 
 // tag::body[]
 
@@ -33,12 +34,8 @@ brew upgrade kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
-The fusion helm chart requires that helm is greater than version `2.12.0`. Please ensure that your version is greater than this, you can check by running `helm version`.
-
-==== Helm v3 User?
-
-Helm v3 is currently in beta, but has some exciting new features, especially not needing to install Tiller into your k8s cluster.
-In general, our scripts are Helm v3 aware if it is ahead of Helm v2 in your PATH. Alternatively, you can use <<helm-v3,Helm v3>> with the Fusion chart directly.
+The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm V3.
+Check your Helm version by running `helm version`.
 
 === Customize Fusion Chart Settings
 
@@ -119,7 +116,7 @@ You can change the instance type using the `-i` parameter; see: https://cloud.go
 
 __Note: If not provided the script generates a custom values file named `gke_<cluster>_<release>_fusion_values.yaml` which you can use to customize the Fusion chart.__
 
-#WARNING# The `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+#WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 If you see an error similar to the following, then wait a few seconds and try running the `setup_f5_gke.sh` script again with the same arguments as this is usually a transient issue:
 ```
@@ -262,7 +259,6 @@ NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative s
 [[eks-cluster-create]]
 === Set up Fusion on EKS
 
-
 To create a cluster in EKS the following IAM policies are required:
 
 * AmazonEC2FullAccess
@@ -332,7 +328,7 @@ If you don't want the script to create a cluster, then you need to create a clus
 
 Use the `--help` option to see full script usage.
 
-#WARNING# The `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
+#WARNING# If using Helm V2, the `setup_f5_eks.sh` script installs Helm's `tiller` component into your EKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 #WARNING# The `setup_f5_eks.sh` script creates a service account that provides S3 read-only permissions to the created pods.
 
@@ -452,10 +448,7 @@ You can also pass the `--preview` option to the script, which enables soon-to-be
 
 It takes a while for AKS to spin up the new cluster. The cluster will have three Standard_D4_v3 nodes which have 4 CPU cores and 16 GB of memory. Behind the scenes, our script calls the `az aks create` command.
 
-WARNING: The `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role.
-ifdef::env-github[]
-If you don't want this, then please see <<helm-only,Helm w/o Tiller>> below.
-endif::[]
+WARNING: If using Helm V2, the `setup_f5_aks.sh` script installs Helm's `tiller` component into your AKS cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
 After running the `setup_f5_aks.sh` script, proceed to <<verifying,Verifying the Fusion Installation>>.
 
@@ -503,7 +496,10 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
 [[helm-only]]
-=== Use Helm v2 to Install Fusion
+=== Use Helm V3 to Install Fusion
+
+You should upgrade to the latest version of Helm V3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
+then just make sure Helm V3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
 
 Start by copying the example custom values yaml file provided in this repo:
 ```
@@ -514,57 +510,15 @@ where `<provider>` is the K8s platform you're running on, such as `gke`, `<clust
 This file is referred to as `${MY_VALUES}` in the commands below, be sure to replace it with the correct file name for your environment.
 
 Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
-After making changes to the custom values YAML file, install Fusion using the following commands:
 
 ```
 RELEASE=f5
 NAMESPACE=default
 
+helm version --short
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
-helm install --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" lucidworks/fusion --values "${MY_VALUES}" --version 5.0.2-7
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-```
-
-ifdef::env-github[]
-For more information, please see the Fusion documentation: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/index.html
-endif::[]
-
-==== Don't want to use Tiller? (Helm v2)
-
-Tiller, the server-side component of Helm, has known https://engineering.bitnami.com/articles/running-helm-in-production.html[security concerns^].
-If your K8s administrators do not allow the use of Tiller for installing Helm charts, then you can use Helm 3 (currently in beta) or use Helm's template command to render the Fusion chart into a single K8s manifest file:
-```
-RELEASE=f5
-NAMESPACE=default
-
-helm repo add lucidworks https://charts.lucidworks.com
-helm repo update
-helm fetch --version 5.0.2-7 --untar lucidworks/fusion
-helm template -n "${RELEASE}" --namespace "${NAMESPACE}" --values "${MY_VALUES}" fusion > ${RELEASE}_${NAMESPACE}_fusion_install.yaml
-kubectl apply -f "${RELEASE}_${NAMESPACE}_fusion_install.yaml" --namespace "${NAMESPACE}"
-```
-
-[[helm-v3]]
-=== Helm v3 (no Tiller)
-
-Helm v3 does not have a server-side Tiller component. For more information about Helm v3, see: https://v3.helm.sh/
-
-__NOTE: Our `setup_f5_*.sh` scripts also support Helm v3 if it is in your PATH before Helm v2.__
-
-- https://github.com/helm/helm/releases[Download the latest helm v3 beta^] (for example, `Helm v3.0.0-rc.3`).
-- Extract it to a directory such as: `/usr/local/helm3`
-- Run the following commands:
-
-```
-HELM3_HOME=/usr/local/helm3
-RELEASE=f5
-NAMESPACE=default
-
-${HELM3_HOME}/helm version --short
-${HELM3_HOME}/helm repo add lucidworks https://charts.lucidworks.com
-${HELM3_HOME}/helm repo update
-${HELM3_HOME}/helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2-7
+helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2-7
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
@@ -572,11 +526,10 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 
 To update an existing installation, do:
 ```
-HELM3_HOME=/usr/local/helm3
 RELEASE=f5
 NAMESPACE=default
-${HELM3_HOME}/helm repo update
-${HELM3_HOME}/helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --values "${MY_VALUES}"
+helm repo update
+helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --values "${MY_VALUES}"
 ```
 
 Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy, e.g.:
