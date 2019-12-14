@@ -5,7 +5,7 @@
 admin-ui:
   resources:
     limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -15,7 +15,7 @@ api-gateway:
   # javaToolOptions: ""
   resources:
     limits:
-      cpu: "2500m"
+      cpu: "2"
       memory: "3Gi"
     requests:
       cpu: "500m"
@@ -24,7 +24,7 @@ api-gateway:
 auth-ui:
   resources:
     limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -34,7 +34,7 @@ classic-rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
-      cpu: "2500m"
+      cpu: "2"
       memory: "3Gi"
     requests:
       cpu: "500m"
@@ -43,7 +43,7 @@ classic-rest-service:
 devops-ui:
   resources:
     limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -53,7 +53,7 @@ fusion-admin:
   #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
     limits:
-      cpu: "1500m"
+      cpu: "1"
       memory: "3Gi"
     requests:
       cpu: "500m"
@@ -85,8 +85,8 @@ job-launcher:
       memory: 600Mi
       cpu: 250m
     limits:
-      memory: 750Mi
-      cpu: 1
+      memory: 1Gi
+      cpu: 500m
 
 job-rest-server:
   #javaToolOptions: "-Xmx1024m -Xms256m"
@@ -96,7 +96,7 @@ job-rest-server:
         cpu: 250m
       limits:
         memory: 1.5Gi
-        cpu: 1
+        cpu: 750m
 
 ml-model-service:
   #javaToolOptions: ""
@@ -131,17 +131,17 @@ rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
-      cpu: "1"
-      memory: 3Gi
+      cpu: "400m"
+      memory: 2Gi
     requests:
       cpu: "200m"
-      memory: 2Gi
+      memory: 1Gi
 
 rpc-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
-      cpu: "2"
+      cpu: "1500m"
       memory: "3Gi"
     requests:
       cpu: "200m"
@@ -150,7 +150,7 @@ rpc-service:
 rules-ui:
   resources:
     limits:
-      cpu: "200m"
+      cpu: "100m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -188,7 +188,7 @@ webapps:
   #javaToolOptions: ""
   resources:
     limits:
-      cpu: "500m"
+      cpu: "400m"
       memory: "500Mi"
     requests:
       cpu: "200m"

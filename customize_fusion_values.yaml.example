@@ -1,11 +1,15 @@
 sql-service:
   enabled: false
+  nodeSelector:
+    {NODE_POOL}
   replicaCount: 0
   service:
     thrift:
       type: "ClusterIP"
 
 solr:
+  nodeSelector:
+    {NODE_POOL}
   image:
     tag: 8.2.0
   updateStrategy:
@@ -13,10 +17,20 @@ solr:
   javaMem: "-Xmx3g"
   volumeClaimTemplates:
     storageSize: "50Gi"
-  replicaCount: 1
+  replicaCount: {SOLR_REPLICAS}
   resources: {}
+  exporter:
+    enabled: {PROMETHEUS}
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      {NODE_POOL}
   zookeeper:
-    replicaCount: 1
+    nodeSelector:
+      {NODE_POOL}
+    replicaCount: {SOLR_REPLICAS}
     persistence:
       size: 15Gi
     resources: {}
@@ -27,19 +41,96 @@ solr:
 ml-model-service:
   image:
     imagePullPolicy: "IfNotPresent"
-  modelRepoImpl: fusion
+  nodeSelector:
+    {NODE_POOL}
+  modelRepoImpl: {ML_MODEL_STORE}
+  gcsBucketName: {GCS_BUCKET}
+  gcsBaseDirectoryName: {RELEASE}
   fs:
     enabled: true
   javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
 
 fusion-admin:
+  nodeSelector:
+    {NODE_POOL}
   readinessProbe:
-    initialDelaySeconds: 180
+    initialDelaySeconds: 120
 
 fusion-indexing:
+  nodeSelector:
+    {NODE_POOL}
   readinessProbe:
-    initialDelaySeconds: 180
+    initialDelaySeconds: 120
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
 
 query-pipeline:
+  nodeSelector:
+    {NODE_POOL}
   javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
 
+admin-ui:
+  nodeSelector:
+    {NODE_POOL}
+
+api-gateway:
+  nodeSelector:
+    {NODE_POOL}
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+
+auth-ui:
+  nodeSelector:
+    {NODE_POOL}
+
+classic-rest-service:
+  nodeSelector:
+    {NODE_POOL}
+
+devops-ui:
+  nodeSelector:
+    {NODE_POOL}
+
+fusion-resources:
+  nodeSelector:
+    {NODE_POOL}
+
+insights:
+  nodeSelector:
+    {NODE_POOL}
+
+job-launcher:
+  nodeSelector:
+    {NODE_POOL}
+
+job-rest-server:
+  nodeSelector:
+    {NODE_POOL}
+
+logstash:
+  nodeSelector:
+    {NODE_POOL}
+
+rest-service:
+  nodeSelector:
+    {NODE_POOL}
+
+rpc-service:
+  nodeSelector:
+    {NODE_POOL}
+
+rules-ui:
+  nodeSelector:
+    {NODE_POOL}
+
+webapps:
+  nodeSelector:
+    {NODE_POOL}

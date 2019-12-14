@@ -6,7 +6,7 @@
 # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics
 
 admin-ui:
-  replicaCount: 2
+  replicaCount: 1
 
 api-gateway:
   replicaCount: 2
@@ -14,20 +14,20 @@ api-gateway:
     enabled: true
     minReplicas: 2
     maxReplicas: 4
-  metrics:
+    metrics:
     - type: Resource
       resource:
         name: cpu
         targetAverageUtilization: 70
 
 auth-ui:
-  replicaCount: 2
+  replicaCount: 1
 
 classic-rest-service:
   replicaCount: 1
 
 devops-ui:
-  replicaCount: 2
+  replicaCount: 1
 
 fusion-admin:
   replicaCount: 2
@@ -120,7 +120,7 @@ rpc-service:
           targetAverageUtilization: 70
 
 rules-ui:
-  replicaCount: 2
+  replicaCount: 1
 
 solr:
   replicaCount: 3
@@ -128,7 +128,7 @@ solr:
     replicaCount: 3
 
 sql-service:
-  replicaCount: 1
+  replicaCount: 0
 
 webapps:
   replicaCount: 2

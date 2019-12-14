@@ -1,0 +1,59 @@
+alertmanager:
+  enabled: false
+kubeStateMetrics:
+  enabled: true
+  nodeSelector:
+    {NODE_POOL}
+nodeExporter:
+  enabled: false
+pushgateway:
+  nodeSelector:
+    {NODE_POOL}
+  enabled: true
+server:
+  nodeSelector:
+    {NODE_POOL}
+  replicaCount: 1
+  statefulSet:
+    enabled: true
+  persistentVolume:
+    size: 10Gi
+  retention: 48h
+  global:
+    scrape_interval: 5s
+    scrape_timeout: 3s
+serverFiles:
+  prometheus.yml:
+    scrape_configs:
+      - job_name: 'spring-services'
+        metrics_path: '/actuator/prometheus'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_instance]
+            action: replace
+            target_label: instance
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod
+          - source_labels: [__meta_kubernetes_service_name]
+            action: replace
+            target_label: kubernetes_name
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+            action: replace
+            target_label: service

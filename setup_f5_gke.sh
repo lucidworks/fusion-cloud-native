@@ -5,6 +5,7 @@ CHART_VERSION="5.0.2-7"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 SOLR_REPLICAS=1
+PROMETHEUS=false
 
 function print_usage() {
   CMD="$1"
@@ -16,27 +17,29 @@ function print_usage() {
 
   echo -e "\nUse this script to install Fusion 5 on GKE; optionally create a GKE cluster in the process"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c          Name of the GKE cluster (required)\n"
-  echo -e "  -p          GCP Project ID (required)\n"
-  echo -e "  -r          Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n          Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z          GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
-  echo -e "  -b          GCS Bucket for storing ML models\n"
-  echo -e "  -i          Instance type, defaults to '${INSTANCE_TYPE}'\n"
-  echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --gke       GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to <release>_<namespace>_fusion_values.yaml (can be specified multiple times)\n"
-  echo -e "  --num-solr  Number of Solr pods to deploy, defaults to 1\n"
-  echo -e "  --node-pool Node pool label to assign pods to specific nodes; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
-  echo -e "  --create    Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
-  echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --dry-run   Perform a dry-run of the upgrade to see what would change\n"
-  echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
-  echo -e "  --force     Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace"
+  echo -e "  -c            Name of the GKE cluster (required)\n"
+  echo -e "  -p            GCP Project ID (required)\n"
+  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
+  echo -e "  -b            GCS Bucket for storing ML models\n"
+  echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n                then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: on, off, install; defaults to 'install'\n"
+  echo -e "  --gke         GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
+  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values      Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml\n                (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
+  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;\n                defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  --create      Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
+  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run     Perform a dry-run of the upgrade to see what would change\n"
+  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster.\n                Be careful! This operation cannot be undone.\n"
+  echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 }
 
+PROMETHEUS="install"
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
 GCLOUD_ZONE=us-west1
@@ -122,6 +125,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             INSTANCE_TYPE="$2"
+            shift 2
+        ;;
+        --prometheus)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --prometheus parameter!"
+              exit 1
+            fi
+            PROMETHEUS="$2"
             shift 2
         ;;
         --gke)
@@ -271,7 +282,7 @@ if [ "$cluster_status" != "0" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
 
-  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (gke: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
+  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (K8s Master Version: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
 
@@ -284,24 +295,40 @@ if [ "$cluster_status" != "0" ]; then
     GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
 
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version ${GKE_MASTER_VERSION} --machine-type ${INSTANCE_TYPE} --image-type "COS" \
+      --no-enable-basic-auth \
+      --cluster-version ${GKE_MASTER_VERSION} \
+      --machine-type ${INSTANCE_TYPE}
+      --image-type "COS" \
       --disk-type "pd-standard" --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
-      --num-nodes "1" --no-enable-cloud-logging --no-enable-cloud-monitoring --enable-ip-alias \
+      --num-nodes "1" \
+      --no-enable-cloud-logging \
+      --no-enable-cloud-monitoring \
+      --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "5" \
-      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
+      --default-max-pods-per-node "110" \
+      --enable-autoscaling --min-nodes "0" --max-nodes "3" \
+      --addons HorizontalPodAutoscaling,HttpLoadBalancing \
+      --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
-      --no-enable-basic-auth --cluster-version ${GKE_MASTER_VERSION} --machine-type ${INSTANCE_TYPE} \
-      --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true \
+      --no-enable-basic-auth \
+      --cluster-version ${GKE_MASTER_VERSION} \
+      --machine-type ${INSTANCE_TYPE} \
+      --image-type "COS" \
+      --disk-type "pd-standard" --disk-size "100" \
+      --metadata disable-legacy-endpoints=true \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
-      --num-nodes "1" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias \
+      --num-nodes "1" \
+      --enable-stackdriver-kubernetes \
+      --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_ZONE}/subnetworks/default" \
-      --default-max-pods-per-node "110" --enable-autoscaling --min-nodes "0" --max-nodes "5" \
-      --addons HorizontalPodAutoscaling,HttpLoadBalancing --no-enable-autoupgrade --enable-autorepair
+      --default-max-pods-per-node "110" \
+      --enable-autoscaling --min-nodes "0" --max-nodes "3" \
+      --addons HorizontalPodAutoscaling,HttpLoadBalancing \
+      --no-enable-autoupgrade --enable-autorepair
   else
     echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
     echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
@@ -337,9 +364,8 @@ if [ "${is_helm_v3}" == "" ]; then
     helm version
   fi
 else
-  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
+  echo -e "Using Helm v3 ($is_helm_v3), no Tiller to install (this is a good thing)"
 fi
-
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
   kubectl create namespace "${NAMESPACE}"
@@ -467,121 +493,18 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
 
     CREATED_MY_VALUES=1
 
-    tee $DEFAULT_MY_VALUES << END
-sql-service:
-  enabled: false
-  nodeSelector:
-    ${NODE_POOL}
-  replicaCount: 0
-  service:
-    thrift:
-      type: "ClusterIP"
+    PROMETHEUS_ON=true
+    if [ "${PROMETHEUS}" == "off" ]; then
+      PROMETHEUS_ON=false
+    fi
 
-solr:
-  nodeSelector:
-    ${NODE_POOL}
-  image:
-    tag: 8.2.0
-  updateStrategy:
-    type: "RollingUpdate"
-  javaMem: "-Xmx3g"
-  volumeClaimTemplates:
-    storageSize: "50Gi"
-  replicaCount: ${SOLR_REPLICAS}
-  resources: {}
-  zookeeper:
-    nodeSelector:
-      ${NODE_POOL}
-    replicaCount: ${SOLR_REPLICAS}
-    persistence:
-      size: 15Gi
-    resources: {}
-    env:
-      ZK_HEAP_SIZE: 1G
-      ZK_PURGE_INTERVAL: 1
-
-ml-model-service:
-  image:
-    imagePullPolicy: "IfNotPresent"
-  nodeSelector:
-    ${NODE_POOL}
-  modelRepoImpl: ${ML_MODEL_STORE}
-  gcsBucketName: ${GCS_BUCKET}
-  gcsBaseDirectoryName: ${RELEASE}
-
-fusion-admin:
-  nodeSelector:
-    ${NODE_POOL}
-  readinessProbe:
-    initialDelaySeconds: 180
-
-fusion-indexing:
-  nodeSelector:
-    ${NODE_POOL}
-  readinessProbe:
-    initialDelaySeconds: 180
-
-query-pipeline:
-  nodeSelector:
-    ${NODE_POOL}
-  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
-
-admin-ui:
-  nodeSelector:
-    ${NODE_POOL}
-
-api-gateway:
-  nodeSelector:
-    ${NODE_POOL}
-
-auth-ui:
-  nodeSelector:
-    ${NODE_POOL}
-
-classic-rest-service:
-  nodeSelector:
-    ${NODE_POOL}
-
-devops-ui:
-  nodeSelector:
-    ${NODE_POOL}
-
-fusion-resources:
-  nodeSelector:
-    ${NODE_POOL}
-
-insights:
-  nodeSelector:
-    ${NODE_POOL}
-
-job-launcher:
-  nodeSelector:
-    ${NODE_POOL}
-
-job-rest-server:
-    ${NODE_POOL}
-
-logstash:
-  nodeSelector:
-    ${NODE_POOL}
-
-rest-service:
-  nodeSelector:
-    ${NODE_POOL}
-
-rpc-service:
-  nodeSelector:
-    ${NODE_POOL}
-
-rules-ui:
-  nodeSelector:
-    ${NODE_POOL}
-
-webapps:
-  nodeSelector:
-    ${NODE_POOL}
-
-END
+    cp customize_fusion_values.yaml.example $DEFAULT_MY_VALUES
+    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{ML_MODEL_STORE}|${ML_MODEL_STORE}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{GCS_BUCKET}|${GCS_BUCKET}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{RELEASE}|${RELEASE}|g" "$DEFAULT_MY_VALUES"
+    sed -i ''  -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$DEFAULT_MY_VALUES"
 
     echo -e "\nCreated $DEFAULT_MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
   else
@@ -626,6 +549,41 @@ api-gateway:
 END
 fi
 
+# wait up to 60s to see the metrics server online ... seems to help make installs more robust on new clusters
+metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+
+if [ "${PROMETHEUS}" == "install" ]; then
+
+  echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics.\n"
+
+  PROMETHEUS_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
+  if [ ! -f "${PROMETHEUS_VALUES}" ]; then
+    cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
+    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
+  fi
+
+  helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
+  echo -e "\nWaiting up to 180 secs to see Prometheus come online in your cluster ...\n"
+  kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
+
+  GRAFANA_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
+  if [ ! -f "${GRAFANA_VALUES}" ]; then
+    cp example-values/grafana-values.yaml $GRAFANA_VALUES
+    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}. Keep this file handy as you'll need it to customize your Grafana installation.\n"
+  fi
+  echo -e "\nWaiting up to 60 secs to see Grafana come online in your cluster ...\n"
+  helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
+  kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
+
+  echo -e "\n\nSuccessfully installed Prometheus and Grafana into namespace ${NAMESPACE}\n"
+
+  #kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+  #kubectl get secret --namespace "${NAMESPACE}" f5-graf-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+fi
+
 if [ "$UPGRADE" == "1" ]; then
   VALUES_STRING=""
   for v in "${MY_VALUES[@]}"; do
@@ -667,10 +625,6 @@ if [ -n "$CREATED_MY_VALUES" ]; then
   echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${DEFAULT_MY_VALUES} file in version control.\n"
 fi
 
-# wait up to 60s to see the metrics server online
-metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
-
 # let's exit immediately if the helm install command fails
 set -e
 if [ "$is_helm_v3" != "" ]; then
@@ -684,8 +638,10 @@ else
 fi
 set +e
 
+echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
+echo -e "\nWaiting up to 2 minutes to see the Fusion Admin deployment come online ...\n"
+kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=120s --namespace "${NAMESPACE}"
 
 if [ "${TLS_ENABLED}" == "1" ]; then
   ingress_setup
