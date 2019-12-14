@@ -48,9 +48,9 @@ GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
 FORCE=0
-ML_MODEL_STORE="fs"
 CUSTOM_MY_VALUES=()
 MY_VALUES=()
+ML_MODEL_STORE="fusion"
 DRY_RUN=""
 
 if [ $# -gt 0 ]; then
@@ -265,7 +265,6 @@ gcloud config set compute/zone "${GCLOUD_ZONE}"
 gcloud config set project "${GCLOUD_PROJECT}"
 
 gcloud beta container clusters list --filter="${CLUSTER_NAME}" | grep "${CLUSTER_NAME}" > /dev/null 2>&1
-
 cluster_status=$?
 if [ "$cluster_status" != "0" ]; then
   if [ "$CREATE_MODE" == "" ]; then
