@@ -5,7 +5,7 @@
 admin-ui:
   resources:
     limits:
-      cpu: "250m"
+      cpu: "200m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -15,16 +15,16 @@ api-gateway:
   # javaToolOptions: ""
   resources:
     limits:
-      cpu: "2"
-      memory: "2Gi"
+      cpu: "2500m"
+      memory: "3Gi"
     requests:
-      cpu: "1"
+      cpu: "500m"
       memory: "1Gi"
 
 auth-ui:
   resources:
     limits:
-      cpu: "250m"
+      cpu: "200m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -34,16 +34,16 @@ classic-rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
     limits:
-      cpu: "4"
+      cpu: "2500m"
       memory: "3Gi"
     requests:
-      cpu: "1"
+      cpu: "500m"
       memory: "2Gi"
 
 devops-ui:
   resources:
     limits:
-      cpu: "250m"
+      cpu: "200m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -53,29 +53,29 @@ fusion-admin:
   #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
     limits:
-      cpu: "2"
+      cpu: "1500m"
       memory: "3Gi"
     requests:
-      cpu: "1"
+      cpu: "500m"
       memory: "2Gi"
 
 fusion-indexing:
   #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
     limits:
-      cpu: "2"
+      cpu: "1500m"
       memory: "3Gi"
     requests:
-      cpu: "1"
+      cpu: "500m"
       memory: "2Gi"
 
 insights:
   resources:
     limits:
-      cpu: "1"
+      cpu: "300m"
       memory: "1.5Gi"
     requests:
-      cpu: "200m"
+      cpu: "100m"
       memory: "1Gi"
 
 job-launcher:
@@ -98,16 +98,6 @@ job-rest-server:
         memory: 1.5Gi
         cpu: 1
 
-kafka:
-  #kafkaHeapOptions: "-Xmx1G -Xms1G"
-  resources:
-    requests:
-      memory: 1Gi
-      cpu: 250m
-    limits:
-      memory: 1.5Gi
-      cpu: 1
-
 ml-model-service:
   #javaToolOptions: ""
   pythonService:
@@ -117,7 +107,7 @@ ml-model-service:
         cpu: 1
       limits:
         memory: 4Gi
-        cpu: 4
+        cpu: 3
   javaService:
     resources:
       requests:
@@ -125,17 +115,17 @@ ml-model-service:
         cpu: 1
       limits:
         memory: 4Gi
-        cpu: 4
+        cpu: 3
 
 query-pipeline:
   #javaToolOptions: ""
   resources:
     limits:
-      cpu: "2"
-      memory: "2Gi"
+      cpu: "2500m"
+      memory: "4Gi"
     requests:
-      cpu: "1"
-      memory: "1Gi"
+      cpu: "500m"
+      memory: "2Gi"
 
 rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
@@ -160,7 +150,7 @@ rpc-service:
 rules-ui:
   resources:
     limits:
-      cpu: "250m"
+      cpu: "200m"
       memory: "32Mi"
     requests:
       cpu: "50m"
@@ -198,8 +188,8 @@ webapps:
   #javaToolOptions: ""
   resources:
     limits:
-      cpu: "1"
+      cpu: "500m"
       memory: "500Mi"
     requests:
-      cpu: "500m"
+      cpu: "200m"
       memory: "400Mi"
