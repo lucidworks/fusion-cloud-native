@@ -43,9 +43,7 @@ ml-model-service:
     imagePullPolicy: "IfNotPresent"
   nodeSelector:
     {NODE_POOL}
-  modelRepoImpl: {ML_MODEL_STORE}
-  gcsBucketName: {GCS_BUCKET}
-  gcsBaseDirectoryName: {RELEASE}
+  modelRepoImpl: fusion
   fs:
     enabled: true
   javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
