@@ -434,18 +434,6 @@ fi
 
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
-
 source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
-
-if [ "$setup_result" == "0" ]; then
-  if [ "${TLS_ENABLED}" == "1" ]; then
-    ingress_setup
-  else
-    proxy_url
-  fi
-
-  kubectl config set-context --current --namespace=${NAMESPACE}
-fi
-
 exit $setup_result

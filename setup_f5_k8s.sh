@@ -340,6 +340,7 @@ fi
 if [ "$UPGRADE" != "1" ]; then
   metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
   kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+  echo ""
 fi
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
@@ -379,7 +380,7 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
     helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
     kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
 
-    echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
+    echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"
   fi
 
 fi
@@ -443,8 +444,12 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 echo -e "\nWaiting up to 2 minutes to see the Fusion Admin deployment come online ...\n"
 kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=120s --namespace "${NAMESPACE}"
 
+echo -e "\nHelm releases:"
+helm ls --namespace "${NAMESPACE}"
+
 if [ "${TLS_ENABLED}" == "1" ]; then
   ingress_setup
 else
   proxy_url
 fi
+kubectl config set-context --current --namespace=${NAMESPACE}
