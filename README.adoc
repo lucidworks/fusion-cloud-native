@@ -84,7 +84,9 @@ If you've already installed the `gcloud` command-line tools, you can skip to <<c
 
 These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
 
-Usually, you only need to perform these setup steps once per local session.  After that, you're ready to link:#cluster-create[create a cluster].
+Usually, you only need to perform these setup steps once.  After that, you're ready to link:#cluster-create[create a cluster].
+
+For a nice getting started tutorial for GKE, see: https://codelabs.developers.google.com/codelabs/cloud-gke-workshop-v2/#1
 
 .How to set up the Google Cloud SDK
 . https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine[Enable the Kubernetes Engine API^].

@@ -324,8 +324,7 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} \
-      --prometheus $PROMETHEUS_ON --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists.\n"
   fi

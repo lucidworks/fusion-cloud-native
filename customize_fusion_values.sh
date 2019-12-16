@@ -28,14 +28,14 @@ function print_usage() {
 }
 
 SCRIPT_CMD="$0"
-
 MY_VALUES="$1"
-echo "MY_VALUES: ${MY_VALUES}"
 
 if [ "$MY_VALUES" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the name of the values yaml file to create as the first arg to this script!"
   exit 1
 fi
+
+# start parsing
 shift 1
 
 if [ $# -gt 1 ]; then
