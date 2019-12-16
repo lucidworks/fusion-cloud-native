@@ -4,7 +4,6 @@ INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.0.2-7"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
-SOLR_REPLICAS=1
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
@@ -21,6 +20,7 @@ CUSTOM_MY_VALUES=()
 MY_VALUES=()
 ML_MODEL_STORE="fusion"
 DRY_RUN=""
+SOLR_REPLICAS=1
 SOLR_DISK_GB=50
 
 function print_usage() {
@@ -350,10 +350,6 @@ fi
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
 
-if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
-  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
 ADDITIONAL_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
 
@@ -396,10 +392,15 @@ fi
 
 DEFAULT_MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
+if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
+  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
+fi
+
 VALUES_STRING=""
 if [ "${UPGRADE}" == "1" ] && [ -z "$MY_VALUES" ] && [ -f "${DEFAULT_MY_VALUES}" ]; then
   MY_VALUES=( ${DEFAULT_MY_VALUES} )
 fi
+
 for v in "${MY_VALUES[@]}"; do
   if [ ! -f "${v}" ]; then
     echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
@@ -407,6 +408,10 @@ for v in "${MY_VALUES[@]}"; do
   fi
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
+
+if [ -z "${ADDITIONAL_VALUES}" ]; then
+  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
+fi
 
 # Invoke the generic K8s setup script to complete the install/upgrade
 INGRESS_ARG=""
@@ -434,6 +439,7 @@ fi
 
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
-source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
 exit $setup_result

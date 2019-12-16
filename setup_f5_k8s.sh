@@ -18,6 +18,7 @@ CUSTOM_MY_VALUES=()
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
+NODE_POOL=""
 
 function print_usage() {
   CMD="$1"
@@ -33,6 +34,8 @@ function print_usage() {
   echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  --provider    Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'k8s'\n"
+  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
+  echo -e "                where you defined a custom node pool, wrap the arg in double-quotes\n"
   echo -e "  --ingress     Ingress hostname\n"
   echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
   echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
@@ -96,6 +99,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             PROMETHEUS="$2"
+            shift 2
+        ;;
+        --node-pool)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
+              exit 1
+            fi
+            NODE_POOL="$2"
             shift 2
         ;;
         --version)
@@ -324,7 +335,8 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON \
+      --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists.\n"
   fi
@@ -356,14 +368,14 @@ helm repo update
 # just let the user do that manually with Helm as needed
 if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
 
-  PROMETHEUS_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
+  PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then
     cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
     sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
     echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
   fi
 
-  GRAFANA_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
+  GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
   if [ ! -f "${GRAFANA_VALUES}" ]; then
     cp example-values/grafana-values.yaml $GRAFANA_VALUES
     sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"

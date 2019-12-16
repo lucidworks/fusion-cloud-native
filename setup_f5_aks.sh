@@ -6,37 +6,6 @@ NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
 AKS_KUBE_CONFIG="${KUBECONFIG:-~/.kube/config}"
-
-function print_usage() {
-  CMD="$1"
-  ERROR_MSG="$2"
-
-  if [ "$ERROR_MSG" != "" ]; then
-    echo -e "\nERROR: $ERROR_MSG"
-  fi
-
-  echo -e "\nUse this script to install Fusion 5 on AKS; optionally create a AKS cluster in the process"
-  echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c          Name of the AKS cluster (required)\n"
-  echo -e "  -p          Azure resource group (required)\n                  If the given group doesn't exist, this script creates it using:\n                  az group create --name <GROUP_NAME> --location <LOCATION>\n"
-  echo -e "  -r          Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n          Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z          Azure location to launch the cluster in, defaults to the location for your Resource Group\n"
-  echo -e "  -i          Instance type, defaults to '${INSTANCE_TYPE}'\n"
-  echo -e "  -y          Initial node count, defaults to '${NODE_COUNT}'\n"
-  echo -e "  -t          Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h          Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,\n              then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --aks       AKS Kubernetes version; defaults to ${AKS_MASTER_VERSION}\n"
-  echo -e "  --preview   Enable PREVIEW mode when creating the cluster to experiment with unreleased options\n"
-  echo -e "  --version   Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to aks_<cluster>_<release>_fusion_values.yaml\n"
-  echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster.\n              Be careful! This operation cannot be undone.\n"
-}
-
-# prep for helm 3
-helm=`which helm`
-
 SCRIPT_CMD="$0"
 AZURE_RESOURCE_GROUP=
 CLUSTER_NAME=
@@ -49,6 +18,46 @@ CUSTOM_MY_VALUES=()
 MY_VALUES=()
 PREVIEW=0
 AZURE_LOCATION=""
+PROMETHEUS="install"
+NODE_POOL=""
+SOLR_REPLICAS=1
+SOLR_DISK_GB=50
+
+function print_usage() {
+  CMD="$1"
+  ERROR_MSG="$2"
+
+  if [ "$ERROR_MSG" != "" ]; then
+    echo -e "\nERROR: $ERROR_MSG"
+  fi
+
+  echo -e "\nUse this script to install Fusion 5 on AKS; optionally create a AKS cluster in the process"
+  echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
+  echo -e "  -c            Name of the AKS cluster (required)\n"
+  echo -e "  -p            Azure resource group (required). If the given group doesn't exist, this script creates it using:"
+  echo -e "                    az group create --name <GROUP_NAME> --location <LOCATION>\n"
+  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -z            Azure location to launch the cluster in, defaults to the location for your Resource Group\n"
+  echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -y            Initial node count, defaults to '${NODE_COUNT}'\n"
+  echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
+  echo -e "                then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
+  echo -e "                where you defined a custom node pool, wrap the arg in double-quotes\n"
+  echo -e "  --aks         AKS Kubernetes version; defaults to ${AKS_MASTER_VERSION}\n"
+  echo -e "  --preview     Enable PREVIEW mode when creating the cluster to experiment with unreleased options\n"
+  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values      Custom values file containing config overrides; defaults to aks_<cluster>_<release>_fusion_values.yaml\n"
+  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster."
+  echo -e "                Be careful! This operation cannot be undone.\n"
+}
 
 if [ $# -gt 0 ]; then
   while true; do
@@ -111,6 +120,30 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             INSTANCE_TYPE="$2"
+            shift 2
+        ;;
+        --node-pool)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
+              exit 1
+            fi
+            NODE_POOL="$2"
+            shift 2
+        ;;
+        --num-solr)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-solr parameter!"
+              exit 1
+            fi
+            SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --prometheus)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --prometheus parameter!"
+              exit 1
+            fi
+            PROMETHEUS="$2"
             shift 2
         ;;
         --aks)
@@ -224,7 +257,7 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
-is_helm_v3=$(${helm} version --short | grep v3)
+is_helm_v3=$(helm version --short | grep v3)
 
 # check to see if the resource group exists
 LISTOUT=`az group list --query "[?name=='${AZURE_RESOURCE_GROUP}']"`
@@ -263,22 +296,12 @@ if [ "$PURGE" == "1" ]; then
     exit 1
   fi
 
-  current=$(kubectl config current-context)
-  confirm="Y"
-  read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
-  if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
-    if [ "$is_helm_v3" != "" ]; then
-      helm delete ${RELEASE}
-    else
-      helm del --purge ${RELEASE}
-    fi
-    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
-    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
-    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+  FORCE_ARG=""
+  if [ "${FORCE}" == "1" ]; then
+    FORCE_ARG=" --force"
   fi
+
+  source ./setup_f5_k8s.sh -c ${CLUSTER_NAME} -r ${RELEASE} -n ${NAMESPACE} --purge ${FORCE_ARG}
   exit 0
 fi
 
@@ -343,40 +366,11 @@ fi
 az aks get-credentials -n "${CLUSTER_NAME}" -g "${AZURE_RESOURCE_GROUP}" -f "${AKS_KUBE_CONFIG}" --admin
 kubectl config current-context
 
-function report_ns() {
-  if [ "${NAMESPACE}" != "default" ]; then
-    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
-  fi
-}
-
-function proxy_url() {
-  PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
-  PROXY_URL="$PROXY_HOST:$PROXY_PORT"
-  if [ "$PROXY_URL" != ":" ]; then
-    echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
-    echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://docs.microsoft.com/en-us/azure/aks/ingress-basic"
-    echo -e "\nAfter configuring an Ingress, please change the 'proxy' service to be a ClusterIP instead of LoadBalancer\n"
-    report_ns
-  else
-    echo -e "\n\nFailed to get Fusion Gateway service URL! Check console for previous errors.\n"
-  fi
-}
-
-function ingress_setup() {
-
-  export INGRESS_IP=$(kubectl --namespace "${ingress_namespace}" get service "nginx-ingress-controller-controller" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
-  echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
-  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated, this may take up to an hour after DNS has updated to be issued"
-}
-
 kubectl rollout status deployment/${RELEASE}-query-pipeline -n ${NAMESPACE} --timeout=10s > /dev/null 2>&1
 rollout_status=$?
 if [ $rollout_status == 0 ]; then
   if [ "$UPGRADE" == "0" ]; then
     echo -e "\nLooks like Fusion is already running ..."
-    proxy_url
     exit 0
   fi
 fi
@@ -393,84 +387,12 @@ if [ "${is_helm_v3}" == "" ]; then
     echo -e "\nSetting up Helm Tiller ..."
     kubectl create serviceaccount --namespace kube-system tiller
     kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    ${helm} init --service-account tiller --wait
-    ${helm} version
+    helm init --service-account tiller --wait
+    helm version
   fi
 else
-  echo -e "Using Helm V3 ($is_helm_v3), no Tiller to install"
+  echo -e "Using Helm V3 ($is_helm_v3)"
 fi
-
-lw_helm_repo=lucidworks
-
-echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-helm repo list | grep "https://charts.lucidworks.com"
-if [ $? ]; then
-  ${helm} repo add ${lw_helm_repo} https://charts.lucidworks.com
-
-fi
-
-if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  if [ ! -f "${DEFAULT_MY_VALUES}" ]; then
-
-    CREATED_MY_VALUES=1
-
-    tee $MY_VALUES << END
-
-sql-service:
-  enabled: false
-  replicaCount: 0
-  service:
-    thrift:
-      type: "ClusterIP"
-
-solr:
-  image:
-    tag: 8.2.0
-  updateStrategy:
-    type: "RollingUpdate"
-  javaMem: "-Xmx3g"
-  volumeClaimTemplates:
-    storageSize: "50Gi"
-  resources: {}
-  zookeeper:
-    resources: {}
-    persistence:
-      size: 15Gi
-    env:
-      ZK_HEAP_SIZE: 1G
-      ZK_PURGE_INTERVAL: 1
-
-ml-model-service:
-  image:
-    imagePullPolicy: "IfNotPresent"
-  modelRepoImpl: ${ML_MODEL_STORE}
-  fs:
-    enabled: true
-
-fusion-admin:
-  readinessProbe:
-    initialDelaySeconds: 180
-
-fusion-indexing:
-  readinessProbe:
-    initialDelaySeconds: 180
-
-query-pipeline:
-  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
-
-END
-    echo -e "\nCreated $DEFAULT_MY_VALUES with default custom value overrides. Please save this file for customizing your Fusion installation and upgrading to a newer version.\n"
-  else
-    echo -e "\nValues file $DEFAULT_MY_VALUES already exists, using this values file.\n"
-  fi
-  MY_VALUES=( ${DEFAULT_MY_VALUES} )
-fi
-
-if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
-  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
-${helm} repo update
 
 ADDITIONAL_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
@@ -553,71 +475,61 @@ EOF
   fi
 fi
 
-if [ "$UPGRADE" == "1" ]; then
-  VALUES_STRING=""
-  for v in "${MY_VALUES[@]}"; do
-    if [ ! -f "${v}" ]; then
-      echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
-      exit 1
-    fi
-    VALUES_STRING="${VALUES_STRING} --values ${v}"
-  done
-
-  if [ "${DRY_RUN}" == "" ]; then
-    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} to version ${CHART_VERSION} with custom values from ${MY_VALUES[*]} ${ADDITIONAL_VALUES}"
-  else
-    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace with custom values from ${MY_VALUES[*]} ${ADDITIONAL_VALUES}"
-  fi
-  if [ "$is_helm_v3" != "" ]; then
-    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180s --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
-  else
-    ${helm} upgrade ${RELEASE} "${lw_helm_repo}/fusion" --timeout=180 --namespace "${NAMESPACE}" ${VALUES_ARG} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
-  fi
-  upgrade_status=$?
-  if [ "${TLS_ENABLED}" == "1" ]; then
-    ingress_setup
-  else
-    proxy_url
-  fi
-  exit $upgrade_status
+if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
+  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
 fi
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES}"
-
 VALUES_STRING=""
+if [ "${UPGRADE}" == "1" ] && [ -z "$MY_VALUES" ] && [ -f "${DEFAULT_MY_VALUES}" ]; then
+  MY_VALUES=( ${DEFAULT_MY_VALUES} )
+fi
+
 for v in "${MY_VALUES[@]}"; do
   if [ ! -f "${v}" ]; then
-    echo -e "\nWARNING: Custom values file ${v} not found!\nPlease check the path to the custom values file is correct.\n"
+    echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
     exit 1
   fi
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
 
-if [ -n "$CREATED_MY_VALUES" ]; then
-  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES} file in version control.\n"
+if [ -z "${ADDITIONAL_VALUES}" ]; then
+  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
 fi
 
-# wait up to 60s to see the metrics server online
-metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+# Invoke the generic K8s setup script to complete the install/upgrade
+INGRESS_ARG=""
+if [ ! -z "${INGRESS_HOSTNAME}" ]; then
+  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME}"
+fi
 
-set -e
-if [ "$is_helm_v3" != "" ]; then
-  if ! kubectl get namespace "${NAMESPACE}"; then
-    kubectl create namespace "${NAMESPACE}"
+UPGRADE_ARGS=""
+if [ "${UPGRADE}" == "1" ]; then
+  UPGRADE_ARGS=" --upgrade"
+  if [ "${FORCE}" == "1" ]; then
+    UPGRADE_ARGS="$UPGRADE_ARGS --force"
   fi
-  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
-  ${helm} install ${RELEASE} ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ "${DRY_RUN}" != "" ]; then
+    UPGRADE_ARGS="$UPGRADE_ARGS --dry-run"
+  fi
 else
-  ${helm} install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} ${ADDITIONAL_VALUES} --version ${CHART_VERSION}
+  if [ "${PURGE}" == "1" ]; then
+    UPGRADE_ARGS=" --purge"
+    if [ "${FORCE}" == "1" ]; then
+      UPGRADE_ARGS="$UPGRADE_ARGS --force"
+    fi
+  fi
 fi
-set +e
 
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=600s --namespace "${NAMESPACE}"
-
-if [ "${TLS_ENABLED}" == "1" ]; then
-  ingress_setup
-else
-  proxy_url
+if [ "${NODE_POOL}" == "" ]; then
+  # the user did not specify a node pool label, but our templating needs one
+  for node in $(kubectl get nodes --namespace="${NAMESPACE}" -o=name); do kubectl label "$node" fusion_node_type=system; done
+  NODE_POOL="fusion_node_type: system"
 fi
+
+# for debug only
+#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
+source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "aks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+setup_result=$?
+exit $setup_result
+
