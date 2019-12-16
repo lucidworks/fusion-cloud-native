@@ -13,10 +13,11 @@ MY_VALUES="--values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 # TODO: append more --values files here as needed for your installation, e.g.
 #MY_VALUES="${MY_VALUES} --values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"
 
-current_context=$(kubectl config current-context | grep $CLUSTER_NAME)
-if [ "" == "" ]; then
+current_context=$(kubectl config current-context | grep ""$CLUSTER_NAME")
+if [ "${current_context}" == "" ]; then
   echo -e "\nERROR: Current kubeconfig not pointing to the $CLUSTER_NAME cluster!\nPlease update your current config to the correct cluster for upgrading Fusion.\n"
   exit 1
 fi
 
+echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES}"
 helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}

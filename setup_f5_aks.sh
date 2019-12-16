@@ -394,10 +394,10 @@ else
   echo -e "Using Helm V3 ($is_helm_v3)"
 fi
 
-ADDITIONAL_VALUES=""
+INGRESS_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
   TLS_VALUES="tls-values.yaml"
-  ADDITIONAL_VALUES="${ADDITIONAL_VALUES} --values tls-values.yaml"
+  INGRESS_VALUES="${INGRESS_VALUES} --values tls-values.yaml"
   tee "${TLS_VALUES}" << END
 api-gateway:
   service:
@@ -492,8 +492,22 @@ for v in "${MY_VALUES[@]}"; do
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
 
-if [ -z "${ADDITIONAL_VALUES}" ]; then
-  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
+if [ ! -z "${INGRESS_VALUES}" ]; then
+  # since we're passing INGRESS_VALUES to the setup_f5_k8s script,
+  # we might need to create the default from the template too
+  if [ -z "${VALUES_STRING}" ] && [ "${UPGRADE}" != "1" ] && [ ! -f "${DEFAULT_MY_VALUES}" ]; then
+
+    PROMETHEUS_ON=true
+    if [ "${PROMETHEUS}" == "none" ]; then
+      PROMETHEUS_ON=false
+    fi
+
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider "aks" --prometheus $PROMETHEUS_ON \
+      --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
+    VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
+  fi
+
+  VALUES_STRING="${VALUES_STRING} ${INGRESS_VALUES}"
 fi
 
 # Invoke the generic K8s setup script to complete the install/upgrade

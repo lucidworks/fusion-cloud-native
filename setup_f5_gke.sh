@@ -63,6 +63,14 @@ function print_usage() {
 if [ $# -gt 0 ]; then
   while true; do
     case "$1" in
+        -b)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -c parameter!"
+              exit 1
+            fi
+            echo -e "\nWARNING: The GCS bucket parameter is no longer supported by this script!\n"
+            shift 2
+        ;;
         -c)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -c parameter!"
@@ -350,7 +358,7 @@ fi
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
 
-ADDITIONAL_VALUES=""
+INGRESS_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
 
   # need to create the namespace if it doesn't exist yet
@@ -373,7 +381,7 @@ spec:
 EOF
 
   TLS_VALUES="tls-values.yaml"
-  ADDITIONAL_VALUES="${ADDITIONAL_VALUES} --values tls-values.yaml"
+  INGRESS_VALUES="${INGRESS_VALUES} --values tls-values.yaml"
   tee "${TLS_VALUES}" << END
 api-gateway:
   service:
@@ -409,8 +417,22 @@ for v in "${MY_VALUES[@]}"; do
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
 
-if [ -z "${ADDITIONAL_VALUES}" ]; then
-  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
+if [ ! -z "${INGRESS_VALUES}" ]; then
+  # since we're passing INGRESS_VALUES to the setup_f5_k8s script,
+  # we might need to create the default from the template too
+  if [ -z "${VALUES_STRING}" ] && [ "${UPGRADE}" != "1" ] && [ ! -f "${DEFAULT_MY_VALUES}" ]; then
+
+    PROMETHEUS_ON=true
+    if [ "${PROMETHEUS}" == "none" ]; then
+      PROMETHEUS_ON=false
+    fi
+
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider "gke" --prometheus $PROMETHEUS_ON \
+      --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
+    VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
+  fi
+  
+  VALUES_STRING="${VALUES_STRING} ${INGRESS_VALUES}"
 fi
 
 # Invoke the generic K8s setup script to complete the install/upgrade
@@ -438,7 +460,7 @@ else
 fi
 
 # for debug only
-#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
+echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
 source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
   --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
