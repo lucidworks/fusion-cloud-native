@@ -124,8 +124,6 @@ rules-ui:
 
 solr:
   replicaCount: 3
-  zookeeper:
-    replicaCount: 3
 
 sql-service:
   replicaCount: 0
@@ -141,3 +139,8 @@ webapps:
         resource:
           name: cpu
           targetAverageUtilization: 70
+
+zookeeper:
+  replicaCount: 3
+
+

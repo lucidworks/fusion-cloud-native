@@ -18,8 +18,13 @@ api-gateway:
       cpu: "2"
       memory: "3Gi"
     requests:
+<<<<<<< Updated upstream
       cpu: "500m"
       memory: "1Gi"
+=======
+      cpu: "0"
+      memory: "0"
+>>>>>>> Stashed changes
 
 auth-ui:
   resources:
@@ -165,15 +170,14 @@ solr:
     limits:
       memory: 12Gi
       cpu: 4
-
-zookeeper:
-  resources:
-    requests:
-      memory: 1Gi
-      cpu: 250m
-    limits:
-      memory: 2Gi
-      cpu: 1
+  zookeeper:
+    resources:
+      requests:
+        memory: 2Gi
+        cpu: 250m
+      limits:
+        memory: 4Gi
+        cpu: 1
 
 sql-service:
   #jvmOptions: "-XX:+UseG1GC -XX:+PrintGC -Xloggc:/work/sql-gc-%t.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -Xms4g -Xmx4g"
@@ -189,8 +193,8 @@ webapps:
   #javaToolOptions: ""
   resources:
     limits:
-      cpu: "500m"
+      cpu: "400m"
       memory: "500Mi"
     requests:
-      cpu: "100m"
+      cpu: "200m"
       memory: "400Mi"
