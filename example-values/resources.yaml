@@ -83,10 +83,10 @@ job-launcher:
   resources:
     requests:
       memory: 600Mi
-      cpu: 250m
+      cpu: 500m
     limits:
       memory: 1Gi
-      cpu: 500m
+      cpu: 2
 
 job-rest-server:
   #javaToolOptions: "-Xmx1024m -Xms256m"
@@ -189,8 +189,8 @@ webapps:
   #javaToolOptions: ""
   resources:
     limits:
-      cpu: "500m"
+      cpu: "2"
       memory: "500Mi"
     requests:
-      cpu: "100m"
+      cpu: "500m"
       memory: "400Mi"
