@@ -282,9 +282,16 @@ function report_ns() {
 }
 
 function proxy_url() {
-  export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+  if [ "${PROVIDER}" == "eks" ]; then
+    export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+  else
+    export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  fi
+
   export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
   export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+
   if [ "$PROXY_URL" != ":" ]; then
     echo -e "\n\nFusion 5 Gateway service exposed at: $PROXY_URL\n"
     echo -e "WARNING: This IP address is exposed to the WWW w/o SSL! This is done for demo purposes and ease of installation.\nYou are strongly encouraged to configure a K8s Ingress with TLS, see:\n   https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer"
