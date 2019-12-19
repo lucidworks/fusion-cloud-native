@@ -1,0 +1,146 @@
+# This file controls the replicaCount and autoscaling policies of all fusion components
+# For all components that can easily be run with multiple instances we set the initial
+# replicas to 2, apart from solr and zookeeper that are set with 3.
+# Autoscaling policies are enabled for all components that support them, to a
+# basic CPU based scaling metric. Other metrics can be enabled, see:
+# https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics
+
+admin-ui:
+  replicaCount: 1
+
+api-gateway:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 70
+
+auth-ui:
+  replicaCount: 1
+
+classic-rest-service:
+  replicaCount: 1
+
+devops-ui:
+  replicaCount: 1
+
+fusion-admin:
+  replicaCount: 2
+
+fusion-indexing:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+insights:
+  replicaCount: 2
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+job-launcher:
+  replicaCount: 1
+
+job-rest-server:
+  replicaCount: 2
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+ml-model-service:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+query-pipeline:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 60
+
+rest-service:
+  replicaCount: 2
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+rpc-service:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+rules-ui:
+  replicaCount: 1
+
+solr:
+  replicaCount: 3
+
+sql-service:
+  replicaCount: 0
+
+webapps:
+  replicaCount: 2
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 3
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          targetAverageUtilization: 70
+
+zookeeper:
+  replicaCount: 3
+
+

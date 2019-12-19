@@ -15,10 +15,13 @@ This section covers prerequisites and background knowledge needed to help you un
 === Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
+Use a short name for your release containing only letters, digits, underscore, and dashes.
 
 You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
 Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
 However, please [.underline]#do not# install more than one Fusion release in the same namespace.
+
+__NOTE: All Fusion services must run in the same namespace, i.e. you should not try to split a Fusion cluster across multiple namespaces.__
 
 === Install Helm
 
@@ -41,7 +44,9 @@ Check your Helm version by running `helm version`.
 
 Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
 
-If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create this file for you the first time you run it. Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
+If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create this file for you the first time you run it using the `customize_fusion_values.yaml.example` as a template.
+
+Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
 
 If you're working with Helm directly and not using one of our setup scripts, then simply copy the example file provided in this repo:
 ```
@@ -79,7 +84,9 @@ If you've already installed the `gcloud` command-line tools, you can skip to <<c
 
 These steps set up your local Google Cloud SDK environment so that you're ready to use the command-line tools to manage your Fusion deployment.
 
-Usually, you only need to perform these setup steps once per local session.  After that, you're ready to link:#cluster-create[create a cluster].
+Usually, you only need to perform these setup steps once.  After that, you're ready to link:#cluster-create[create a cluster].
+
+For a nice getting started tutorial for GKE, see: https://codelabs.developers.google.com/codelabs/cloud-gke-workshop-v2/#1
 
 .How to set up the Google Cloud SDK
 . https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine[Enable the Kubernetes Engine API^].
@@ -184,6 +191,17 @@ kubectl get managedcertificates -n <namespace> -o yaml
 ```
 
 Please refer to the Kubernetes documentation on configuring an Ingress for GKE: https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer[Setting up HTTP Load Balancing with Ingress]
+
+==== Custom values
+
+There are some example values files that can be used as a starting point for
+resources, affinity and replica count configuration in the `example-values` folder.
+These can be passed to the install script using the `--values` option, for example:
+```
+./setup_f5_gke.sh -c <cluster> -p <project> -r <release> -n <namespace> \
+  --values example-values/affinity.yaml --values example-values/resources.yaml --values example-values/replicas.yaml
+```
+The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
 
 ==== Upgrades and Ingress
 
