@@ -225,7 +225,10 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 
 === Upgrade Fusion on GKE
 
+*NOTE: If you're currently running Fusion 5.0.1, then please use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>>*
+
 During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
+
 After making changes to this file, you need to run the following command:
 ```
 ./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
@@ -235,12 +238,105 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 
 If you're using the `default` namespace and see an error similar to the following, then simply pass the `--force` parameter when upgrading:
 ```
-Namespace default is owned by: , by we are: OWNER please provide the --force parameter if you are sure you wish to upgrade this namespace
+Namespace default is owned by: , by we are: OWNER please provide the `--force` parameter if you are sure you wish to upgrade this namespace
 ```
 _This owner label check before upgrading is in place as a safeguard for shared clusters with Fusion deployed to multiple namespaces._
 
 After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
 To see the versions of running pods, do:
+```
+kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
+```
+
+[[upgrade-to-502]]
+==== Upgrade from 5.0.1 to 5.0.2 to Zookeeper 3.5.6 and Solr 8.3.1
+
+Fusion 5.0.1 runs Solr 8.2.0 and Zookeeper 3.4.14. Prior to upgrading to Fusion 5.0.2, you need to upgrade Solr to 8.3.1 in your existing cluster and perform some minor changes to the custom values yaml.
+
+Helm V3 no longer uses the server-side Tiller component with all of its security concerns and problems. Prior to upgrading, list our your releases for Helm v2:
+
+```
+helm ls --all-namespaces
+```
+
+On a Mac:
+```
+brew upgrade kubernetes-helm
+```
+For other OS, download from https://github.com/helm/helm/releases
+
+Verify: helm version --short
+```
+v3.0.0+ge29ce2a
+```
+
+===== Migrate your release to Helm V3 using the helm-2to3 plugin (if needed)
+
+If you installed your F5 cluster using Helm v2, you need to migrate it to v3 using the process described here:
+https://helm.sh/blog/migrate-from-helm-v2-to-helm-v3/. Basically, you need to migrate the release metadata that lives in Tiller over to your local system.
+
+If you installed your cluster with Helm v3 originally, then you don't need to do this step. Just verify your release is shown by: `helm ls`
+
+During testing, we found upgrading Solr to 8.3.1 before moving to ZK 3.5.6 was more stable.
+
+Edit your custom values yaml file and change the Solr version to 8.3.1.
+```
+solr:
+  image:
+    tag: 8.3.1
+  updateStrategy:
+    type: "RollingUpdate"
+```
+
+__Wait until solr is back up and heatlhy__
+
+*IMPORTANT: You need to edit your custom values file and move the Zookeeper settings out from under the solr: section to the main level, e.g. instead of:*
+
+```
+solr:
+  ...
+  zookeeper:
+    ...
+```
+
+You need:
+```
+solr:
+  ...
+zookeeper:
+  ...
+```
+
+At this point you're ready to switch over to ZK 3.5.6. However, we cannot do this with zero downtime, meaning your cluster will lose quorum momentarily.
+So plan to have a minute or so of downtime in this cluster. Also, to avoid as much downtime as possible, be ready to do step 7 immediately after deleting the existing statefulset.
+
+When ready, do:
+
+```
+kubectl delete statefulset ${RELEASE}-solr
+kubectl delete statefulset ${RELEASE}-zookeeper
+```
+
+Deleting the StatefulSet does not remove the persistent volumes backing Zookeeper, which is how we can perform an upgrade w/o losing data.
+
+After editing your custom values yaml file, run:
+
+```
+cd fusion-cloud-native
+./setup_f5_gke.sh -c <CLUSTER> -p <PROJECT> -z <ZONE> \
+  -n <NAMESPACE> -r <RELEASE> \
+    --values <MY_VALUES> --upgrade --force
+```
+
+Wait a few minutes and then verify the new ZK establishes quorum:
+
+```
+kubectl get pods
+```
+
+It will take some time for the upgrade to rollout across all the services as K8s needs to pull new Docker images and then perform a rolling upgrade for each Fusion service.
+
+After upgrading, verify the versions of each pod:
 ```
 kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 ```
