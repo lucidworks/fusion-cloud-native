@@ -122,10 +122,6 @@ if [ "$CLUSTER_NAME" == "" ]; then
   exit 1
 fi
 
-if [ "$PROVIDER" != "gke" ]; then
-  NODE_POOL=""
-fi
-
 cp customize_fusion_values.yaml.example $MY_VALUES
 sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
 sed -i ''  -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"

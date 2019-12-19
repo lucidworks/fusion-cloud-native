@@ -3,7 +3,7 @@
 # Platform agnostic script used by the other setup_f5_*.sh scripts to perform general K8s and Helm commands to install Fusion.
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 
-CHART_VERSION="5.0.2-7"
+CHART_VERSION="5.0.2"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
 PROMETHEUS="install"
