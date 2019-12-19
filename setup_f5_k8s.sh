@@ -331,6 +331,11 @@ if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
   helm repo add ${lw_helm_repo} https://charts.lucidworks.com
 fi
 
+if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
+  echo -e "\nAdding the stable chart repo to helm repo list"
+  helm repo add stable https://kubernetes-charts.storage.googleapis.com
+fi
+
 # If no custom values are passed, and we are not upgrading, then supply a default values yaml
 if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
   if [ ! -f "${DEFAULT_MY_VALUES}" ]; then

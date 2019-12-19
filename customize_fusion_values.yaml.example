@@ -27,16 +27,17 @@ solr:
       prometheus.io/path: "/metrics"
     nodeSelector:
       {NODE_POOL}
-  zookeeper:
-    nodeSelector:
-      {NODE_POOL}
-    replicaCount: {SOLR_REPLICAS}
-    persistence:
-      size: 15Gi
-    resources: {}
-    env:
-      ZK_HEAP_SIZE: 1G
-      ZK_PURGE_INTERVAL: 1
+
+zookeeper:
+  nodeSelector:
+    {NODE_POOL}
+  replicaCount: {SOLR_REPLICAS}
+  persistence:
+    size: 15Gi
+  resources: {}
+  env:
+    ZK_HEAP_SIZE: 1G
+    ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
   image:
