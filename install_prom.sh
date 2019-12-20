@@ -14,7 +14,7 @@ function print_usage() {
     echo -e "\nERROR: $ERROR_MSG"
   fi
 
-  echo -e "\nUse this script to install Prometheus and Grafana into an existing cluster"
+  echo -e "\nUse this script to install Prometheus and Grafana into an existing Fusion 5 cluster"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c            Name of the K8s cluster (required)\n"
   echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
@@ -97,6 +97,11 @@ if [ "$RELEASE" == "" ]; then
   exit 1
 fi
 
+if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-prom"; then
+  echo -e "\nERROR: There is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-prom\n"
+  exit 1
+fi
+
 PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
 if [ ! -f "${PROMETHEUS_VALUES}" ]; then
   cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
@@ -113,10 +118,10 @@ fi
 
 echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
 
-helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
+#helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
 kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
 
-helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
+#helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
 kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
 
 echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"

@@ -37,7 +37,7 @@ brew upgrade kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
-The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm V3.
+The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm v3.
 Check your Helm version by running `helm version`.
 
 === Customize Fusion Chart Settings
@@ -251,15 +251,19 @@ kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 [[upgrade-to-502]]
 ==== Upgrade from 5.0.1 to 5.0.2 to Zookeeper 3.5.6 and Solr 8.3.1
 
-Fusion 5.0.1 runs Solr 8.2.0 and Zookeeper 3.4.14. Prior to upgrading to Fusion 5.0.2, you need to upgrade Solr to 8.3.1 in your existing cluster and perform some minor changes to the custom values yaml.
+Fusion 5.0.1 (and subsequent 5.0.2 pre-release versions, such as 5.0.2-7) runs Solr 8.2.0 and Zookeeper 3.4.14.
+Prior to upgrading to Fusion 5.0.2, you need to upgrade Solr to 8.3.1 in your existing cluster and perform some minor changes to the custom values yaml.
 
-Helm V3 no longer uses the server-side Tiller component with all of its security concerns and problems. Prior to upgrading, list our your releases for Helm v2:
+When you upgrade to 5.0.2, Zookeeper will migrate from 3.4.14 to 3.5.6. Behind the scenes, we also had update the ZK Helm chart to work around an issue with purging logs (https://github.com/kubernetes-retired/contrib/issues/2942),
+so we'll have to delete the existing StatefulSet in order to switch charts during the upgrade.
+
+Prior to upgrading, list our your releases for Helm v2:
 
 ```
 helm ls --all-namespaces
 ```
 
-On a Mac:
+Once you're ready to upgrade, on a Mac, do:
 ```
 brew upgrade kubernetes-helm
 ```
@@ -270,7 +274,7 @@ Verify: helm version --short
 v3.0.0+ge29ce2a
 ```
 
-===== Migrate your release to Helm V3 using the helm-2to3 plugin (if needed)
+===== Migrate your release to Helm v3 using the helm-2to3 plugin (if needed)
 
 If you installed your F5 cluster using Helm v2, you need to migrate it to v3 using the process described here:
 https://helm.sh/blog/migrate-from-helm-v2-to-helm-v3/. Basically, you need to migrate the release metadata that lives in Tiller over to your local system.
@@ -288,9 +292,19 @@ solr:
     type: "RollingUpdate"
 ```
 
+Determine the version of the Fusion chart you are currently running (shown by `helm ls -n <namespace>`) as you'll need to pass that to the setup script when upgrading Solr to 8.3.1.
+
+For instance, your chart version may be: `fusion-5.0.2-7` in which case you would pass `--version 5.0.2-7`. The `-7` part of the version is considered a "pre-release" of 5.0.2 in the semantic versioning scheme, see: https://semver.org/
+
+```
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
+  --version <CHART_VERSION> \
+  --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
+```
+
 __Wait until solr is back up and heatlhy__
 
-*IMPORTANT: You need to edit your custom values file and move the Zookeeper settings out from under the solr: section to the main level, e.g. instead of:*
+*IMPORTANT: You need to edit your custom values file and move the Zookeeper settings out from under the `solr:` section to the main level, e.g. instead of:*
 
 ```
 solr:
@@ -303,12 +317,13 @@ You need:
 ```
 solr:
   ...
+
 zookeeper:
   ...
 ```
 
 At this point you're ready to switch over to ZK 3.5.6. However, we cannot do this with zero downtime, meaning your cluster will lose quorum momentarily.
-So plan to have a minute or so of downtime in this cluster. Also, to avoid as much downtime as possible, be ready to do step 7 immediately after deleting the existing statefulset.
+So plan to have a minute or so of downtime in this cluster. Also, to avoid as much downtime as possible, be ready to upgrade to 5.0.2 immediately after deleting the existing statefulset.
 
 When ready, do:
 
@@ -317,15 +332,16 @@ kubectl delete statefulset ${RELEASE}-solr
 kubectl delete statefulset ${RELEASE}-zookeeper
 ```
 
-Deleting the StatefulSet does not remove the persistent volumes backing Zookeeper, which is how we can perform an upgrade w/o losing data.
+Deleting the StatefulSet does not remove the persistent volumes backing Zookeeper and Solr, so no data will be lost.
 
 After editing your custom values yaml file, run:
 
 ```
 cd fusion-cloud-native
+
 ./setup_f5_gke.sh -c <CLUSTER> -p <PROJECT> -z <ZONE> \
   -n <NAMESPACE> -r <RELEASE> \
-    --values <MY_VALUES> --upgrade --force
+    --values <MY_VALUES> --version 5.0.2 --upgrade --force
 ```
 
 Wait a few minutes and then verify the new ZK establishes quorum:
@@ -340,6 +356,64 @@ After upgrading, verify the versions of each pod:
 ```
 kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 ```
+
+===== Install Prometheus / Grafana to Existing Cluster
+
+As of 5.0.2, the Fusion setup scripts provide the option to install Prometheus and Grafana using the `--prometheus` option.
+However, if you installed a previous version of Fusion 5.0.x, then the upgrade does not install Prometheus / Grafana for you.
+
+Once you complete the upgrade to Fusion 5.0.2, you can run the `install_prom.sh` script to install these additional services into your namespace. Pass the `--help` option to see script usage details.
+
+For instance, to install into a GKE cluster and schedule the new pods in the default Node Pool, you would do:
+```
+./install_prom.sh -c <cluster> -r <release> -n <namespace> \
+  --node-pool "cloud.google.com/gke-nodepool: default-pool" --provider gke
+```
+
+Once Prometheus and Grafana are deployed, edit your custom values yaml file for Fusion to enable the Solr exporter:
+```
+solr:
+  ...
+  exporter:
+    enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+```
+
+Add pod annotations to the `query-pipeline`, `fusion-indexing`, `api-gateway` services as needed to allow Prometheus to scrape metrics:
+
+```
+fusion-indexing:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+```
+
+```
+query-pipeline:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+```
+
+```
+api-gateway:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+```
+
+After making changes to the custom values yaml file, run an upgrade.
 
 // end::gke[]
 
@@ -599,10 +673,10 @@ You will also use the `--upgrade` option to upgrade to a newer version of Fusion
 If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
 [[helm-only]]
-=== Use Helm V3 to Install Fusion
+=== Use Helm v3 to Install Fusion
 
-You should upgrade to the latest version of Helm V3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
-then just make sure Helm V3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
+You should upgrade to the latest version of Helm v3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
+then just make sure Helm v3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
 
 Start by copying the example custom values yaml file provided in this repo:
 ```
@@ -755,6 +829,39 @@ kubectl get svc
 ```
 
 For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/microservices.html
+
+Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/blob/master/Fusion_5_Survival_Guide_v0.1.pdf[Fusion 5 Survival Guide] PDF in this repo.
+
+
+=== Grafana Dashboards
+
+Get the initial Grafana password from a K8s secret by doing:
+
+```
+kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-graf-grafana \
+  -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+With Grafana, you can either setup a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s LoadBalancer.
+To define a LoadBalancer, do (replace ${RELEASE} with your Helm release label):
+
+```
+kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+```
+
+You can use `kubectl get services --namespace <namespace>` to determine when the load balancer is setup and its IP address. Direct your browser to http://<GrafanaIP>:3000 and enter the username `admin@localhost` and the password that was returned in the previous step.
+
+This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
+
+One of the first things you will want to do is to configure the Prometheus data source in Grafana. Go to the gear icon on the left and then to Data Sources.
+
+Click Add Data Source and then click on Prometheus as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
+
+```
+http://<RELEASE>-prom-prometheus-server
+```
+
+Import dashboards from `monitoring/grafana/*.json`
 
 // end::verify[]
 
