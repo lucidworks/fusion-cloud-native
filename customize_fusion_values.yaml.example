@@ -11,7 +11,7 @@ solr:
   nodeSelector:
     {NODE_POOL}
   image:
-    tag: 8.2.0
+    tag: 8.3.1
   updateStrategy:
     type: "RollingUpdate"
   javaMem: "-Xmx3g"
