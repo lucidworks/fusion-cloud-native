@@ -2,7 +2,7 @@
 
 INSTANCE_TYPE="m5.2xlarge"
 CHART_VERSION="5.0.2"
-NODE_POOL="alpha.eksctl.io/nodegroup-name=standard-workers"
+NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
