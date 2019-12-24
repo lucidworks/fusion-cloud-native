@@ -158,7 +158,7 @@ kubectl config current-context
 
 kubectl config set-context --current --namespace=${NAMESPACE}
 
-declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "insights" "job-launcher" "job-rest-server" "ml-model-service" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "sql-service-cm" "sql-service-cr" "webapps" "cx-scheduler" "cx-script-executor" "cx-ui" "cx-user-prefs")
+declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "graf-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "prom-prometheus-kube-state-metrics" "prom-prometheus-pushgateway" "prom-prometheus-server" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "solr-exporter" "webapps")
 
 if [ "$ACTION" == "down" ]; then
 
@@ -172,7 +172,7 @@ if [ "$ACTION" == "down" ]; then
      kubectl scale deployments/${next} --replicas=0 -n ${NAMESPACE}
   done
 
-  declare -a stateful=("classic-rest-service" "logstash" "solr" "cx-api" "kafka")
+  declare -a stateful=("classic-rest-service" "logstash" "solr")
   for i in "${stateful[@]}"
   do
      next="${RELEASE}-$i"
@@ -195,7 +195,7 @@ echo -e "\nBringing ${NUM_REPLICAS} Solr pods back up ... will wait up to 3 minu
 kubectl scale statefulsets/${RELEASE}-solr --replicas=${NUM_REPLICAS} -n ${NAMESPACE}
 kubectl rollout status statefulset/${RELEASE}-solr -n ${NAMESPACE} --timeout=180s
 
-declare -a stateful=("logstash" "classic-rest-service" "cx-api" "kafka")
+declare -a stateful=("logstash" "classic-rest-service")
 for i in "${stateful[@]}"
 do
    next="${RELEASE}-$i"
