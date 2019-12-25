@@ -460,7 +460,7 @@ else
 fi
 
 # for debug only
-echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
+#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
 source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
   --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?

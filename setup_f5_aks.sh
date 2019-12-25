@@ -534,7 +534,7 @@ else
   fi
 fi
 
-if [ "${NODE_POOL}" == "" ]; then
+if [ "${NODE_POOL}" == "" ] || [ "${NODE_POOL}" == "fusion_node_type: system" ]; then
   # the user did not specify a node pool label, but our templating needs one
   for node in $(kubectl get nodes --namespace="${NAMESPACE}" -o=name); do kubectl label "$node" fusion_node_type=system; done
   NODE_POOL="fusion_node_type: system"

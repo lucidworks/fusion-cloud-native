@@ -347,6 +347,10 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
+    if [ "${NODE_POOL}" == "" ]; then
+      NODE_POOL="{}"
+    fi
+
     source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON \
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
   else
@@ -379,6 +383,10 @@ helm repo update
 # Don't mess with upgrading the Prom / Grafana charts during upgrade
 # just let the user do that manually with Helm as needed
 if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
+
+  if [ "${NODE_POOL}" == "" ]; then
+    NODE_POOL="{}"
+  fi
 
   PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then

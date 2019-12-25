@@ -26,7 +26,7 @@ __NOTE: All Fusion services must run in the same namespace, i.e. you should not 
 === Install Helm
 
 Helm is a package manager for Kubernetes that helps you install and manage applications on your Kubernetes cluster.
-Regardless of which Kubernetes platform you're using, e.g. GKE, EKS, OpenShift, you need to install `Helm` as it is required to install Fusion for any K8s platform.
+Regardless of which Kubernetes platform you're using, e.g. GKE, EKS, OpenShift, you need to install *`helm`* as it is required to install Fusion for any K8s platform.
 On MacOS, you can do:
 ```
 brew install kubernetes-helm
@@ -48,11 +48,15 @@ If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will cre
 
 Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
 
-If you're working with Helm directly and not using one of our setup scripts, then simply copy the example file provided in this repo:
+If you're working with Helm directly and not using one of our setup scripts, then run the `customize_fusion_values.sh` script to create a custom values yaml file from our `customize_fusion_values.yaml.example` template as a starting point (pass `--help` for usage details):
 ```
-cp customize_fusion_values.yaml.example <provider>_<cluster>_<release>_fusion_values.yaml
+./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
+  -c <cluster> -r <release> \
+  --provider <provider> --num-solr 1 --node-pool "<node_pool>"
 ```
 where `<provider>` is the K8s platform you're running on, such as `gke`, `<cluster>` is the name of your cluster, and `<release>` is the name you give to your Fusion release, such as `f5`.
+
+__NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods; you can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.__
 
 === Upgrading with Zero Downtime
 
@@ -234,7 +238,11 @@ After making changes to this file, you need to run the following command:
 ./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
   --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
+You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2. Our setup script creates an upgrade script you can use to perform upgrades, see:
+
+```
+gke_<cluster>_<release>_upgrade_fusion.sh
+```
 
 If you're using the `default` namespace and see an error similar to the following, then simply pass the `--force` parameter when upgrading:
 ```
@@ -536,6 +544,12 @@ During installation, the script generates a file named `eks_<cluster>_<release>_
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
 
+To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
+
+```
+eks_<cluster>_<release>_upgrade_fusion.sh
+```
+
 === Provide access to the EKS cluster to other users
 
 Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions, a `ConfigMap` should be created to allow access to IAM users or roles.
@@ -663,6 +677,12 @@ During installation, the script generates a file named `aks_<cluster>_<release>_
   --values aks_<cluster>_<release>_fusion_values.yaml --upgrade
 ```
 You will also use the `--upgrade` option to upgrade to a newer version of Fusion.
+
+To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
+
+```
+aks_<cluster>_<release>_upgrade_fusion.sh
+```
 
 // end::aks[]
 

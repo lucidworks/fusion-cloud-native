@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
+NODE_POOL=""
 SOLR_REPLICAS=3
 RELEASE=f5
 CLUSTER_NAME=
@@ -120,6 +120,16 @@ fi
 if [ "$CLUSTER_NAME" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the K8s cluster name using: -c <cluster>"
   exit 1
+fi
+
+if [ "${NODE_POOL}" == "" ]; then
+  if [ "${PROVIDER}" == "eks" ]; then
+    NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
+  elif [ "${PROVIDER}" == "gke" ]; then
+    NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
+  else
+    NODE_POOL="{}"
+  fi
 fi
 
 cp customize_fusion_values.yaml.example $MY_VALUES
