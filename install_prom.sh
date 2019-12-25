@@ -4,7 +4,7 @@ PROVIDER=gke
 CLUSTER_NAME=
 RELEASE=f5
 NAMESPACE=default
-NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
+NODE_POOL=""
 
 function print_usage() {
   CMD="$1"
@@ -102,6 +102,16 @@ if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0]
   exit 1
 fi
 
+if [ "${NODE_POOL}" == "" ]; then
+  if [ "${PROVIDER}" == "eks" ]; then
+    NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
+  elif [ "${PROVIDER}" == "gke" ]; then
+    NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
+  else
+    NODE_POOL="{}"
+  fi
+fi
+
 PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
 if [ ! -f "${PROMETHEUS_VALUES}" ]; then
   cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
@@ -118,10 +128,10 @@ fi
 
 echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
 
-#helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
+helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
 kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
 
-#helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
+helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
 kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
 
 echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"

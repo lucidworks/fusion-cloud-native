@@ -42,13 +42,11 @@ Check your Helm version by running `helm version`.
 
 === Customize Fusion Chart Settings
 
-Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file.
-
-If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create this file for you the first time you run it using the `customize_fusion_values.yaml.example` as a template.
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values yaml file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] as a template.
 
 Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
 
-If you're working with Helm directly and not using one of our setup scripts, then run the `customize_fusion_values.sh` script to create a custom values yaml file from our `customize_fusion_values.yaml.example` template as a starting point (pass `--help` for usage details):
+If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customize_fusion_values.sh^] script to create a custom values yaml file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] template as a starting point (pass `--help` for usage details):
 ```
 ./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
   -c <cluster> -r <release> \
@@ -370,7 +368,7 @@ kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 As of 5.0.2, the Fusion setup scripts provide the option to install Prometheus and Grafana using the `--prometheus` option.
 However, if you installed a previous version of Fusion 5.0.x, then the upgrade does not install Prometheus / Grafana for you.
 
-Once you complete the upgrade to Fusion 5.0.2, you can run the `install_prom.sh` script to install these additional services into your namespace. Pass the `--help` option to see script usage details.
+Once you complete the upgrade to Fusion 5.0.2, you can run the https://github.com/lucidworks/fusion-cloud-native/blob/master/install_prom.sh[install_prom.sh^] script to install these additional services into your namespace. Pass the `--help` option to see script usage details.
 
 For instance, to install into a GKE cluster and schedule the new pods in the default Node Pool, you would do:
 ```
@@ -421,7 +419,7 @@ api-gateway:
       prometheus.io/scrape: "true"
 ```
 
-After making changes to the custom values yaml file, run an upgrade.
+After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
 
 // end::gke[]
 
