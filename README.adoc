@@ -40,6 +40,19 @@ For other OS, please refer to the Helm installation docs: https://helm.sh/docs/u
 The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm v3.
 Check your Helm version by running `helm version`.
 
+=== Clone fusion-cloud-native from Github
+
+You should clone this repo from github as you'll need to run the scripts on your local workstation:
+```
+git clone https://github.com/lucidworks/fusion-cloud-native.git
+```
+
+You should get into the habit of pulling this repo for the latest changes before performing any maintenance operations on your Fusion cluster to ensure you have the latest updates to the scripts.
+```
+cd fusion-cloud-native
+git pull
+```
+
 == Google Kubernetes Engine (GKE)
 
 // tag::gke[]
@@ -81,9 +94,9 @@ gcloud components update
 ```
 
 [[cluster-create]]
-=== Set up Fusion on GKE
+=== Create a Fusion cluster in GKE
 
-Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
 ```
 ./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -r <release> -n <namespace>
 ```
