@@ -40,35 +40,6 @@ For other OS, please refer to the Helm installation docs: https://helm.sh/docs/u
 The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm v3.
 Check your Helm version by running `helm version`.
 
-=== Customize Fusion Chart Settings
-
-Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values yaml file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] as a template.
-
-Keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
-
-If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customize_fusion_values.sh^] script to create a custom values yaml file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] template as a starting point (pass `--help` for usage details):
-```
-./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
-  -c <cluster> -r <release> \
-  --provider <provider> --num-solr 1 --node-pool "<node_pool>"
-```
-where `<provider>` is the K8s platform you're running on, such as `gke`, `<cluster>` is the name of your cluster, and `<release>` is the name you give to your Fusion release, such as `f5`.
-
-__NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods; you can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.__
-
-=== Upgrading with Zero Downtime
-
-One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.x.y to a later 5.x.z version on a live cluster with zero downtime or disruption of service.
-
-When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure stored configuration remains compatible in the same 5.x release line.
-
-Lucidworks releases minor updates to individual services frequently, so our customers can pull in those upgrades using Helm at their discretion.
-
-To upgrade your cluster at any time, use the `--upgrade` option with our setup scripts in this repo.
-
-The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks.
-To see what would be upgraded, you can pass the `--dry-run` option to the script.
-
 == Google Kubernetes Engine (GKE)
 
 // tag::gke[]
@@ -696,13 +667,21 @@ If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use
 You should upgrade to the latest version of Helm v3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
 then just make sure Helm v3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
 
-Start by copying the example custom values yaml file provided in this repo:
+==== Customize Fusion Chart Settings
+
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values yaml file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] as a template.
+
+If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customize_fusion_values.sh^] script to create a custom values yaml file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] template as a starting point (pass `--help` for usage details):
 ```
-cp customize_fusion_values.yaml.example <provider>_<cluster>_<release>_fusion_values.yaml
+./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
+  -c <cluster> -r <release> \
+  --provider <provider> --num-solr 1 --node-pool "<node_pool>"
 ```
 where `<provider>` is the K8s platform you're running on, such as `gke`, `<cluster>` is the name of your cluster, and `<release>` is the name you give to your Fusion release, such as `f5`.
 
-This file is referred to as `${MY_VALUES}` in the commands below, be sure to replace it with the correct file name for your environment.
+__NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods; you can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.__
+
+This file is referred to as `${MY_VALUES}` in the commands below, be sure to replace it with the correct file name for your environment. Also, be sure to keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
 
 Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
 
@@ -713,7 +692,7 @@ NAMESPACE=default
 helm version --short
 helm repo add lucidworks https://charts.lucidworks.com
 helm repo update
-helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2-7
+helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
@@ -848,8 +827,20 @@ kubectl get svc
 
 For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/microservices.html
 
-Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/blob/master/Fusion_5_Survival_Guide_v0.1.pdf[Fusion 5 Survival Guide] PDF in this repo.
+Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/blob/master/Fusion_5_Survival_Guide_v0.2.pdf[Fusion 5 Survival Guide] PDF in this repo.
 
+=== Upgrading with Zero Downtime
+
+One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.x.y to a later 5.x.z version on a live cluster with zero downtime or disruption of service.
+
+When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure stored configuration remains compatible in the same 5.x release line.
+
+Lucidworks releases minor updates to individual services frequently, so our customers can pull in those upgrades using Helm at their discretion.
+
+To upgrade your cluster at any time, use the `--upgrade` option with our setup scripts in this repo.
+
+The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks.
+To see what would be upgraded, you can pass the `--dry-run` option to the script.
 
 === Grafana Dashboards
 
