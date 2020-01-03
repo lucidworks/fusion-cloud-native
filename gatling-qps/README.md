@@ -9,7 +9,7 @@ Query load tests for Fusion 5.x
 
 ## Run from Intellij IDEA
 
-Run the GatlingRunner class from your IDE. You may need to override the default configuration settings in scala code.
+Run the GatlingRunner class from your IDE. You may need to override the default configuration settings in scala code especially the Fusion URL and credentials.
 
 ## Docker
 

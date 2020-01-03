@@ -52,7 +52,7 @@ class FusionQueryTraffic extends Simulation {
     val testDurationMins = getInt("qps.duration.mins", 5)
     val queryFeederSource = getStr("qps.feeder.source", "data/example_queries.csv")
     val rampDurationSecs = getInt("qps.ramp.secs", 5)
-    val proxyHostAndPort = getStr("qps.fusion.url", "http://35.233.215.27:6764")
+    val proxyHostAndPort = getStr("qps.fusion.url", "http://localhost:6764")
     val appId = getStr("qps.app", "datagen")
     val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
     val username = getStr("qps.fusion.user", "admin")
