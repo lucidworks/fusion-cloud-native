@@ -764,12 +764,22 @@ oc adm policy add-scc-to-group anyuid system:authenticated
 
 In this section, we provide some tips on how to verify the Fusion installation. First, let's review some useful kubectl commands.
 
-=== Useful kubectl commands
+=== Enhance the K8s Command-line Experience
 
 When working with Kubernetes on the command-line, it's useful to create a shell alias for `kubectl`, e.g.:
 ```
 alias k=kubectl
 ```
+
+Here is a list of tools we found useful for improving your command-line experience with Kubernetes:
+
+* krew (kubectl plugin mgr): https://github.com/kubernetes-sigs/krew/
+* kube-ps1 (show current context on command line prompt): https://github.com/jonmosco/kube-ps1
+* kubectx / kubens (switch between clusters / namespaces): https://github.com/ahmetb/kubectx
+
+=== Useful kubectl commands
+
+kubectl reference: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
 
 Set the namespace for `kubectl` if not using the default:
 ```
