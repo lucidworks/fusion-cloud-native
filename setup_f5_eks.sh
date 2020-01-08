@@ -308,7 +308,7 @@ else
   fi
 fi
 
-aws eks --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
+aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
 current_cluster=$(kubectl config current-context)
 
 if [ "$PURGE" == "1" ]; then
@@ -398,4 +398,3 @@ source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "eks" -n "$
   --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
 exit $setup_result
-
