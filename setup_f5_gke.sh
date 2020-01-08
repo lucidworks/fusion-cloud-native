@@ -60,6 +60,21 @@ function print_usage() {
   echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 }
 
+SCRIPT_CMD="$0"
+GCLOUD_PROJECT=
+GCLOUD_ZONE=us-west1
+CLUSTER_NAME=
+RELEASE=f5
+NAMESPACE=marc-ns-063
+UPGRADE=0
+GCS_BUCKET=
+CREATE_MODE=
+PURGE=0
+FORCE=0
+ML_MODEL_STORE="fs"
+CUSTOM_MY_VALUES=""
+DRY_RUN=""
+
 if [ $# -gt 0 ]; then
   while true; do
     case "$1" in

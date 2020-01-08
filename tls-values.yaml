@@ -1,0 +1,12 @@
+api-gateway:
+  service:
+    type: "NodePort"
+  ingress:
+    enabled: true
+    host: "fusion5.bear19.net"
+    tls:
+      enabled: true
+    annotations:
+      "networking.gke.io/managed-certificates": "f5marc063-managed-certificate"
+      "kubernetes.io/ingress.class": "gce"
+
