@@ -178,6 +178,9 @@ kubectl get managedcertificates -n <namespace> -o yaml
 
 Please refer to the Kubernetes documentation on configuring an Ingress for GKE: https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer[Setting up HTTP Load Balancing with Ingress]
 
+NOTE: The GCP Ingress defaults to a 30 second timeout, which can lead to false negatives for long running requests such as importing apps. Use the instructions on this page to increase the timeout:
+https://cloud.google.com/load-balancing/docs/backend-service#timeout-setting
+
 ==== Custom values
 
 There are some example values files that can be used as a starting point for
