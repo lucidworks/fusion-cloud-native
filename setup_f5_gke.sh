@@ -389,6 +389,7 @@ api-gateway:
   ingress:
     enabled: true
     host: "${INGRESS_HOSTNAME}"
+    path: "/*"
     tls:
       enabled: true
     annotations:
@@ -431,7 +432,7 @@ if [ ! -z "${INGRESS_VALUES}" ]; then
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
     VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
   fi
-  
+
   VALUES_STRING="${VALUES_STRING} ${INGRESS_VALUES}"
 fi
 
