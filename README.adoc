@@ -178,9 +178,43 @@ kubectl get managedcertificates -n <namespace> -o yaml
 
 Please refer to the Kubernetes documentation on configuring an Ingress for GKE: https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer[Setting up HTTP Load Balancing with Ingress]
 
-NOTE: The GCP Ingress defaults to a 30 second timeout, which can lead to false negatives for long running requests such as importing apps. Use the instructions on this page to increase the timeout:
-https://cloud.google.com/load-balancing/docs/backend-service#timeout-setting
+NOTE: The GCP Ingress defaults to a 30 second timeout, which can lead to false negatives for long running requests such as importing apps. To configure the timeout for the backend in kubernetes:
 
+Create a BackendConfig object in your namespace:
+
+```
+---
+apiVersion: cloud.google.com/v1beta1
+kind: BackendConfig
+metadata:
+  name: backend_config_name
+spec:
+  timeoutSec: 120
+  connectionDraining:
+    drainingTimeoutSec: 60
+```
+
+Then make sure that the following entries are in the right place in your values.yaml file:
+
+```
+api-gateway:
+  service:
+    annotations:
+      beta.cloud.google.com/backend-config: '{"ports": {"6764":"backend_config_name"}}'
+```
+
+and upgrade your release to apply the configuration changes
+
+==== Considerations when using the nginx ingress controller
+
+If you are using the `nginx` ingress controller to fulfil your ingress definitions there are a couple
+of options that are recommended to be set in the configmap:
+
+```
+enable-underscores-in-headers: "true"   # Fusion can return some headers that have underscores, these have to be explicitly enabled in nginx
+proxy-body-size: "0"        # By default nginx places a maximum size on request bodies, either increase as needed or disable by setting to 0
+proxy-read-timeout: "300"   # Increases the timeout for potential slow queries.
+```
 ==== Custom values
 
 There are some example values files that can be used as a starting point for

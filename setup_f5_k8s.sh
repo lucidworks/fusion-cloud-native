@@ -259,9 +259,16 @@ elif [ "$PURGE" == "1" ]; then
   exit 0
 else
   # Check if there is already a release for helm with the release name that we want
-  if helm status "${RELEASE}" > /dev/null 2>&1 ; then
-    echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release\n"
-    exit 1
+  if [ "${is_helm_v3}" == "" ]; then
+    if helm status "${RELEASE}" > /dev/null 2>&1 ; then
+      echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release\n"
+      exit 1
+    fi
+  else
+     if helm status --namespace "${NAMESPACE}" "${RELEASE}" > /dev/null 2>&1 ; then
+       echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in namespace: ${NAMESPACE} in the cluster, please choose a different release name or upgrade the release\n"
+       exit 1
+     fi
   fi
 
   # There isn't let's check if there is a fusion deployment in the namespace already
