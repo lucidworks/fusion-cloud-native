@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 2,
-  "iteration": 1578596078018,
+  "iteration": 1578596818436,
   "links": [],
   "panels": [
     {
@@ -545,6 +545,7 @@
       {
         "allValue": null,
         "current": {
+          "tags": [],
           "text": "default",
           "value": "default"
         },
@@ -570,10 +571,9 @@
       {
         "allValue": null,
         "current": {
+          "selected": false,
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "Prometheus",
         "definition": "label_values(indexing_pipeline_outcome_total{kubernetes_namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
@@ -584,7 +584,7 @@
         "name": "pipeline",
         "options": [],
         "query": "label_values(indexing_pipeline_outcome_total{kubernetes_namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -617,5 +617,5 @@
   "timezone": "",
   "title": "Indexing Service Metrics",
   "uid": "RvRcaixWk",
-  "version": 7
+  "version": 4
 }
