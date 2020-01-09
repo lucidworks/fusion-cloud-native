@@ -582,28 +582,7 @@
         "label": "Pipeline Id",
         "multi": true,
         "name": "pipeline",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "LLM_us",
-            "value": "LLM_us"
-          },
-          {
-            "selected": false,
-            "text": "LLM_us_non_product_IPL",
-            "value": "LLM_us_non_product_IPL"
-          },
-          {
-            "selected": false,
-            "text": "_signals_ingest",
-            "value": "_signals_ingest"
-          }
-        ],
+        "options": [],
         "query": "label_values(indexing_pipeline_outcome_total{kubernetes_namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
         "refresh": 0,
         "regex": "",
@@ -638,5 +617,5 @@
   "timezone": "",
   "title": "Indexing Service Metrics",
   "uid": "RvRcaixWk",
-  "version": 6
+  "version": 7
 }
