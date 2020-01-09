@@ -203,6 +203,8 @@ api-gateway:
       beta.cloud.google.com/backend-config: '{"ports": {"6764":"backend_config_name"}}'
 ```
 
+and upgrade your release to apply the configuration changes
+
 ==== Considerations when using the nginx ingress controller
 
 If you are using the `nginx` ingress controller to fulfil your ingress definitions there are a couple
