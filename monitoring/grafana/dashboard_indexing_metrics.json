@@ -15,8 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 5,
-  "iteration": 1574803211416,
+  "id": 2,
+  "iteration": 1578596078018,
   "links": [],
   "panels": [
     {
@@ -33,6 +33,7 @@
         "x": 0,
         "y": 0
       },
+      "hiddenSeries": false,
       "id": 7,
       "legend": {
         "avg": false,
@@ -118,6 +119,7 @@
         "x": 12,
         "y": 0
       },
+      "hiddenSeries": false,
       "id": 9,
       "legend": {
         "avg": false,
@@ -203,6 +205,7 @@
         "x": 0,
         "y": 8
       },
+      "hiddenSeries": false,
       "id": 11,
       "legend": {
         "avg": false,
@@ -288,6 +291,7 @@
         "x": 12,
         "y": 8
       },
+      "hiddenSeries": false,
       "id": 5,
       "legend": {
         "avg": false,
@@ -373,6 +377,7 @@
         "x": 0,
         "y": 16
       },
+      "hiddenSeries": false,
       "id": 2,
       "legend": {
         "avg": false,
@@ -458,6 +463,7 @@
         "x": 0,
         "y": 25
       },
+      "hiddenSeries": false,
       "id": 4,
       "legend": {
         "avg": false,
@@ -531,7 +537,7 @@
     }
   ],
   "refresh": false,
-  "schemaVersion": 20,
+  "schemaVersion": 21,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -539,9 +545,8 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
-          "text": "qa",
-          "value": "qa"
+          "text": "default",
+          "value": "default"
         },
         "datasource": "Prometheus",
         "definition": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
@@ -585,208 +590,18 @@
           },
           {
             "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-650_api_query-testcc5872bc",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-650_api_query-testcc5872bc"
+            "text": "LLM_us",
+            "value": "LLM_us"
           },
           {
             "selected": false,
-            "text": "robot_local_EWE_api_ds_test_318d3892",
-            "value": "robot_local_EWE_api_ds_test_318d3892"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_EWE_api_ds_test_f2f1505f",
-            "value": "robot_local_EWE_api_ds_test_f2f1505f"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_EWE_api_tutorial_f12aa777",
-            "value": "robot_local_EWE_api_tutorial_f12aa777"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-650_api_tutorial_88471ed6",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-650_api_tutorial_88471ed6"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_EWE_api_ds_test_f117b51b",
-            "value": "robot_local_EWE_api_ds_test_f117b51b"
-          },
-          {
-            "selected": false,
-            "text": "_lw_tmp_1574798207",
-            "value": "_lw_tmp_1574798207"
+            "text": "LLM_us_non_product_IPL",
+            "value": "LLM_us_non_product_IPL"
           },
           {
             "selected": false,
             "text": "_signals_ingest",
             "value": "_signals_ingest"
-          },
-          {
-            "selected": false,
-            "text": "ewe",
-            "value": "ewe"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-651_api_tutorial_0a4c808a",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-651_api_tutorial_0a4c808a"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-652_api_query-test17e9dc31",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-652_api_query-test17e9dc31"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-652_api_tutorial_f6035ab8",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-652_api_tutorial_f6035ab8"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-653_api_query-test0c389997",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-653_api_query-test0c389997"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-653_api_tutorial_abcac311",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-653_api_tutorial_abcac311"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-654_api_query-test5944bfd9",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-654_api_query-test5944bfd9"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-654_api_tutorial_c0d962b8",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-654_api_tutorial_c0d962b8"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-655_api_query-testd46a6d31",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-655_api_query-testd46a6d31"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-655_api_tutorial_a596711d",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-655_api_tutorial_a596711d"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_EWE_api_ds_test_9de69d04",
-            "value": "robot_local_EWE_api_ds_test_9de69d04"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_EWE_api_tutorial_1451dd47",
-            "value": "robot_local_EWE_api_tutorial_1451dd47"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test22083832",
-            "value": "robot_local_api_query-test22083832"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test528fc1f9",
-            "value": "robot_local_api_query-test528fc1f9"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test85f9c139",
-            "value": "robot_local_api_query-test85f9c139"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test8c7c6e2a",
-            "value": "robot_local_api_query-test8c7c6e2a"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-testc1e65eb7",
-            "value": "robot_local_api_query-testc1e65eb7"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-testc860b1d7",
-            "value": "robot_local_api_query-testc860b1d7"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-testde96fbc0",
-            "value": "robot_local_api_query-testde96fbc0"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_07f80283",
-            "value": "robot_local_api_tutorial_07f80283"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_31f0ca11",
-            "value": "robot_local_api_tutorial_31f0ca11"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_744bf1ea",
-            "value": "robot_local_api_tutorial_744bf1ea"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_814ff696",
-            "value": "robot_local_api_tutorial_814ff696"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_a0ea075f",
-            "value": "robot_local_api_tutorial_a0ea075f"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_b6006901",
-            "value": "robot_local_api_tutorial_b6006901"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_b943b2a0",
-            "value": "robot_local_api_tutorial_b943b2a0"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_c3efc420",
-            "value": "robot_local_api_tutorial_c3efc420"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_ebf46417",
-            "value": "robot_local_api_tutorial_ebf46417"
-          },
-          {
-            "selected": false,
-            "text": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-651_api_query-testadd211ea",
-            "value": "robot_jenkins-QE-test-engineering-hourly-qa-cluster-tests-651_api_query-testadd211ea"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test69017d43",
-            "value": "robot_local_api_query-test69017d43"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-test7a11fbcc",
-            "value": "robot_local_api_query-test7a11fbcc"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_query-testb98d2143",
-            "value": "robot_local_api_query-testb98d2143"
-          },
-          {
-            "selected": false,
-            "text": "robot_local_api_tutorial_7b7c804a",
-            "value": "robot_local_api_tutorial_7b7c804a"
           }
         ],
         "query": "label_values(indexing_pipeline_outcome_total{kubernetes_namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
@@ -823,5 +638,5 @@
   "timezone": "",
   "title": "Indexing Service Metrics",
   "uid": "RvRcaixWk",
-  "version": 5
+  "version": 6
 }
