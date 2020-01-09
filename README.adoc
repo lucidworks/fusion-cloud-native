@@ -17,6 +17,10 @@ This section covers prerequisites and background knowledge needed to help you un
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
 Use a short name for your release containing only letters, digits, underscore, and dashes.
 
+As of Helm v3, releases are managed at the namespace level, so you can have multiple releases
+with the same name across different namespaces in the same cluster. However, we recommend *NOT* doing this and use a unique release for every namespace; if you do use the same release
+label across multiple namespaces in the same cluster, then you need to take care to include the namespace in your custom values yaml file(s).
+
 You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
 Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
 However, please [.underline]#do not# install more than one Fusion release in the same namespace.
