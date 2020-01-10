@@ -305,7 +305,7 @@ if [ "$cluster_status" != "0" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
-      --machine-type ${INSTANCE_TYPE}
+      --machine-type ${INSTANCE_TYPE} \
       --image-type "COS" \
       --disk-type "pd-standard" --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
