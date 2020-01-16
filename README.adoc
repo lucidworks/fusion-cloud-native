@@ -209,6 +209,18 @@ api-gateway:
 
 and upgrade your release to apply the configuration changes
 
+
+==== Ingresses and externalTrafficPolicy
+
+When running a fusion cluster behind an externally controlled LoadBalancer it can be advantageous
+to configure the `externalTrafficPolicy` of the `proxy` service to `Local`. This preserves the client
+source IP and avoids a second hop for LoadBalancer and NodePort type services, but risks potentially
+imbalanced traffic spreading. Although when running in a cluster with a dedicated pool for spark jobs
+that can scale up and down freely it can prevent unwanted request failures. This behaviour can be
+altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Local` if the example values
+file is used. 
+
+
 ==== Considerations when using the nginx ingress controller
 
 If you are using the `nginx` ingress controller to fulfil your ingress definitions there are a couple
