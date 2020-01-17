@@ -716,6 +716,8 @@ It is a fully-conformant Kubernetes version that tracks upstream releases and is
 
 This instructions are written for the MicroK8s v1.17.0 installed on Linux. For Windows or MacOS installation, the steps are similar, followinf the `Multipass` installation. Please see the instructions on https://microk8s.io/
 
+*Running Fusion on microk8s is intended for the initial trial and test purpose only. It is not intended for production use.*
+
 === Microk8s Installation
 
 To install Fusion on microk8s, you should have a Linux node with at least 12 Gb or memory, 100Gb of disk and 4 cpu cores. The recommended setup is 16Gb (or more) of memory and 8+ cpu cores.
