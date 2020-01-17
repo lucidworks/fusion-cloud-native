@@ -3,6 +3,8 @@
 # Platform agnostic script used by the other setup_f5_*.sh scripts to perform general K8s and Helm commands to install Fusion.
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 
+shopt -s expand_aliases
+
 CHART_VERSION="5.0.3-1"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
@@ -168,18 +170,26 @@ fi
 
 DEFAULT_MY_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
-hash kubectl
-has_prereq=$?
-if [ $has_prereq == 1 ]; then
-  echo -e "\nERROR: Must install kubectl before proceeding with this script!"
-  exit 1
+if [ "${PROVIDER}" == "microk8s" ]; then
+  alias kubectl="sudo microk8s.kubectl"
+else
+  hash kubectl
+  has_prereq=$?
+  if [ $has_prereq == 1 ]; then
+    echo -e "\nERROR: Must install kubectl before proceeding with this script!"
+    exit 1
+  fi
 fi
 
-hash helm
-has_prereq=$?
-if [ $has_prereq == 1 ]; then
-  echo -e "\nERROR: Must install helm before proceeding with this script! See: https://helm.sh/docs/using_helm/#quickstart"
-  exit 1
+if [ "${PROVIDER}" == "microk8s" ]; then
+  alias helm="sudo microk8s.helm"
+else
+  hash helm
+  has_prereq=$?
+  if [ $has_prereq == 1 ]; then
+    echo -e "\nERROR: Must install helm before proceeding with this script! See: https://helm.sh/docs/using_helm/#quickstart"
+    exit 1
+  fi
 fi
 
 current=$(kubectl config current-context)
@@ -473,7 +483,7 @@ if [ "$is_helm_v3" != "" ]; then
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
   helm install "${RELEASE}" ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version "${CHART_VERSION}"
 else
-  helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version "${CHART_VERSION}"
+  helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version "${CHART_VERSION}"   
 fi
 set +e
 
