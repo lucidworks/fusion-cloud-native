@@ -8,6 +8,7 @@ We assume that you'll want to control how your production clusters are provision
 
 // tag::body[]
 
+// tag::prerequisites[]
 == Prerequisites
 
 This section covers prerequisites and background knowledge needed to help you understand the structure of this document and how the Fusion installation process works with Kubernetes.
@@ -56,6 +57,8 @@ You should get into the habit of pulling this repo for the latest changes before
 cd fusion-cloud-native
 git pull
 ```
+
+// end::prerequisites[]
 
 == Google Kubernetes Engine (GKE)
 
