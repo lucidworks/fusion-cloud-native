@@ -1,0 +1,49 @@
+= Fusion 5 Grafana Dashboards
+:toc:
+:toclevels: 3
+:toc-title:
+
+== Pipeline and Stage Metrics
+Both the Indexing and Query service provide per-pipeline per-stage execution times for the 99th, 95th, 75th, and 50th
+percentiles. These are commonly used to determine where there may be a performance bottleneck when pipelines are executing
+slowly
+
+=== Indexing Service Dashboard
+The Indexing Service has its own Grafana dashboard which highlights key performance metrics for understanding the
+behavior of the Fusion 5 Indexing pipelines. It provides per-pipeline and per-stage execution time metrics along with
+metrics for document indexing.
+
+=== Query Service Dashboard
+The Query Service also has its own Grafana dashboard that shows the performance of the pipelines and query stages that
+are being run. It shows the global and per-pod request metrics in addition to per-pipeline query stage execution times.
+
+== Gateway Metrics Dashboard
+The Gateway Metrics provides visibility into the behavior of the API Gateway, which stands in front of Fusion 5 services.
+It includes global request rate gauge in addition to per-handler and per-route request metrics. This dashboard can be a
+good entry point for locating service slowdowns as it can highlight particular routes or handlers that are responding slowly.
+
+
+== JVM Metrics Dashboard
+The JVM Metrics Dashboard provides information about the CPU and memory utilization of Fusion 5 services along with some
+GC metrics. These can be used to assess the JVM performance of Fusion 5 microservices and may help locate bottlenecks such
+as being CPU-pegged or hitting frequent garbage collection events that pause the application. Issues relating to garbage
+collection can often be solved by modifying the JVM options of the process and can then be monitored via this dashboard.
+
+== Solr Dashboards
+
+Solr has its metrics split into three distinct dashboards, each covering a separate area of concern for monitoring Solr
+performance.
+
+==== Core Dashboard
+The Solr Core dashboard contains metrics by the associated Solr core, including but not limited to per-core metrics for
+requests, file system utilization, document processing/access and handler usage.
+
+==== Node Dashboard
+The Solr Node dashboard contains per-node metrics including information about requests, errors, cores, thread pool
+utilization and connections. Per-node metrics are useful for tracking down issues with a particular Solr node, especially
+when said issue(s) do not affect all nodes.
+
+==== System Dashboard
+The Solr System Dashboard shows high-level system stats, including requests/response statistics, JVM metrics as well as
+common operating system metrics (including memory usage, file descriptor usage, and cpu utilization)
+
