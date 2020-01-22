@@ -49,11 +49,11 @@ class FusionQueryTraffic extends Simulation {
       }
     }
 
-    val queriesPerSecond = getInt("qps.rps", 30)
+    val queriesPerSecond = getInt("qps.rps", 60)
     val testDurationMins = getInt("qps.duration.mins", 5)
     val queryFeederSource = getStr("qps.feeder.source", "data/example_queries.csv")
     val rampDurationSecs = getInt("qps.ramp.secs", 5)
-    val proxyHostAndPort = getStr("qps.fusion.url", "http://35.223.69.238:6764") //http://localhost:6764")
+    val proxyHostAndPort = getStr("qps.fusion.url", "http://localhost:6764")
     val appId = getStr("qps.app", "datagen")
     val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
     val username = getStr("qps.fusion.user", "admin")
@@ -82,7 +82,10 @@ class FusionQueryTraffic extends Simulation {
         .execute(parser = {inputStream => jsonObjectMapper.readTree(inputStream)})
       if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to login to ${loginUrl} due to: ${jsonResp.code}")
       jwtToken = jsonResp.body.get("access_token").asText()
-      jwtExpiresIn = jsonResp.body.get("expires_in").asLong() - 10L
+      val expires_in = jsonResp.body.get("expires_in").asLong()
+      val grace_secs = if (expires_in > 15L) 10L else 2L
+      jwtExpiresIn = expires_in - grace_secs
+      println(s"Successfully refreshed global JWT for load test ... will do again in ${jwtExpiresIn} secs")
     }
 
     // This function is rife with side-effects ;-)
