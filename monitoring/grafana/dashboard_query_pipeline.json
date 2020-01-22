@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1575932271199,
+  "iteration": 1579714187359,
   "links": [],
   "panels": [
     {
@@ -56,7 +56,7 @@
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "6.5.0",
+      "pluginVersion": "6.5.2",
       "targets": [
         {
           "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",service=\"query-pipeline\"}[1m]))/60",
@@ -916,7 +916,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(query_stage_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod=~\"$pod\",pipelineId=~\"$pipeline\"}) by (error, pipelineId, stageType)",
+          "expr": "sum(query_stage_outcome_total{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",pipelineId=~\"$pipeline\"}) by (error, pipelineId, stageType)",
           "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
           "refId": "A"
         }
@@ -1003,7 +1003,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum  by (error, pipelineId, stageType)(increase(query_stage_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod=~\"$pod\",pipelineId=~\"$pipeline\"}[1m]))",
+          "expr": "sum  by (error, pipelineId, stageType)(increase(query_stage_outcome_total{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",pipelineId=~\"$pipeline\"}[1m]))",
           "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
           "refId": "A"
         }
@@ -1978,9 +1978,10 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
-          "text": "default",
-          "value": "default"
+          "selected": false,
+          "tags": [],
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": "Prometheus",
         "definition": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
@@ -2004,8 +2005,6 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "tags": [],
           "text": "All",
           "value": [
             "$__all"
@@ -2060,10 +2059,9 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
-          "text": "LLM_us_Search",
+          "text": "All",
           "value": [
-            "LLM_us_Search"
+            "$__all"
           ]
         },
         "datasource": "Prometheus",
@@ -2088,7 +2086,7 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -2108,5 +2106,5 @@
   "timezone": "",
   "title": "Query Pipeline Metrics",
   "uid": "cACmdI2Zz1",
-  "version": 17
+  "version": 1
 }
