@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.3-1"
+CHART_VERSION="5.0.3-2"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
