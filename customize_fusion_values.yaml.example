@@ -1,3 +1,6 @@
+global:
+  zkReplicaCount: {SOLR_REPLICAS}
+
 sql-service:
   enabled: false
   nodeSelector:
