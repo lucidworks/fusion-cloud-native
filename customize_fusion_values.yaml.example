@@ -79,6 +79,7 @@ admin-ui:
     {NODE_POOL}
 
 api-gateway:
+  externalTrafficPolicy: "Local"
   nodeSelector:
     {NODE_POOL}
   pod:
