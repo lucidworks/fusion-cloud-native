@@ -412,7 +412,7 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
   if [ "${PROMETHEUS}" == "install" ]; then
     echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
 
-    helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
+    helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 10.3.1
     kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
 
     helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"

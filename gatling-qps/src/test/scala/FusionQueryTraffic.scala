@@ -1,7 +1,6 @@
-import java.util.concurrent.{Executors, ScheduledThreadPoolExecutor, ThreadFactory, TimeUnit}
+import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 import scalaj.http.Http
@@ -90,7 +89,6 @@ class FusionQueryTraffic extends Simulation {
 
     // This function is rife with side-effects ;-)
     def initJwtAndStartBgRefreshThread() = {
-      jsonObjectMapper.registerModule(new DefaultScalaModule)
 
       // Get the initial token ...
       updateJwtToken

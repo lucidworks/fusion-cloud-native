@@ -78,7 +78,7 @@ curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_user_prefs"
 sleep 5
 
 # analytics oriented collections
-curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_signals&collection.configName=${APP}_signals&numShards=1&replicationFactor=2&policy=analytics&maxShardsPerNode=2"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_signals&collection.configName=${APP}_signals&numShards=3&replicationFactor=2&policy=analytics&maxShardsPerNode=2"
 curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_query_rewrite_staging&collection.configName=${APP}_query_rewrite_staging&numShards=1&replicationFactor=2&policy=analytics"
 curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_job_reports&collection.configName=${APP}_job_reports&numShards=1&replicationFactor=2&policy=analytics"
 
