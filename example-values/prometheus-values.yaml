@@ -33,6 +33,9 @@ serverFiles:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
             regex: true
+          - source_labels: [__meta_kubernetes_namespace]
+            action: keep
+            regex: "^{NAMESPACE}$"
           - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
             action: replace
             regex: ([^:]+)(?::\d+)?;(\d+)

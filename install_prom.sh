@@ -116,6 +116,7 @@ PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
 if [ ! -f "${PROMETHEUS_VALUES}" ]; then
   cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
   sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+  sed -i ''  -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
   echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
 fi
 
@@ -135,4 +136,3 @@ helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}"
 kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
 
 echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"
-
