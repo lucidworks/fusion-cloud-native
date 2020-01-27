@@ -24,18 +24,33 @@ Add a CSV file containing your test queries to the `src/test/resources/data/` fo
 
 From the `gatling-qps` folder build a docker image with whatever tag you want to identify it with:
 ```
-docker build -t <REPO>/gatling-qps:yourtag -f docker/Dockerfile .
+docker build -t gatling-qps:yourtag -f docker/Dockerfile .
 ```
 
 To run the image pass in the name of the simulation you want to run with `-s <simulation_name>`
 ```
-docker container run <REPO>/gatling-qps:yourtag -s FusionQueryTraffic
+docker container run gatling-qps:yourtag -s FusionQueryTraffic
 ```
 
 You can also override built-in defaults using the JAVA_OPTS environment variable, e.g.
 ```
-docker container run --env JAVA_OPTS="-Dqps.fusion.url=http://..." <REPO>/gatling-qps:yourtag -s FusionQueryTraffic
+docker container run --env JAVA_OPTS="-Dqps.fusion.url=http://..." gatling-qps:yourtag -s FusionQueryTraffic
 ```
 
+The various properties you can override are:
+```
+    val queriesPerSecond = getInt("qps.rps", 60)
+    val testDurationMins = getInt("qps.duration.mins", 5)
+    val queryFeederSource = getStr("qps.feeder.source", "data/example_queries.csv")
+    val rampDurationSecs = getInt("qps.ramp.secs", 5)
+    val proxyHostAndPort = getStr("qps.fusion.url", "http://localhost:6764")
+    val appId = getStr("qps.app", "datagen")
+    val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
+    val username = getStr("qps.fusion.user", "admin")
+    val password = getStr("qps.fusion.pass", "password123")
+```
 
-
+To run in Kubernetes, you can do something like this after pushing your image to gcr.io:
+```
+kubectl run --generator=run-pod/v1 --image=us.gcr.io/lw-sales/gatling-qps:tjp --env="JAVA_OPTS=-Dqps.fusion.url=https://... -Dqps.app=lab4" gatling-qps -- -s FusionQueryTraffic
+```

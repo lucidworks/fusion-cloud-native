@@ -8,20 +8,20 @@
   "set-policy": {
     "analytics": [
       {"node": "#ANY", "shard": "#EACH", "replica":"<3", "strict": false},
-      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH"},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH"},
+      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
       {"replica": "#ALL", "sysprop.fusion_node_type": "analytics"}
     ],
     "search": [
       {"node": "#ANY", "shard": "#EACH", "replica":"<2"},
-      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH"},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH"},
+      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
       {"replica": "#ALL", "sysprop.fusion_node_type": "search"}
     ],
     "system": [
       {"node": "#ANY", "shard": "#EACH", "replica":"<3", "strict": false},
-      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH"},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH"},
+      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
       {"replica": "#ALL", "sysprop.fusion_node_type": "system"}
     ]
   }
