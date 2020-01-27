@@ -399,6 +399,7 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then
     cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
     sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    sed -i ''  -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
     echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
   fi
 
