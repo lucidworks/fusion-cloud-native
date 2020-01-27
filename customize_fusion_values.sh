@@ -146,6 +146,7 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then
     cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
     sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    sed -i ''  -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
     echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}\n"
   fi
 
@@ -156,4 +157,3 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
     echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}\n"
   fi
 fi
-
