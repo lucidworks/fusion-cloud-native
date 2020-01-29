@@ -47,3 +47,14 @@ when said issue(s) do not affect all nodes.
 The Solr System Dashboard shows high-level system stats, including requests/response statistics, JVM metrics as well as
 common operating system metrics (including memory usage, file descriptor usage, and cpu utilization)
 
+
+==== Kube Metrics Dashboard
+There are Kubernetes metrics that can be queried through Grafana. However, these require installing a daemonset when setting up Prometheus, showing information
+about running pods, memory allocation and CRON jobs.
+
+Ensure that at least one namespace in your cluster uses the following configuration in the
+Prometheus `values.yaml` for the `stable/prometheus` helm chart.
+```
+kubeStateMetrics:
+    enabled: true
+```
