@@ -211,7 +211,7 @@ cat >> "${CONFIG_FILE}" <<EOF
 EOF
 done
 
-#eksctl --profile "${PROFILE}" create cluster --config-file "${CONFIG_FILE}"
+eksctl --profile "${PROFILE}" create cluster --config-file "${CONFIG_FILE}"
 
 eksctl --profile "${PROFILE}" utils write-kubeconfig --cluster "${CLUSTER}"
 
