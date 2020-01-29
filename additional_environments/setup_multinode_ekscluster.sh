@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-PROFILE="lw-engineering"
 REGION="us-west-2"
 CONFIG_FILE="eksctl_config.yaml"
 REGION_ZONES=(a b c)
