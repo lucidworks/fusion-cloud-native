@@ -1,71 +1,70 @@
 == MicroK8s
 
-MicroK8s is a single-node Kubernetes cluster that could be installed natively on any version of Linux that supports `snap` package manager (Debian, Fedora, Ubuntu and Ubuntu-derived distros like Linux Mint etc.) or on Windows or MacOS in combination with `Multipass` VM manager (that creates a "virtual Ubuntu" VM in Windows or MacOS environment).
-It is a fully-conformant Kubernetes version that tracks upstream releases and is designed to make a cluster setup and management easy.
+// tag::body[]
 
-This instructions are written for the MicroK8s v1.17.0 installed on Linux. For Windows or MacOS installation, the steps are similar, followinf the `Multipass` installation. Please see the instructions on https://microk8s.io/
+MicroK8s is a single-node Kubernetes cluster that can be installed natively on any version of Linux that supports the `snap` package manager (Debian, Fedora, Ubuntu and Ubuntu-derived distros like Linux Mint and so on.) or on Windows or MacOS in combination with the `Multipass` VM manager (which creates a "virtual Ubuntu" VM in Windows or MacOS environment).
+It is a fully-conformant Kubernetes version that tracks upstream releases and is designed to make cluster setup and management easy.
 
-*Running Fusion on microk8s is intended for the initial trial and test purpose only. It is not intended for production use.*
+These instructions are written for the MicroK8s v1.17.0 installed on Linux. For Windows or MacOS installation, the steps are similar, following the `Multipass` installation. Please see the instructions on https://microk8s.io/[https://microk8s.io/^].
+
+NOTE: Running Fusion on MicroK8s is intended for the initial trial and test purpose only. It is not intended for production use.
 
 === Microk8s Installation
 
-To install Fusion on microk8s, you should have a Linux node with at least 12 Gb or memory, 100Gb of disk and 4 cpu cores. The recommended setup is 16Gb (or more) of memory and 8+ cpu cores.
+To install Fusion on MicroK8s, you should have a Linux node with at least 12GB of memory, 100GB of disk and 4 CPU cores. The recommended setup is 16GB (or more) of memory and 8+ CPU cores.
 
-First step is installation of microk8s itself and it requires `snap` package manager.
+First step is installation of MicroK8s itself and it requires the `snap` package manager:
 
-- Install `snap` if it is not done yet:
-
+. Install `snap` if it is not done yet:
++
 ```
 sudo apt install snapd
 ```
 
-- Install the microk8s snap:
-
+. Install the MicroK8s `snap`:
++
 ```
 sudo snap install microk8s --classic
 ```
++
+NOTE: MicroK8s commands are prefixed with the `microk8s`, such as `microk8s.kubectl` or `microk8s.helm`. That differs from the standard k8s commands. Also, most of them require `sudo` invocation (there is a possible way to work around the sudo requirement, by adding the installation user to the `microk8s` group, but that may not work for all commands and systems).
 
-Note: microk8s commands are prefixed with the `microk8s`, i.e. `microk8s.kubectl` or `microk8s.helm`. That differs from the standard k8s commands. Also, most of them require `sudo` invocation (there is a possible way to work around the sudo requirement, by adding the installation user to the `microk8s` group, but that may not work for all commands and systems).
-
-- Check the status:
-
+. Check the status:
++
 ```
 sudo microk8s.status --wait-ready
 ```
 
 === Microk8s Configuration
 
-- Turn on standard services and add-ons:
-
+. Turn on standard services and add-ons:
++
 ```
 sudo microk8s.enable dns dashboard registry storage
 ```
 
-- Enable Helm:
-
+. Enable Helm:
++
 ```
 sudo microk8s.enable helm
 ```
++
+NOTE: The Helm version shipped with MicroK8s v1.17.0 is Helm v2.16.0. Unfortunately, this version of helm has a bug (that is fixed in 2.16.1) that causes error when installing Fusion charts. To avoid this, an additional step (see below) is needed that installs Helm v3 using snap, and linking it to MicroK8s, to replace the Helm v2.16.0. Once the MicroK8s is upgraded to use Helm v3 (likely in release v1.17.1), this stepis not needed.
 
-Note: The Helm version shipped with microk8s v1.17.0 is Helm v2.16.0. Unfortunately, this version of helm has a bug (that is fixed in 2.16.1) that causes error when installing Fusion charts. To avoid this, an additional step (see below) is needed that installs Helm v3 using snap, and linking it to microk8s, to replace the Helm v2.16.0. Once the microk8s is upgraded to use Helm v3 (likely in release v1.17.1), this stepis not needed.
-
-- Enable load balancer add-on:
-
+. Enable the load balancer add-on:
++
 ```
 sudo microk8s.enable metallb
 ```
++
+NOTE: The MicroK8s does not come with the load balancer enabled by default. We will use a Metal LB load balancer plugin. It requires a manual configuration for the IP range for the "external" IPs assigned to LoadBalancer services. See below on how to configure the metallb. Also, if you would have problems with the metallb plugin shipped with MicroK8s v1.17.0, you could install the latest version of MetalLB using this command:
+`sudo microk8s.kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml`
 
-Note: The microk8s does not come with the load balancer enabled by default. We will use a Metal LB load balancer plugin. It requires a manual configuration for the IP range for the "external" IPs assigned to LoadBalancer services. See below on how to configure the metallb. Also, if you would have problems with the metallb plugin shipped with microk8s v1.17.0, you could install the latest version of MetalLB using command:
-
-```
-sudo microk8s.kubectl apply -f https://raw.githubusercontent.com/google/metallb/v0.8.3/manifests/metallb.yaml
-```
-
-- Configure the Load Balancer
-
-Create a ConfigMap for the Metal LB balancer. It should specify the range of "external" IP addresses that will be assigned to the services of type LoadBalancer (Fusion Helm charts create one of that service that will act as an entry point to Fusion gateway).
-Select the IP range so your Linux node will be able to access them, i.e. if your Linux node IP is 192.168.1.1, select the range to be something like `192.168.1.240-192.168.1.250`:
-
+. Configure the load balancer:
++
+Create a `ConfigMap` for the Metal LB balancer. It should specify the range of "external" IP addresses that will be assigned to the services of type `LoadBalancer` (Fusion Helm charts create one of that service that will act as an entry point to the Fusion gateway).
+Select the IP range so your Linux node will be able to access them; for example, if your Linux node IP is `192.168.1.1`, select the range to be something like `192.168.1.240-192.168.1.250`:
++
 ```
 apiVersion: v1
 kind: ConfigMap
@@ -80,80 +79,79 @@ data:
       addresses:
       - 192.168.1.240-192.168.1.250
 ```
++
+Note that this example of the config file uses Layer 2 protocol, the easiest way to configure it. For more advanced Metal LB load balancer, see the documentation at https://metallb.universe.tf/configuration/[https://metallb.universe.tf/configuration/^].
 
-Note that this example of the config file uses Layer 2 protocol, the easiest way to configure. For more advanced Metal LB load balancer, see the documentation here: https://metallb.universe.tf/configuration/
-
-- put the ConfigMap for the load balancer (above) into some file, e.g. `metallb-config.yaml` and apply the config:
-
+. Put the `ConfigMap` for the load balancer (above) into some file, such as `metallb-config.yaml`, and apply the config:
++
 ```
 sudo microk8s.kubectl apply -f metallb-config.yaml
 ```
 
-- Install the Helm 3 and substitute the Helm that comes with the microk8s:
-
+. Install Helm 3 and substitute the Helm that comes with the MicroK8s:
++
 ```
 sudo snap install helm --classic
 sudo mkdir /var/snap/microk8s/current/bin
 sudo ln -s /snap/bin/helm /var/snap/microk8s/current/bin/helm
 ```
++
+(The second command may fail stating that the folder is already there; that's OK.)
 
-(the second command could fail stating that the folder is already there; that's OK)
-
-- Make sure the microk8s.helm is enabled and the version is 3.0.x:
-
+. Make sure that `microk8s.helm` is enabled and the version is 3.0.x:
++
 ```
 sudo microk8s.status
 ```
-
-Should show the helm enabled
-
++
+This should show that `helm` is enabled.  Next, do:
++
 ```
 sudo microk8s.helm version
 ```
-
-Should display version 3 (e.g. `3.0.2`)
++
+This should display version 3 (such as `3.0.2`).
 
 === Fusion Installation
 
-- Check out the Github repo with Fusion 5 installation scripts using `git`:
-
+. Check out the Github repo with Fusion 5 installation scripts using `git`:
++
 ```
-git clone https://github.com/lucidworks/fusion-cloud-native.git
-cd fusion-cloud-native
-git pull
+git pull https://github.com/lucidworks/fusion-cloud-native
 ```
++
+And `cd` to this folder. All subsequent commands should be run from this location.
 
-Copy the `setup_f5_microk8s` script from `fusion-cloud-native/microk8s` to `fusion-cloud-native` and cd there.
-All subsequent commands are supposed to be ran from the `fusion-cloud-native` folder.
-
-- install the Fusion 5 using installation script:
-
+. Install Fusion 5 using the installation script:
++
 ```
 ./setup_f5_microk8s
 ```
-
-Note: By default, this will not install the Prometheus/Grafana. You may consider use a scripts from the repo to add them later, or run the install script with a flag `--prometheus install`. Note that the installation of Prometheus may fail, since at the moment the Helm charts for Prometheus use api beta1 and beta2 versions that are not compatible with Kubernetes 1.17
++
+NOTE: By default, this will not install the Prometheus/Grafana. You may consider use a scripts from the repo to add them later, or run the install script with a flag `--prometheus install`. Note that the installation of Prometheus may fail, since at the moment the Helm charts for Prometheus use api beta1 and beta2 versions that are not compatible with Kubernetes 1.17
 You may alternatively enable the `microk8s.prometheus` service and install with `--provided` flag.
 
-- Check the installation results by assessing the pods and services by running:
-
+. Check the installation results by assessing the pods and services:
++
 ```
 sudo microk8s.kubectl get pods
 sudo microk8s.kubectl get services
 ```
-
-You should have the proxy service of type LoadBalancer exposed via external IP so you could access Fusion services via API calls or Web browser. For example,
-
++
+You should have the proxy service of type `LoadBalancer` exposed via external IP so you could access Fusion services via API calls or Web browser. For example:
++
 ```
 proxy                   LoadBalancer   10.152.183.32    192.168.1.240     6764:30006/TCP
 ```
-
-Point your web browser to that node using port 6764, e.g. `192.168.1.240:6764` and enter the `admin`'s password.
-
-Once it is set, you could try to call the Fusion api, for example (assuming the password is `password123`):
-
++
+Point your Web browser to that node using port 6764, such as `192.168.1.240:6764`, and enter the admin user's password.
++
+Once it is set, you can try to call the Fusion API, as in this example:
++
 ```
 curl -u admin:password123 http://192.168.1.240:6764/api/index-pipelines
 ```
++
+Then, access the Fusion Admin UI via your Web browser.
 
-And access the Fusion Admin UI via Web browser.
+// end::body[]
