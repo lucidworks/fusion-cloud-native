@@ -9,7 +9,6 @@ INGRESS_HOSTNAME=""
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 PURGE=0
@@ -171,6 +170,16 @@ if [[ $NAMESPACE =~ [^$valid] ]]; then
   echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
 fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
 if [[ $RELEASE =~ [^$valid] ]]; then
   echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1

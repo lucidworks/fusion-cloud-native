@@ -9,7 +9,6 @@ SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
 GCLOUD_ZONE=us-west1
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 GCS_BUCKET=
@@ -35,7 +34,7 @@ function print_usage() {
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c            Name of the GKE cluster (required)\n"
   echo -e "  -p            GCP Project ID (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
   echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
@@ -247,6 +246,14 @@ valid="0-9a-zA-Z_\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
   echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
+fi
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
 fi
 if [[ $RELEASE =~ [^$valid] ]]; then
   echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"

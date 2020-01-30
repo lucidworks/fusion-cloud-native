@@ -9,7 +9,6 @@ SCRIPT_CMD="$0"
 AWS_ACCOUNT=
 REGION=us-west-2
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 CREATE_MODE=
@@ -217,6 +216,16 @@ if [[ $NAMESPACE =~ [^$valid] ]]; then
   echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
 fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
 if [[ $RELEASE =~ [^$valid] ]]; then
   echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
