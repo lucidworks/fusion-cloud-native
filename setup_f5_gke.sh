@@ -379,7 +379,7 @@ INGRESS_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
 
   # need to create the namespace if it doesn't exist yet
-  if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
+  if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
     if [ "${UPGRADE}" != "1" ]; then
       kubectl create namespace "${NAMESPACE}"
       kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
