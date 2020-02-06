@@ -60,19 +60,22 @@ logstash:
 If you're running Prometheus and Grafana for monitoring the performance and health of Fusion services, then you'll want to install Lucidworks Grafana dashboards. We provide the following dashboards in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^]:
 
 [cols="1m,2a", options="header"]
-|=======================
+|===
 |Dashboard JSON     |Description
 
 |dashboard_query_pipeline.json
 |Query Pipeline Metrics including HTTP request metrics and both per-pipeline and per pipeline stage execution times
+
 |dashboard_indexing_pipipeline.json
 |Indexing Service Metrics including HTTP request metrics and per-pipeline metrics execution times
+
 |dashboard_jvm_metrics.json
 |General JVM metrics for instrumented spring-boot services
+
 |dashboard_solr_core.json
 |Solr exporter per-core metric dashboard, including request details
 
-|=======================
+|===
 
 .How to configure Grafana
 
@@ -93,19 +96,19 @@ kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=gra
 
 . Use `kubectl get services --namespace <namespace>` to verify that the load balancer is set up and its IP address.
 
-. Direct your browser to `http://<GrafanaIP>:3000` and enter the username `admin@localhost` and the password that was returned in the previous step.
+. Direct your browser to `\http://<GrafanaIP>:3000` and enter the username `admin@localhost` and the password that was returned in the previous step.
 +
 This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
 +
 One of the first things you will want to do is to configure the Prometheus data source in Grafana.
 
-. Go to the gear icon on the left and then to Data Sources.
+. Go to the gear icon on the left and then go to *Data Sources*.
 
 . Click *Add Data Source* and then click on *Prometheus* as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
 +
 image:grafana-add-datasource.png[]
 
-. Enter `http://<RELEASE>-prom-prometheus-server`
+. Enter `\http://<RELEASE>-prom-prometheus-server`
 
 . Configure any additional fields as desired (but defaults are fine), then click *Save and Test*, which should succeed.
 
@@ -189,15 +192,16 @@ warmingQueryJson:
 
 NOTE: The indentation for the opening / closing braces is important for embedding JSON in YAML
 
-=== Resource Limits
+=== Resource limits
 
 Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster. Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up-and-running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services. Lucidworks provides a template to help you get started with setting the appropriate resource limits, see: `example-values/resources.yaml`. However, you may need to refine the settings for your environment and workloads, especially for Solr.
 
-=== Spark Ops
+[[spark-ops]]
+=== Spark operations
 
 In Fusion 5.x, Spark operates in native Kubernetes mode instead of standalone mode (like in Fusion 4.x). The sections below describe Spark operations in Fusion 5.0.
 
-==== Cluster Mode
+==== Cluster mode
 
 Fusion 5.0 ships with Spark 2.4.3 and operates in "cluster" mode on top of Kubernetes. In cluster mode, each Spark driver runs in a separate pod and hence resources can be managed per job. Each executor also runs in its own pod.
 
@@ -264,9 +268,9 @@ The table below shows the default configurations for Spark. These settings are c
 
 |===
 
-==== Spark Job Resource Allocation
+==== Spark job resource allocation
 
-===== Number of Instances and Cores Allocated
+===== Number of instances and cores allocated
 
 In order to set the number of cores allocated for a job, add the following parameter keys and values in the Spark Settings field within the "advanced" job properties in the Fusion UI or the `sparkConfig` object if defining a job via the Fusion API.
 
@@ -295,7 +299,7 @@ The ratio for `spark.kubernetes.executor.request.cores` to `spark.executor.cores
 
 If these settings are left unspecified, then the job launches with a driver using one core and 3GB of memory plus two executors, each using one core with 1GB of memory.
 
-===== Memory Allocation
+===== Memory allocation
 
 The amount of memory allocated to the driver and executors is controlled on a per-job basis using the `spark.executor.memory` and `spark.driver.memory` parameters in the Spark Settings section of the job definition in the Fusion UI or within the `sparkConfig` object in the JSON definition of the job.
 

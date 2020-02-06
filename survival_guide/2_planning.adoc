@@ -103,7 +103,9 @@ Next let's see how to monitor the health and performance of Fusion services usin
 
 === Monitoring and alerting with Prometheus and Grafana
 
-Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster. The following diagram depicts how metrics work in a Fusion cluster.
+Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster. The following diagram depicts how metrics work in a Fusion cluster:
+
+image:metrics.png[]
 
 Notice in the diagram that Prometheus pulls (or "scrapes") metrics from Fusion services. Prometheus identifies which services to pull metrics from using pod annotations. For instance, to enable metrics for the Fusion `query-pipeline` service, you add the following pod annotations for the query service in the custom values YAML file (this is already done for you in the `customize_fusion_values.yaml.example` template).
 
@@ -265,8 +267,11 @@ In the above example the analytics partition will have 6 replicas (Solr pods), b
 
 The Solr pods will have a `fusion_node_type` system property set on them as shown below:
 
+image:fusion_node_type.png[]
+
 You can use the `fusion_node_type` property in Solr auto-scaling policies to govern replica placement during collection creation.
 
+[[solr-autoscaling]]
 === Solr auto-scaling policy
 
 You can configure a custom Solr auto-scaling policy in the custom values YAML file under the `fusion-admin` section as shown below:
