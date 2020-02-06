@@ -1,0 +1,662 @@
+= Fusion 5 Survival Guide: Day Two Operations
+:toc:
+:toclevels: 3
+:toc-title:
+
+// tag::body[]
+
+This topic provides an overview of common daily maintenance tasks.
+
+=== Helm upgrade script
+
+Our `setup_f5_*.sh` scripts are nice for getting started and for checking your environment has all the necessary command-line tools before attempting an installation. However, once you have a working cluster, we recommend creating a simple upgrade script that hardcodes the various parameters and alleviates you needing to remember which parameters to pass to the script. This is especially helpful when working with multiple K8s clusters. Rename the example script provided in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] using our custom value YAML naming convention:
+
+[source,bash]
+----
+cp upgrade_fusion.sh.example <provider>_<cluster>_<release>_upgrade_fusion.sh
+----
+
+Edit the script to hardcode the various parameters for your cluster, such as:
+
+----
+PROVIDER=gke
+CLUSTER_NAME=search
+RELEASE=f5
+NAMESPACE=default
+CHART_VERSION=5.0.2
+----
+
+The script assumes your kubeconfig is pointing to the correct cluster and fails fast if not. Thus, you'll have to be sure to select the correct kubeconfig before running the script. The script also assumes the use of Helm v3. Be sure to append all custom values YAML files to the `MY_VALUES` variable in the upgrade script, such as:
+
+----
+MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
+----
+
+Of course being a good ops person, you'll also check the script into version control alongside your custom values YAML files.
+
+=== Logging
+
+Fusion services come pre-configured to write log messages to stdout (common pattern in K8s) and send log messages to Logstash (deployed in our Helm chart). Logstash is configured to index log messages into the Fusion `system_logs` collection. The Log Viewer integrated into the Fusion Admin UI provides basic log analytics for the logs collected in system_logs. However, we fully expect our customers / prospects to already have a preferred log analytics stack, such as ELK, Splunk, DataDog, or similar. The Log Viewer is only there for demo purposes and the unlikely case of a customer not having a preferred logging stack already.
+
+For integration with an existing log infrastructure, you have two basic choices:
+
+* Disable Logstash in our Helm chart (set `logstashEnabled: false` for all services in the custom values YAML) and then have their logging infrastructure scrape logs from the stdout from each pod. This is a very common pattern in Kubernetes and most modern log analytics solutions have good integration with Kubernetes.
+//In most cases, the customers ops team will help guide you on how they want this to work (typically with a log shipper process deployed as a DaemonSet on each node), there’s not much you’ll have to do.
+
+* Use Logstash and configure it to send logs to some output sink supported by Logstash. This would be a good option for customers / prospects that use ELK but don’t have an existing integration with Kubernetes. Again, most would use something like Filebeat as a DaemonSet to do this vs. relying on our Logstash. This will require some configuration changes to the Logstash in our Helm chart using custom values YAML as is done for most Fusion configuration changes.
+
+==== Elasticsearch
+
+Elasticsearch is a common tool used to store and query logs and can be easily configured as an output for Logstash. Just include the `elasticsearchHost` to our Helm chart and set it to `host:port`. In most cases, the port number will be 9200.
+
+[source,yaml]
+----
+logstash:
+   elasticsearchHost: <elasticsearch-host>:9200
+----
+
+=== Grafana dashboards
+
+If you're running Prometheus and Grafana for monitoring the performance and health of Fusion services, then you'll want to install Lucidworks Grafana dashboards. We provide the following dashboards in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^]:
+
+[cols="1m,2a", options="header"]
+|=======================
+|Dashboard JSON     |Description
+
+|dashboard_query_pipeline.json
+|Query Pipeline Metrics including HTTP request metrics and both per-pipeline and per pipeline stage execution times
+|dashboard_indexing_pipipeline.json
+|Indexing Service Metrics including HTTP request metrics and per-pipeline metrics execution times
+|dashboard_jvm_metrics.json
+|General JVM metrics for instrumented spring-boot services
+|dashboard_solr_core.json
+|Solr exporter per-core metric dashboard, including request details
+
+|=======================
+
+.How to configure Grafana
+
+. If you used the `--prometheus` install option when installing Fusion, then you need to get the initial Grafana password from a K8s secret by doing:
++
+[source,bash]
+----
+kubectl get secret --namespace "${NAMESPACE}" f5-graf-grafana \
+  -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+----
+
+. With Grafana, you can either set up a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s `LoadBalancer`. To define a `LoadBalancer`, do (replace `${RELEASE}` with your Helm release label):
++
+[source,bash]
+----
+kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+----
+
+. Use `kubectl get services --namespace <namespace>` to verify that the load balancer is set up and its IP address.
+
+. Direct your browser to `http://<GrafanaIP>:3000` and enter the username `admin@localhost` and the password that was returned in the previous step.
++
+This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
++
+One of the first things you will want to do is to configure the Prometheus data source in Grafana.
+
+. Go to the gear icon on the left and then to Data Sources.
+
+. Click *Add Data Source* and then click on *Prometheus* as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
++
+image:grafana-add-datasource.png[]
+
+. Enter `http://<RELEASE>-prom-prometheus-server`
+
+. Configure any additional fields as desired (but defaults are fine), then click *Save and Test*, which should succeed.
+
+. Import the dashboards from fusion-cloud-native:
++
+image:grafana-import.png[]
+
+=== Pod affinity rules
+
+The `example-values/affinity.yaml` file sets affinity rules for all of the Fusion components where the cluster is spread over multiple availability zones. All components have the same affinity setup which follows the following logic:
+
+* When scheduling, prefer to put a pod on a node that is in an availability zone that doesn't already have a running instance of this component.
+
+* Require that pods are all deployed on a host that doesn't have a running instance of the component that is being scheduled.
+
+This means that the loss of a host will bring down at most one component but there is a trade off that the cluster will be at least as large as the number of replicas in the largest deployment. If a large number of a certain type of component should be run then it may make sense to relax the required to a preferred policy on hostname, that is, change:
+
+----
+     requiredDuringSchedulingIgnoredDuringExecution:
+----
+to
+----
+     preferredDuringSchedulingIgnoredDuringExecution:
+----
+
+for the kubernetes.io/hostname policies. We recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
+
+Append the following to your upgrade script (discussed previously ~ Helm Upgrade Script):
+----
+MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
+----
+
+=== Multiple replicas and horizontal pod auto-scaling
+
+You can configure multiple replicas and horizontal pod autoscalers (tied to CPU usage) using the `example-values/replicas.yaml` file. Once you're ready to apply the replica and HPA settings from the replicas.yaml file, we recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_replicas.yaml`
+
+Append the following to your upgrade script (discussed previously ~ Helm Upgrade Script):
+
+----
+MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_replicas.yaml"
+----
+
+==== Use Gatling to run query performance / load tests
+
+Lucidworks recommends running query performance tests to establish a baseline number of pods for the proxy, query pipeline, and Solr services. You can use the gatling-qps project provided in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] as a starting point for building a query load test. Gatling.io is a load test framework that provides a powerful Scala-based DSL for constructing performance test scenarios. See `FusionQueryTraffic.scala` in the repo as a starting point for building query performance tests for Fusion 5.
+
+==== Register warming queries
+
+To avoid any potential delays when a new query pod joins the cluster, such as in reaction to an HPA auto-scaling trigger, we recommend registering a small set of queries to "warm up" the query pipeline service before it gets added to the Kubernetes service. In the query-pipeline section of the custom values YAML, configure your warming queries using the structure shown in the example below:
+
+[source,json]
+----
+warmingQueryJson:
+  {
+  "pipelines": [
+    {
+      "pipeline": "<PIPELINE>",
+      "collection": "<COLLECTION>",
+      "params": {
+        "q": ["*:*"]
+      }
+    },{
+      "method" : "POST",
+      "pipeline": "<ANOTHER_PIPELINE>",
+      "collection": "<ANOTHER_COLL>",
+      "params": {
+        "q": ["*:*"]
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "profile": "<PROFILE>",
+      "params": {
+        "q": ["*:*"]
+      }
+    }
+  ]
+  }
+----
+
+NOTE: The indentation for the opening / closing braces is important for embedding JSON in YAML
+
+=== Resource Limits
+
+Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster. Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up-and-running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services. Lucidworks provides a template to help you get started with setting the appropriate resource limits, see: `example-values/resources.yaml`. However, you may need to refine the settings for your environment and workloads, especially for Solr.
+
+=== Spark Ops
+
+In Fusion 5.x, Spark operates in native Kubernetes mode instead of standalone mode (like in Fusion 4.x). The sections below describe Spark operations in Fusion 5.0.
+
+==== Cluster Mode
+
+Fusion 5.0 ships with Spark 2.4.3 and operates in "cluster" mode on top of Kubernetes. In cluster mode, each Spark driver runs in a separate pod and hence resources can be managed per job. Each executor also runs in its own pod.
+
+==== Spark config defaults
+
+The table below shows the default configurations for Spark. These settings are configured in the job-launcher config map, accessible using `kubectl get configmaps <release-name>-job-launcher`. Some of these settings are also configurable via Helm.
+
+.Spark Resource Configurations
+[cols="2m,1a,1m"]
+|===
+|Spark Configuration
+|Default value
+|Helm Variable
+
+|spark.driver.memory
+|3g
+|
+
+|spark.executor.instances
+|2
+|executorInstances
+
+|spark.executor.memory
+|3g
+|
+
+|spark.executor.cores
+|6
+|
+
+|spark.kubernetes.executor.request.cores
+|3
+|
+
+|===
+
+
+.Spark Kubernetes Configurations
+[cols="2m,1a,1m"]
+|===
+|Spark Configuration
+|Default value
+|Helm Variable
+
+|spark.kubernetes.container.image.pullPolicy
+|Always
+|image.imagePullPolicy
+
+|spark.kubernetes.container.image.pullSecrets
+|[artifactory]
+|image.imagePullSecrets
+
+|spark.kubernetes.authenticate.driver.serviceAccountName
+|<name>-job-launcher-spark
+|
+
+|spark.kubernetes.driver.container.image
+|fusion-dev-docker.ci-artifactory.lucidworks.com
+|image.repository
+
+|spark.kubernetes.executor.container.image
+|fusion-dev-docker.ci-artifactory.lucidworks.com
+|image.repository
+
+|===
+
+==== Spark Job Resource Allocation
+
+===== Number of Instances and Cores Allocated
+
+In order to set the number of cores allocated for a job, add the following parameter keys and values in the Spark Settings field within the "advanced" job properties in the Fusion UI or the `sparkConfig` object if defining a job via the Fusion API.
+
+If `spark.kubernetes.executor.request.cores` is not set (default config), then Spark will set the number of CPUs for the executor pod to be the same number as `spark.executor.cores`. In that case, if `spark.executor.cores` is 3, then Spark will allocate 3 CPUs for the executor pod and will run 3 tasks in parallel. To under-allocate the CPU for the executor pod and still run multiple tasks in parallel, set `spark.kubernetes.executor.request.cores` to a lower value than `spark.executor.cores`.
+
+The ratio for `spark.kubernetes.executor.request.cores` to `spark.executor.cores` depends on the type of job: either CPU-bound or I/O-bound. Allocate more memory to the executor if more tasks are running in parallel on a single executor pod.
+
+[cols="3m,1a"]
+|===
+|Parameter Key
+|Example Value
+
+|spark.executor.instances
+|3
+
+|spark.kubernetes.executor.request.cores
+|3
+
+|spark.executor.cores
+|6
+
+|spark.driver.cores
+|1
+
+|===
+
+If these settings are left unspecified, then the job launches with a driver using one core and 3GB of memory plus two executors, each using one core with 1GB of memory.
+
+===== Memory Allocation
+
+The amount of memory allocated to the driver and executors is controlled on a per-job basis using the `spark.executor.memory` and `spark.driver.memory` parameters in the Spark Settings section of the job definition in the Fusion UI or within the `sparkConfig` object in the JSON definition of the job.
+
+[cols="3m,1a"]
+|===
+|Parameter Key
+|Example Value
+
+|spark.executor.memory
+|6g
+
+|spark.driver.memory
+|2g
+
+|===
+
+==== Configuring credentials in the Kubernetes cluster
+
+AWS/GCS credentials can be configured per job or per cluster.
+
+===== Configuring GCS credentials for Spark jobs
+
+. Create a secret containing the credentials JSON file.
++
+See https://cloud.google.com/iam/docs/creating-managing-service-account-keys on how to create service account JSON files.
++
+[source,bash]
+----
+kubectl create secret generic solr-dev-gc-serviceaccount-key --from-file=/Users/kiranchitturi/creds/solr-dev-gc-serviceaccount-key.json
+----
+
+. Create an extra config map in Kubernetes setting the required properties for GCP.
+.. Create a properties file with GCP properties:
++
+[source,bash]
+----
+$ cat gcp-launcher.properties
+spark.kubernetes.driverEnv.GOOGLE_APPLICATION_CREDENTIALS = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+spark.kubernetes.driver.secrets.solr-dev-gc-serviceaccount-key = /mnt/gcp-secrets
+spark.kubernetes.executor.secrets.solr-dev-gc-serviceaccount-key = /mnt/gcp-secrets
+spark.executorEnv.GOOGLE_APPLICATION_CREDENTIALS = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+spark.hadoop.google.cloud.auth.service.account.json.keyfile = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+----
+.. Create a config map based on the properties file:
++
+[source,bash]
+----
+kubectl create configmap gcp-launcher --from-file=gcp-launcher.properties
+----
+. Add the gcp-launcher config map to values.yaml under job-launcher:
++
+[source,yaml]
+----
+configSources: gcp-launcher
+----
+
+===== Configuring S3 credentials for Spark jobs
+
+AWS credentials can’t be set via a single file. So, we have to set two environment variables referring to the key and secret.
+
+. Create a secret pointing to the creds:
++
+[source,bash]
+----
+kubectl create secret generic aws-secret --from-literal=key='<access key>' --from-literal=secret='<secret key>'
+----
+. Create an extra config map in Kubernetes setting the required properties for AWS:
+.. Create a properties file with AWS properties:
++
+[source,bash]
+----
+cat aws-launcher.properties
+spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
+spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
+spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
+spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
+----
+.. Create a config map based on the properties file:
++
+[source,bash]
+----
+kubectl create configmap aws-launcher --from-file=aws-launcher.properties
+----
+. Add the `aws-launcher` config map to `values.yaml` under `job-launcher`:
++
+[source,yaml]
+----
+configSources: aws-launcher
+----
+
+===== Configuring Azure Data Lake credentials for Spark jobs
+
+Configuring Azure through environment variables or `configMaps` does not seem to be possible at the moment. You need to manually upload the `core-site.xml` file into the job-launcher pod at `/app/spark-dist/conf`.
+
+Currently only Data Lake Gen 1 is supported.
+
+Here’s what the `core-site.xml` file should look like:
+[source,xml]
+----
+<property>
+  <name>dfs.adls.oauth2.access.token.provider.type</name>
+  <value>ClientCredential</value>
+</property>
+<property>
+    <name>dfs.adls.oauth2.refresh.url</name>
+    <value> Insert Your OAuth 2.0 Endpoint URL Value Here </value>
+</property>
+<property>
+    <name>dfs.adls.oauth2.client.id</name>
+    <value> Insert Your Application ID Here </value>
+</property>
+<property>
+    <name>dfs.adls.oauth2.credential</name>
+    <value>Insert the Secret Key Value Here </value>
+</property>
+<property>
+    <name>fs.adl.impl</name>
+    <value>org.apache.hadoop.fs.adl.AdlFileSystem</value>
+</property>
+<property>
+    <name>fs.AbstractFileSystem.adl.impl</name>
+    <value>org.apache.hadoop.fs.adl.Adl</value>
+</property>
+----
+
+===== Configuring credentials per job
+
+. Create a Kubernetes secret with the GCP/AWS credentials.
+. Add the Spark configuration to configure the secrets for the Spark driver/executor.
+
+====== GCS
+
+. Create a secret containing the credentials JSON file.
++
+See https://cloud.google.com/iam/docs/creating-managing-service-account-keys on how to create service account JSON files.
++
+[source,bash]
+----
+kubectl create secret generic solr-dev-gc-serviceaccount-key --from-file=/Users/kiranchitturi/creds/solr-dev-gc-serviceaccount-key.json
+----
+. Toggle the Advanced config in the job UI and add the following to the Spark configuration:
++
+----
+spark.kubernetes.driver.secrets.solr-dev-gc-serviceaccount-key = /mnt/gcp-secrets
+spark.kubernetes.executor.secrets.solr-dev-gc-serviceaccount-key = /mnt/gcp-secrets
+spark.kubernetes.driverEnv.GOOGLE_APPLICATION_CREDENTIALS = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+spark.executorEnv.GOOGLE_APPLICATION_CREDENTIALS = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+spark.hadoop.google.cloud.auth.service.account.json.keyfile = /mnt/gcp-secrets/solr-dev-gc-serviceaccount-key.json
+----
+
+====== S3
+
+AWS credentials can’t be set via a single file. So, we have to set two environment variables referring to the key and secret.
+
+. Create a secret pointing to the creds:
++
+----
+kubectl create secret generic aws-secret --from-literal=key='<access key>' --from-literal=secret='<secret key>'
+----
+. Toggle the Advanced config in the job UI and add the following to Spark configuration:
++
+----
+spark.kubernetes.driver.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
+spark.kubernetes.driver.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
+spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
+spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
+----
+
+==== How to get logs for a Spark job
+
+* To get the initial logs that contain information about the pod spin up, do:
++
+----
+curl -X GET -u admin:password123 http://localhost:8764/api/apollo/spark/driver/log/{jobId}
+----
+* Get the pod ID by running:
++
+----
+k get pods -l spark-role=driver -l jobConfigId=<job-id>
+----
+* Logs from failed jobs can be obtained by using:
++
+----
+kubectl logs [DRIVER-POD-NAME]
+----
+* Logs from running containers can be tailed using the -f parameter:
++
+----
+kubectl logs -f [POD-NAME]
+----
+
+Spark deletes failed and successful executor pods. Fusion provides a cleanup Kubernetes cron job that removes successfully completed driver pods every 15 minutes.
+
+==== Pod cleanup
+
+Driver pods are cleaned up using a Kubernetes cron job that runs every 15 minutes to clean up pods using this command:
+----
+kubectl delete pods --namespace default --field-selector=status.phase=Succeeded -l spark-role=driver
+----
+This cron job is created automatically when the job-launcher microservice is installed in the Fusion cluster.
+
+==== Spark History Server
+
+While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the Spark History Server into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
+
+===== Installing Spark History Server
+
+Spark History Server can be installed via its default Helm chart:
+----
+helm install stable/spark-history-server --values values.yaml
+----
+
+===== Recommended Configuration
+
+Our recommended configuration for using the Spark History Server with Fusion is to store and read Spark logs in cloud storage. For installations on Google Kubernetes Engine, we suggest setting these keys in the `values.yaml`:
+[source,yaml]
+----
+gcs:
+    enableGCS: false
+    secret: history-secrets
+    key: [SECRET_KEY_NAME].json
+    logDirectory: gs://[BUCKET_NAME]
+service:
+    type: ClusterIP
+    port: 18080
+----
+We override the default `service.type` of `LoadBalancer` with `ClusterIP` to keep the History Server from being accessible to outside connections without port-forwarding.
+
+You may need to set up your secret for full access to the cloud bucket:
+[source,bash]
+----
+$ export ACCOUNT_NAME=[SECRET_KEY_NAME]
+$ export GCP_PROJECT_ID=[PROJECT_ID]
+$ gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "${ACCOUNT_NAME}"
+$ gcloud iam service-accounts keys create "${ACCOUNT_NAME}.json" --iam-account "${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+$ gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} --member "serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role roles/storage.admin
+$ gsutil iam ch serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com:objectAdmin gs://[BUCKET_NAME]
+----
+The service key sets up the history server on an internal IP within your cluster but does not create a LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
+
+===== Other Configurations
+
+====== Azure
+
+[source,bash]
+----
+$ echo "your-storage-account-name" >> azure-storage-account-name
+$ echo "your-container-name" >> azure-blob-container-name
+# to auth with sas token (if wasbs.sasKeyMode=true, which is the default)
+$ echo "your-azure-blob-sas-key" >> azure-blob-sas-key
+# or to auth with storage account key
+$ echo "your-azure-storage-account-key" >> azure-storage-account-key
+$ kubectl create secret generic azure-secrets --from-file=azure-storage-account-name --from-file=azure-blob-container-name [--from-file=azure-blob-sas-key | --from-file=azure-storage-account-key]
+----
+
+For SAS token access, `values.yaml` should look like:
+[source,yaml]
+----
+wasbs:
+    enableWASBS: true
+    secret: azure-secrets
+    sasKeyName: azure-blob-sas-key
+    storageAccountNameKeyName: azure-storage-account-name
+    containerKeyName: azure-blob-container-name
+    logDirectory: [BUCKET-NAME]
+----
+For non-SAS access:
+[source,yaml]
+----
+wasbs:
+    enableWASBS: true
+    secret: azure-secrets
+    sasKeyMode: false
+    storageAccountKeyName: azure-storage-account-key
+    storageAccountNameKeyName: azure-storage-account-name
+    containerKeyName:  azure-blob-container-name
+    logDirectory: [BUCKET-NAME]
+----
+
+====== AWS
+
+The recommended approach for S3 access is to use AWS IAM roles, but you can also use a access/secret key pair as a Kubernetes secret:
+
+[source,bash]
+----
+$ aws iam list-access-keys --user-name your-user-name --output text | awk '{print $2}' >> aws-access-key
+$ echo "your-aws-secret-key" >> aws-secret-key
+$ kubectl create secret generic aws-secrets --from-file=aws-access-key --from-file=aws-secret-key
+----
+
+For IAM, your `values.yaml` will be:
+
+[source,yaml]
+----
+s3:
+    enableS3: true
+    logDirectory: s3a://[BUCKET-NAME]
+----
+(Note the Hadoop `s3a://` link instead of `s3://`.)
+
+With a access/secret pair, you’ll need to add the secret:
+
+[source,yaml]
+----
+s3:
+    enableS3: true
+    enableIAM: false
+    accessKeyName: aws-access-key
+    secretKeyName: aws-secret-key
+    logDirectory: s3a://[BUCKET-NAME]
+----
+
+===== Configuring Spark
+
+After the History Server has been set up, then the Fusion job-launcher deployment ConfigMap’s `application.yaml` key will need to be updated with these Spark settings so the driver and executors know where to write out their logs. In this example, we’re redirecting to a GCS bucket:
+
+[source,yaml]
+----
+spark:
+    eventLog:
+        enabled: true
+        compress: true
+        dir: gs://[BUCKET-NAME]
+    hadoop:
+        google:
+            cloud:
+                auth:
+                    service:
+                        account:
+                            json:
+                                keyfile: /etc/secrets/[SECRET_KEY_NAME].json]
+    kubernetes:
+        driver:
+            secrets:
+                history-secrets: /etc/secrets
+        executor:
+            secrets:
+                history-secrets: /etc/secrets
+----
+
+===== Accessing The Spark History Server
+
+As we have set up the History Server to only set up a ClusterIP, we will need to port forward the server using `kubectl`:
+----
+kubectl get pods # to find the Spark History Server pod
+kubectl port-forward [POD_NAME] 18080:18080
+----
+
+You can now access the Spark History Server at `\http://localhost:18080`.
+
+=== Upgrades with Helm v3
+
+One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.0.2 to a later 5.x.y version on a live cluster with zero downtime or disruption of service.
+
+When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure stored configuration remains compatible in the same 5.x release line.
+
+Lucidworks releases minor updates to individual services frequently, so our customers can pull in those upgrades using Helm at their discretion.
+
+To upgrade your cluster at any time, use the `--upgrade` option with our setup scripts in this repo.
+
+The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks. To see what would be upgraded, you can pass the `--dry-run` option to the script.
+
+
+// end::body[]
