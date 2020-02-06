@@ -5,6 +5,7 @@
 
 // tag::body[]
 
+//tag::intro[]
 The diagram below depicts a Fusion 5 cluster running in a single Kubernetes namespace for high availability:
 
 [[fig1]]
@@ -14,16 +15,21 @@ ifdef::env-github[]
 image:high-availability.png[]
 endif::[]
 ifndef::env-github[]
-image:high-availability.png[]
+image:https://raw.githubusercontent.com/lucidworks/fusion-cloud-native/DOCS-2152-F5-survival-guide/survival_guide/high-availability.png[]
 endif::[]
+
+//end::intro[]
 
 This topic covers some of the most important concepts of the Fusion cluster depicted in the diagram above.
 
+[[which]]
 == Which Kubernetes?
 
 Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusion 5 runs on any modern version of Kuberentes (v 1.12 or newer). In fact, very little code in Fusion has any awareness of Kubernetes or Docker. The K8s ecosystem is moving very fast and infrastructure providers are quickly offering some flavor of Kubernetes. However, the beauty of Kubernetes is that applications like Fusion do not need to care about the underlying infrastructure. Although Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, do not take this to mean Fusion only runs on those flavors of Kubernetes. In general, as long as K8s is running, Fusion 5 can run on it.
 
 == Multiple zones for high availability
+
+//tag::ha[]
 
 Fusion relies heavily on Zookeeper to maintain quorum, which implies you need at least 3 ZK pods in an ensemble. In the Fusion Helm chart, Zookeeper is deployed as a StatefulSet. With GKE, you can launch a link:https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters[regional cluster^] that distributes nodes across 3 availability zones. With a multi-zone setup, your cluster can withstand the loss of one zone without experiencing downtime; you may experience degraded performance from losing ⅓ of your total compute capacity assuming your pods are distributed evenly across zones. The multi-zonal cluster also ensures higher availability for the Kubernetes control plane services.
 
@@ -38,9 +44,13 @@ link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
 endif::[]
 section.
 
+//end::ha[]
+
 == Overview of Fusion microservices
 
-Table 1 lists the Fusion microservices deployed by our Helm chart. Recognize that Fusion is a complex distributed application composed of many stateful and stateless services designed to support demanding search-oriented workloads at high scale.
+//tag::microservices[]
+
+The table below lists the Fusion microservices deployed by our Helm chart. Recognize that Fusion is a complex distributed application composed of many stateful and stateless services designed to support demanding search-oriented workloads at high scale.
 
 [cols="1a,1,1,1a,2,2",options="header"]
 |===
@@ -96,7 +106,11 @@ Exposes a JDBC endpoint for the SQL service.
 
 |===
 
+//end::microservices[]
+
 == Ingress, TLS termination, API gateway
+
+//tag::ingress[]
 
 All external access to Fusion services should be routed through the Fusion proxy service, which serves as an API gateway and provides authentication and authorization. The most common approach is to set up a link:https://kubernetes.io/docs/concepts/services-networking/ingress/[Kubernetes Ingress^] that routes requests to Fusion services to the proxy service as shown in the example ingress definition below. Moreover, it is also common to do link:https://cloud.google.com/load-balancing/docs/https/#tls_support[TLS termination^] at the Ingress so that all traffic to/from the K8s cluster is encrypted but internal requests happen over unencrypted HTTP.
 
@@ -133,13 +147,21 @@ items:
 
 If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer your specific K8s provider's documentation on creating an Ingress and TLS certificate.
 
+//end::ingress[]
+
 == Stateless sessions with JWT
+
+//tag::jwt[]
 
 The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in the link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.7wrxeua3noi8[Query Load Tests with Gatling^] section below, including how to refresh the JWT before it expires.
 
 All Fusion services require requests to include a JWT to identify the caller.
 
+//end::jwt[]
+
 == Workload isolation with multiple node pools
+
+//tag::workload-isolation[]
 
 You can run all Fusion services on a single link:https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools[Node Pool^] and Kubernetes will do its best to balance resource utilization across the nodes. However, Lucidworks recommends defining multiple link:https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools[Node Pools^] to separate services into "workload partitions" based on the type of traffic a service receives. Specifically, the Fusion Helm chart supports three optional partitions: *search*, *analytics*, and *system*. Workload isolation with Node Pools allows you to optimize resource utilization across the cluster to achieve better scalability, balance, and minimize infrastructure costs. It also helps with monitoring as you have better control over the traffic handled by each node in the cluster. To use this feature, you must define separate NodePools in your Kubernetes cluster ahead of time.
 
@@ -175,7 +197,11 @@ The *system* partition hosts all other Fusion services, such as the various stat
 
 The analytics, search, and system partitions are simply a recommended starting point--you can extend upon this model to refine your pod allocation by adding more Node Pools as needed. For instance, running Spark jobs on a dedicated pool of preemptible nodes is a pattern we've had great success with in our own K8s clusters at Lucidworks.
 
+//end::workload-isolation[]
+
 == High-performance query processing with auto-scaling
+
+//tag::auto-scaling[]
 
 To further illustrate key concepts about the Fusion 5 architecture, let's walk through how query execution works and the various microservices involved. There are two primary take-aways from this section. First, there are a number of microservices involved in query execution, which illustrates the value and importance of having a robust orchestration layer like Kubernetes. Second, Fusion comes well-configured out of the box so you don't have to worry about configuring all the details depicted in the diagram below:
 
@@ -209,5 +235,6 @@ ifndef::env-github[]
 link:2_planning.adoc[planning your installation].
 endif::[]
 
+//end::auto-scaling[]
 
 // end::body[]
