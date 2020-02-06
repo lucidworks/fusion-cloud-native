@@ -10,7 +10,12 @@ The diagram below depicts a Fusion 5 cluster running in a single Kubernetes name
 [[fig1]]
 .Figure 1: Fusion 5 running in GKE with multiple node pools for workload isolation
 
+ifdef::env-github[]
 image:high-availability.png[]
+endif::[]
+ifndef::env-github[]
+image:high-availability.png[]
+endif::[]
 
 This topic covers some of the most important concepts of the Fusion cluster depicted in the diagram above.
 
@@ -24,7 +29,14 @@ Fusion relies heavily on Zookeeper to maintain quorum, which implies you need at
 
 Lucidworks provides affinity rules to ensure multiple pods per service get distributed across multiple zones, see link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.4oehsl3nw87j[Pod Affinity Rules^] later in this document.
 
-When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the solr_zone property to distribute replicas across zones in the link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy] section.
+When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the solr_zone property to distribute replicas across zones in the
+ifdef::env-github[]
+link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
+endif::[]
+ifndef::env-github[]
+link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
+endif::[]
+section.
 
 == Overview of Fusion microservices
 
@@ -133,7 +145,14 @@ You can run all Fusion services on a single link:https://cloud.google.com/kubern
 
 .search
 
-As depicted in link:1_foundational_concepts.adoc#fig1[Figure 1], the *search* partition hosts the API gateway (aka proxy), query pipelines, ML model service, and a Solr StatefulSet that hosts collections that support high volume, low-latency reads, such as your primary search collection and the signals_aggr collection which serves signal boosting lookups during query execution. The search partition is where you want to invest in better hardware, such as using nodes with SSDs for better query performance; typically, SSDs would not be needed for analytics nodes. The services deployed in the search partition often have Horizontal Pod Autoscalers (HPA) configured. We'll cover how to configure the HPA for search-oriented services in the link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.yweny7j3wkv4[HPA Auto-scaling^] section below.
+As depicted in
+ifdef::env-github[]
+link:1_foundational_concepts.adoc#fig1[Figure 1],
+endif::[]
+ifndef::env-github[]
+link:1_foundational_concepts.adoc#fig1[Figure 1],
+endif::[]
+the *search* partition hosts the API gateway (aka proxy), query pipelines, ML model service, and a Solr StatefulSet that hosts collections that support high volume, low-latency reads, such as your primary search collection and the signals_aggr collection which serves signal boosting lookups during query execution. The search partition is where you want to invest in better hardware, such as using nodes with SSDs for better query performance; typically, SSDs would not be needed for analytics nodes. The services deployed in the search partition often have Horizontal Pod Autoscalers (HPA) configured. We'll cover how to configure the HPA for search-oriented services in the link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.yweny7j3wkv4[HPA Auto-scaling^] section below.
 
 When using multiple node pools to isolate / partition workloads, the Fusion Helm chart defines multiple StatefulSets for Solr. Each Solr StatefulSet uses the same Zookeeper connect string so are considered to be in the same Solr cluster; the partitioning of collections based on workload and zone is done with a Solr auto-scaling policy. The auto-scaling policy also ensures replicas get placed evenly between multiple availability zones (typically 3 for HA) so that your Fusion cluster can withstand the loss of one AZ and remain operational.
 
@@ -141,7 +160,14 @@ When using multiple node pools to isolate / partition workloads, the Fusion Helm
 
 The *analytics* partition hosts the Spark driver & executor pods, Spark job management services (job-rest-service and job-launcher), index pipelines, and a Solr StatefulSet for hosting analytics-oriented collections, such as the signals collection. The signals collection typically experiences high write volume (to track user activity) and batch-oriented read requests from Spark jobs that do large table scans on the collection throughout the day. In addition, the analytics Solr pods may have different resource settings than the search Solr pods, i.e. you don't need as much memory for these as they're not serving facet queries and other memory intensive workloads in Solr.
 
-TIP: When running in GKE, separating the Spark driver and executor pods into a dedicated Node Pool backed by preemptible nodes is a common pattern for reducing costs while increasing the compute capacity for running Spark jobs. You can also do this on EKS with spot instances. We'll cover this approach in more detail in the link:3_operations.adoc#spark-ops[Spark Ops] section.
+TIP: When running in GKE, separating the Spark driver and executor pods into a dedicated Node Pool backed by preemptible nodes is a common pattern for reducing costs while increasing the compute capacity for running Spark jobs. You can also do this on EKS with spot instances. We'll cover this approach in more detail in the
+ifdef::env-github[]
+link:3_operations.adoc#spark-ops[Spark Ops]
+endif::[]
+ifndef::env-github[]
+link:3_operations.adoc#spark-ops[Spark Ops]
+endif::[]
+section.
 
 .system
 
@@ -156,7 +182,12 @@ To further illustrate key concepts about the Fusion 5 architecture, let's walk t
 [[fig2]]
 .Figure 2: Fusion query execution
 
+ifdef::env-github[]
 image:query-execution.png[]
+endif::[]
+ifndef::env-github[]
+image:query-execution.png[]
+endif::[]
 
 At point A (far right), background Spark jobs aggregate signals to power the signal boosting stage and analyze signals for query rewriting (head/tail, synonym detection, and so on). At point B, Fusion uses a link:https://lucene.apache.org/solr/guide/8_3/solrcloud-autoscaling-overview.html[Solr auto-scaling policy^] in conjunction with K8s node pools to govern replica placement for various Fusion collections. For instance, to support high performance query traffic, we typically place the primary collection together with sidecar collections for query rewriting, signal boosting, and rules matching. Solr pods supporting high volume, low-latency reads are backed by a HPA linked to CPU or custom metrics in Prometheus. Fusion services store configuration, such as query pipeline definitions, in Zookeeper (point C lower left).
 
@@ -170,6 +201,13 @@ After executing the query the primary collection, Fusion generates a *response* 
 
 Behind the scenes, every Fusion microservice exposes detailed metrics. Prometheus scrapes the metrics using pod annotations. The query microservice exposes per stage metrics to help understand query performance (point 7). Moreover, every Fusion service ships logs to Logstash, which can be configured to index log messages into the system_logs collection in Solr or to an external service like Elastic (point 8).
 
-Armed with a basic understanding of the Fusion 5 architecture and how the various microservices interact, let's move on to link:2_planning.adoc[planning your installation].
+Armed with a basic understanding of the Fusion 5 architecture and how the various microservices interact, let's move on to
+ifdef::env-github[]
+link:2_planning.adoc[planning your installation].
+endif::[]
+ifndef::env-github[]
+link:2_planning.adoc[planning your installation].
+endif::[]
+
 
 // end::body[]

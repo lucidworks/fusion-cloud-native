@@ -106,7 +106,12 @@ One of the first things you will want to do is to configure the Prometheus data 
 
 . Click *Add Data Source* and then click on *Prometheus* as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
 +
+ifdef::env-github[]
 image:grafana-add-datasource.png[]
+endif::[]
+ifndef::env-github[]
+image:grafana-add-datasource.png[]
+endif::[]
 
 . Enter `\http://<RELEASE>-prom-prometheus-server`
 
@@ -114,7 +119,12 @@ image:grafana-add-datasource.png[]
 
 . Import the dashboards from fusion-cloud-native:
 +
+ifdef::env-github[]
 image:grafana-import.png[]
+endif::[]
+ifndef::env-github[]
+image:grafana-import.png[]
+endif::[]
 
 === Pod affinity rules
 

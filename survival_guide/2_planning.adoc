@@ -105,7 +105,12 @@ Next let's see how to monitor the health and performance of Fusion services usin
 
 Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster. The following diagram depicts how metrics work in a Fusion cluster:
 
+ifdef::env-github[]
 image:metrics.png[]
+endif::[]
+ifndef::env-github[]
+image:metrics.png[]
+endif::[]
 
 Notice in the diagram that Prometheus pulls (or "scrapes") metrics from Fusion services. Prometheus identifies which services to pull metrics from using pod annotations. For instance, to enable metrics for the Fusion `query-pipeline` service, you add the following pod annotations for the query service in the custom values YAML file (this is already done for you in the `customize_fusion_values.yaml.example` template).
 
