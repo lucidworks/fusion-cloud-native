@@ -31,7 +31,7 @@ __NOTE: All Fusion services must run in the same namespace, i.e. you should not 
 === Install Helm
 
 Helm is a package manager for Kubernetes that helps you install and manage applications on your Kubernetes cluster.
-Regardless of which Kubernetes platform you're using, e.g. GKE, EKS, OpenShift, you need to install *`helm`* as it is required to install Fusion for any K8s platform.
+Regardless of which Kubernetes platform you're using, you need to install *`helm`* as it is required to install Fusion for any K8s platform.
 On MacOS, you can do:
 ```
 brew install kubernetes-helm
@@ -221,7 +221,7 @@ source IP and avoids a second hop for LoadBalancer and NodePort type services, b
 imbalanced traffic spreading. Although when running in a cluster with a dedicated pool for spark jobs
 that can scale up and down freely it can prevent unwanted request failures. This behaviour can be
 altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Local` if the example values
-file is used. 
+file is used.
 
 
 ==== Considerations when using the nginx ingress controller
