@@ -9,15 +9,26 @@ This topic provides an overview of common daily maintenance tasks.
 
 === Helm upgrade script
 
-Our `setup_f5_*.sh` scripts are nice for getting started and for checking your environment has all the necessary command-line tools before attempting an installation. However, once you have a working cluster, we recommend creating a simple upgrade script that hardcodes the various parameters and alleviates you needing to remember which parameters to pass to the script. This is especially helpful when working with multiple K8s clusters. Rename the example script provided in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] using our custom value YAML naming convention:
+// tag::upgrade-script[]
 
+Once you
+ifdef::env-github[]
+link:2_planning.adoc[deploy a working cluster],
+endif::[]
+ifndef::env-github[]
+link:/how-to/deploy-fusion-at-scale.html[deploy a working cluster],
+endif::[]
+we recommend creating a simple upgrade script that hard-codes the various parameters and alleviates the need to remember which parameters to pass to the script. This is especially helpful when working with multiple K8s clusters.
+
+. Rename the https://github.com/lucidworks/fusion-cloud-native/blob/master/upgrade_fusion.sh.example[example script^] provided in the fusion-cloud-native repo using the same naming convention you used to name your custom value YAML file:
++
 [source,bash]
 ----
 cp upgrade_fusion.sh.example <provider>_<cluster>_<release>_upgrade_fusion.sh
 ----
 
-Edit the script to hardcode the various parameters for your cluster, such as:
-
+. Edit the script to hard-code the various parameters for your cluster, such as:
++
 ----
 PROVIDER=gke
 CLUSTER_NAME=search
@@ -26,28 +37,44 @@ NAMESPACE=default
 CHART_VERSION=5.0.2
 ----
 
-The script assumes your kubeconfig is pointing to the correct cluster and fails fast if not. Thus, you'll have to be sure to select the correct kubeconfig before running the script. The script also assumes the use of Helm v3. Be sure to append all custom values YAML files to the `MY_VALUES` variable in the upgrade script, such as:
-
+. Append all custom values YAML files to the `MY_VALUES` variable in the upgrade script, such as:
++
 ----
 MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
 ----
 
-Of course being a good ops person, you'll also check the script into version control alongside your custom values YAML files.
+. Check the script into version control alongside your custom values YAML files.
+
+TIP: The script assumes your kubeconfig is pointing to the correct cluster; if not, it fails fast. Be sure to select the correct kubeconfig before running the script. The script also assumes the use of Helm v3.
+
+// end::upgrade-script[]
 
 === Logging
 
-Fusion services come pre-configured to write log messages to stdout (common pattern in K8s) and send log messages to Logstash (deployed in our Helm chart). Logstash is configured to index log messages into the Fusion `system_logs` collection. The Log Viewer integrated into the Fusion Admin UI provides basic log analytics for the logs collected in system_logs. However, we fully expect our customers / prospects to already have a preferred log analytics stack, such as ELK, Splunk, DataDog, or similar. The Log Viewer is only there for demo purposes and the unlikely case of a customer not having a preferred logging stack already.
+// tag::logging[]
+
+Fusion services come pre-configured to write log messages to stdout (common pattern in K8s) and send log messages to Logstash (deployed in our Helm chart).  Logstash is configured to index log messages into the Fusion `system_logs` collection.
+
+The Log Viewer integrated into the Fusion Admin UI provides basic log analytics for the logs collected in `system_logs`.  You can also use your preferred log analytics stack, such as ELK, Splunk, DataDog, or similar.
 
 For integration with an existing log infrastructure, you have two basic choices:
 
-* Disable Logstash in our Helm chart (set `logstashEnabled: false` for all services in the custom values YAML) and then have their logging infrastructure scrape logs from the stdout from each pod. This is a very common pattern in Kubernetes and most modern log analytics solutions have good integration with Kubernetes.
+==== Disable Logstash and scrape logs from stdout
+
+. In your custom values YAML files, set `logstashEnabled: false` for all services.
+. Configure your logging infrastructure to scrape logs from the stdout from each pod.
++
+This is a very common pattern in Kubernetes and most modern log analytics solutions have good integration with Kubernetes.
 //In most cases, the customers ops team will help guide you on how they want this to work (typically with a log shipper process deployed as a DaemonSet on each node), there’s not much you’ll have to do.
 
-* Use Logstash and configure it to send logs to some output sink supported by Logstash. This would be a good option for customers / prospects that use ELK but don’t have an existing integration with Kubernetes. Again, most would use something like Filebeat as a DaemonSet to do this vs. relying on our Logstash. This will require some configuration changes to the Logstash in our Helm chart using custom values YAML as is done for most Fusion configuration changes.
+==== Use Logstash to send logs
 
-==== Elasticsearch
+This is a good option if you use ELK but don't have an existing integration with Kubernetes.  This option requires some changes to the Logstash configuration in your custom values YAML file.
+//Again, most would use something like Filebeat as a DaemonSet to do this vs. relying on our Logstash.
 
-Elasticsearch is a common tool used to store and query logs and can be easily configured as an output for Logstash. Just include the `elasticsearchHost` to our Helm chart and set it to `host:port`. In most cases, the port number will be 9200.
+===== Elasticsearch
+
+Elasticsearch is a common tool used to store and query logs and can be easily configured as an output for Logstash. Just include the `elasticsearchHost` to our Helm chart and set it to `host:port`. In most cases, the port number will be 9200, as in the example below.
 
 [source,yaml]
 ----
@@ -55,7 +82,11 @@ logstash:
    elasticsearchHost: <elasticsearch-host>:9200
 ----
 
+// end::logging[]
+
 === Grafana dashboards
+
+// tag::grafana[]
 
 If you're running Prometheus and Grafana for monitoring the performance and health of Fusion services, then you'll want to install Lucidworks Grafana dashboards. We provide the following dashboards in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^]:
 
@@ -126,7 +157,11 @@ ifndef::env-github[]
 image:grafana-import.png[]
 endif::[]
 
+// end::grafana[]
+
 === Pod affinity rules
+
+// tag::affinity[]
 
 The `example-values/affinity.yaml` file sets affinity rules for all of the Fusion components where the cluster is spread over multiple availability zones. All components have the same affinity setup which follows the following logic:
 
@@ -151,7 +186,11 @@ Append the following to your upgrade script (discussed previously ~ Helm Upgrade
 MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
 ----
 
+// end::affinity[]
+
 === Multiple replicas and horizontal pod auto-scaling
+
+// tag::auto-scaling[]
 
 You can configure multiple replicas and horizontal pod autoscalers (tied to CPU usage) using the `example-values/replicas.yaml` file. Once you're ready to apply the replica and HPA settings from the replicas.yaml file, we recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_replicas.yaml`
 
@@ -202,12 +241,20 @@ warmingQueryJson:
 
 NOTE: The indentation for the opening / closing braces is important for embedding JSON in YAML
 
+// end::auto-scaling[]
+
 === Resource limits
+
+// tag::resources[]
 
 Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster. Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up-and-running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services. Lucidworks provides a template to help you get started with setting the appropriate resource limits, see: `example-values/resources.yaml`. However, you may need to refine the settings for your environment and workloads, especially for Solr.
 
+// end::resources[]
+
 [[spark-ops]]
 === Spark operations
+
+// tag::spark-ops[]
 
 In Fusion 5.x, Spark operates in native Kubernetes mode instead of standalone mode (like in Fusion 4.x). The sections below describe Spark operations in Fusion 5.0.
 
@@ -660,7 +707,11 @@ kubectl port-forward [POD_NAME] 18080:18080
 
 You can now access the Spark History Server at `\http://localhost:18080`.
 
+// end::spark-ops[]
+
 === Upgrades with Helm v3
+
+// tag::upgrades[]
 
 One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.0.2 to a later 5.x.y version on a live cluster with zero downtime or disruption of service.
 
@@ -672,5 +723,6 @@ To upgrade your cluster at any time, use the `--upgrade` option with our setup s
 
 The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks. To see what would be upgraded, you can pass the `--dry-run` option to the script.
 
+// end::upgrades[]
 
 // end::body[]
