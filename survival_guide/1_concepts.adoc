@@ -11,13 +11,7 @@ The diagram below depicts a Fusion 5 cluster running in a single Kubernetes name
 [[fig1]]
 .Figure 1: Fusion 5 running in GKE with multiple node pools for workload isolation
 
-ifdef::env-github[]
-image:high-availability.png[]
-endif::[]
-ifndef::env-github[]
-image:https://raw.githubusercontent.com/lucidworks/fusion-cloud-native/DOCS-2152-F5-survival-guide/survival_guide/high-availability.png[]
-endif::[]
-
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/high-availability.png?raw=true[]
 //end::intro[]
 
 This topic covers some of the most important concepts of the Fusion cluster depicted in the diagram above.
@@ -211,13 +205,7 @@ To further illustrate key concepts about the Fusion 5 architecture, let's walk t
 [[fig2]]
 .Figure 2: Fusion query execution
 
-ifdef::env-github[]
-image:query-execution.png[]
-endif::[]
-ifndef::env-github[]
-image:query-execution.png[]
-endif::[]
-
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/query-execution.png?raw=true[]
 At point A (far right), background Spark jobs aggregate signals to power the signal boosting stage and analyze signals for query rewriting (head/tail, synonym detection, and so on). At point B, Fusion uses a link:https://lucene.apache.org/solr/guide/8_3/solrcloud-autoscaling-overview.html[Solr auto-scaling policy^] in conjunction with K8s node pools to govern replica placement for various Fusion collections. For instance, to support high performance query traffic, we typically place the primary collection together with sidecar collections for query rewriting, signal boosting, and rules matching. Solr pods supporting high volume, low-latency reads are backed by a HPA linked to CPU or custom metrics in Prometheus. Fusion services store configuration, such as query pipeline definitions, in Zookeeper (point C lower left).
 
 At point 1, (far left), a query request comes into the cluster via a link:https://cloud.google.com/kubernetes-engine/docs/concepts/ingress[Kubernetes Ingress^]. The Ingress is configured to route requests to the Fusion API Gateway service. The gateway performs authentication and authorization to ensure the user has the correct permissions to execute the query. The Fusion API Gateway load-balances requests across multiple query pipeline services using native Kubernetes service discovery (point 2).

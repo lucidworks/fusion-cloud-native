@@ -88,25 +88,7 @@ logstash:
 
 // tag::grafana[]
 
-If you're running Prometheus and Grafana for monitoring the performance and health of Fusion services, then you'll want to install Lucidworks Grafana dashboards. We provide the following dashboards in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^]:
-
-[cols="1m,2a", options="header"]
-|===
-|Dashboard JSON     |Description
-
-|dashboard_query_pipeline.json
-|Query Pipeline Metrics including HTTP request metrics and both per-pipeline and per pipeline stage execution times
-
-|dashboard_indexing_pipipeline.json
-|Indexing Service Metrics including HTTP request metrics and per-pipeline metrics execution times
-
-|dashboard_jvm_metrics.json
-|General JVM metrics for instrumented spring-boot services
-
-|dashboard_solr_core.json
-|Solr exporter per-core metric dashboard, including request details
-
-|===
+If you're running Prometheus and Grafana for monitoring the performance and health of Fusion services, then you'll want to install Lucidworks Grafana dashboards. We provide a number of dashboards in the link:https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana[fusion-cloud-native repo^].
 
 .How to configure Grafana
 
@@ -137,39 +119,29 @@ One of the first things you will want to do is to configure the Prometheus data 
 
 . Click *Add Data Source* and then click on *Prometheus* as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
 +
-ifdef::env-github[]
-image:grafana-add-datasource.png[]
-endif::[]
-ifndef::env-github[]
-image:grafana-add-datasource.png[]
-endif::[]
-
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/grafana-add-datasource.png?raw=true[]
 . Enter `\http://<RELEASE>-prom-prometheus-server`
 
 . Configure any additional fields as desired (but defaults are fine), then click *Save and Test*, which should succeed.
 
-. Import the dashboards from fusion-cloud-native:
+. Import the dashboards from the fusion-cloud-native repo:
 +
-ifdef::env-github[]
-image:grafana-import.png[]
-endif::[]
-ifndef::env-github[]
-image:grafana-import.png[]
-endif::[]
-
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/grafana-import.png?raw=true[]
 // end::grafana[]
 
 === Pod affinity rules
 
 // tag::affinity[]
 
-The `example-values/affinity.yaml` file sets affinity rules for all of the Fusion components where the cluster is spread over multiple availability zones. All components have the same affinity setup which follows the following logic:
+The https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] sets affinity rules for all of the Fusion components where the cluster is spread over multiple availability zones. All components have the same affinity setup which follows this logic:
 
 * When scheduling, prefer to put a pod on a node that is in an availability zone that doesn't already have a running instance of this component.
 
 * Require that pods are all deployed on a host that doesn't have a running instance of the component that is being scheduled.
 
-This means that the loss of a host will bring down at most one component but there is a trade off that the cluster will be at least as large as the number of replicas in the largest deployment. If a large number of a certain type of component should be run then it may make sense to relax the required to a preferred policy on hostname, that is, change:
+This means that the loss of a host will bring down at most one component. However, the cluster will be at least as large as the number of replicas in the largest deployment.
+
+If you need to run a large number of a certain type of component, then consider relaxing the "required" policy by changing it to a "preferred" policy on hostname by changing
 
 ----
      requiredDuringSchedulingIgnoredDuringExecution:
@@ -179,7 +151,7 @@ to
      preferredDuringSchedulingIgnoredDuringExecution:
 ----
 
-for the kubernetes.io/hostname policies. We recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
+for the `kubernetes.io/hostname` policies. We recommend copying the https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
 
 Append the following to your upgrade script (discussed previously ~ Helm Upgrade Script):
 ----
