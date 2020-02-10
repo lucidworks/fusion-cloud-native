@@ -230,14 +230,37 @@ After executing the query the primary collection, Fusion generates a *response* 
 
 Behind the scenes, every Fusion microservice exposes detailed metrics. Prometheus scrapes the metrics using pod annotations. The query microservice exposes per stage metrics to help understand query performance (point 7). Moreover, every Fusion service ships logs to Logstash, which can be configured to index log messages into the system_logs collection in Solr or to an external service like Elastic (point 8).
 
-Armed with a basic understanding of the Fusion 5 architecture and how the various microservices interact, let's move on to
+//end::auto-scaling[]
+
+=== Metrics with Prometheus and Grafana
+
+// tag::metrics[]
+The following diagram depicts how metrics work in a Fusion cluster:
+
+image:https://raw.githubusercontent.com/lucidworks/fusion-cloud-native/DOCS-2152-F5-survival-guide/survival_guide/metrics.png[]
+
+Notice in the diagram that Prometheus pulls (or "scrapes") metrics from Fusion services. Prometheus identifies which services to pull metrics from using pod annotations.  This is done for you when you
 ifdef::env-github[]
-link:2_planning.adoc[planning your installation].
+// github link:
+link:2_planning.adoc#custom-values[create a custom values YAML file].
 endif::[]
 ifndef::env-github[]
-link:2_planning.adoc[planning your installation].
+link:TBD[create a custom values YAML file].
 endif::[]
+After that you, can edit your custom values YAML to enable or disable metrics for specific services.
 
-//end::auto-scaling[]
+For instance, to enable metrics for the Fusion `query-pipeline` service, you add the following pod annotations for the query service in the custom values YAML file:
+
+[source,yaml]
+----
+query-pipeline:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+----
+
+// end::metrics[]
 
 // end::body[]

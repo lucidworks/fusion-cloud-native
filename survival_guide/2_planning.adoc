@@ -5,7 +5,7 @@
 
 // tag::body[]
 
-This topic explains how to plan and execute a Fusion deployment at the scale you need.
+This topic explains how to plan and execute a Fusion deployment at the scale you need for staging or production.
 
 :sectnums:
 [[basic-install]]
@@ -79,7 +79,7 @@ In addition, you may need to clarify your organization's DockerHub policy.  The 
 Work with your K8s / Docker admin team to determine how to get the Fusion images loaded into a registry that is accessible to your cluster. You can update the image for each service using the custom values YAML file discussed in the next section.
 
 [[custom-values]]
-=== Configure the custom values YAML file
+=== Create a custom values YAML file
 
 Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion.  Our setup scripts (`setup_f5_*.sh`) use this file to create a custom values YAML for your cluster if it does not already exist.  We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you get started.
 
@@ -178,44 +178,10 @@ ifndef::env-github[]
 link:tbd[TBD].
 endif::[]
 
-After the initial installation of Prometheus and Grafana, you'll need to use helm directly for making changes to those services as the `setup_f5_*.sh` scripts do not perform upgrades on Prometheus and Grafana. For instance, if you change a setting in the prom values YAML, you would do:
-
-[source,bash]
-----
-helm upgrade ${RELEASE}-prom stable/prometheus --namespace "${NAMESPACE}" \
-  -f "$PROMETHEUS_VALUES" --version 9.0.0
-----
-
-Of course if you don't want to use Prometheus, simply pass `--prometheus false` to the script.
-
-// move to concepts:
-The following diagram depicts how metrics work in a Fusion cluster:
-
-ifdef::env-github[]
-image:metrics.png[]
-endif::[]
-ifndef::env-github[]
-image:metrics.png[]
-endif::[]
-
-Notice in the diagram that Prometheus pulls (or "scrapes") metrics from Fusion services. Prometheus identifies which services to pull metrics from using pod annotations. For instance, to enable metrics for the Fusion `query-pipeline` service, you add the following pod annotations for the query service in the custom values YAML file (this is already done for you in the `customize_fusion_values.yaml.example` template).
-
-
-
-[source,yaml]
-----
-query-pipeline:
-  ...
-  pod:
-    annotations:
-      prometheus.io/port: "8787"
-      prometheus.io/scrape: "true"
-----
-
 [[solr-sizing]]
-=== Solr sizing
+=== Configure Solr sizing
 
-When you're ready to build a production ready setup for Fusion 5, you need to customize the Fusion Helm chart to ensure Fusion is well-configured for production workloads.
+When you're ready to build a production-ready setup for Fusion 5, you need to customize the Fusion Helm chart to ensure Fusion is well-configured for production workloads.
 
 You'll be able to scale the number of nodes for Solr up and down after building the cluster, but you need to establish the initial size of the nodes (memory and CPU) and size / type of disks you need.
 
@@ -268,7 +234,7 @@ To be clear, you can tune GC settings and number of replicas after the cluster i
 
 ==== Configure storage class for Solr pods (optional)
 
-If you wish to run with a storage class other than the default you can create a storage class for your Solr pods before you install. For example to create regional disks in GCP you can create a file called `storageClass.yaml` with the following contents:
+If you wish to run with a storage class other than the default you can create a storage class for your Solr pods before you install. For example, to create regional disks in GCP you can create a file called `storageClass.yaml` with the following contents:
 
 [source,yaml]
 ----
@@ -303,7 +269,7 @@ solr:
 NOTE: We're not advocating that you must use regional disks for Solr storage, as that would be redundant with Solr replication. We're just using this as an example of how to configure a custom storage class for Solr disks if you see the need. For instance, you could use regional disks without Solr replication for write-heavy type collections.
 
 [[node-pools]]
-=== Multiple node pools
+=== Configure multiple node pools
 
 As discussed in the Workload Isolation with Multiple Node Pools section above, Lucidworks recommends isolating search workloads from analytics workloads using multiple node pools. You'll need to define multiple node pools for your cluster as our scripts do not do this for you; we do provide an example script for GKE, see `create_gke_cluster_node_pools.sh`.
 
