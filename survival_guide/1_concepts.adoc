@@ -179,7 +179,7 @@ You can run all Fusion services on a single link:https://cloud.google.com/kubern
 
 As depicted in
 ifdef::env-github[]
-link:1_foundational_concepts.adoc#fig1[Figure 1],
+link:#fig1[Figure 1],
 endif::[]
 ifndef::env-github[]
 link:/fusion-server/{version}/concepts/deployment/index.html#fig1[Figure 1],

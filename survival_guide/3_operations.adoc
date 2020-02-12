@@ -153,7 +153,14 @@ to
 
 for the `kubernetes.io/hostname` policies. We recommend copying the https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
 
-Append the following to your upgrade script (discussed previously ~ Helm Upgrade Script):
+Append the following to your
+ifdef::env-github[]
+link:#helm-upgrade-script[upgrade script]:
+endif::[]
+ifndef::env-github[]
+link:/how-to/create-helm-upgrade-script.html[upgrade script]:
+endif::[]
+
 ----
 MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
 ----
@@ -166,7 +173,13 @@ MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
 
 You can configure multiple replicas and horizontal pod autoscalers (tied to CPU usage) using the `example-values/replicas.yaml` file. Once you're ready to apply the replica and HPA settings from the replicas.yaml file, we recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_replicas.yaml`
 
-Append the following to your upgrade script (discussed previously ~ Helm Upgrade Script):
+Append the following to your
+ifdef::env-github[]
+link:#helm-upgrade-script[upgrade script]:
+endif::[]
+ifndef::env-github[]
+link:/how-to/create-helm-upgrade-script.html[upgrade script]:
+endif::[]
 
 ----
 MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_replicas.yaml"
