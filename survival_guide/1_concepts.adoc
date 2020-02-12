@@ -1,0 +1,273 @@
+= Fusion 5 Survival Guide: Foundational Concepts
+:toc:
+:toclevels: 3
+:toc-title:
+
+// tag::body[]
+
+//tag::intro[]
+The diagram below depicts a Fusion 5 cluster running in a single Kubernetes namespace for high availability:
+
+[[fig1]]
+.Figure 1: Fusion 5 running in GKE with multiple node pools for workload isolation
+
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/high-availability.png?raw=true[]
+//end::intro[]
+
+This topic covers some of the most important concepts of the Fusion cluster depicted in the diagram above.
+
+== Which Kubernetes?
+
+//tag::which[]
+
+Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusion 5 runs on any modern version of Kuberentes (v 1.12 or newer). In fact, very little code in Fusion has any awareness of Kubernetes or Docker. The K8s ecosystem is moving very fast and infrastructure providers are quickly offering some flavor of Kubernetes. However, the beauty of Kubernetes is that applications like Fusion do not need to care about the underlying infrastructure. Although Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, do not take this to mean Fusion only runs on those flavors of Kubernetes. In general, as long as K8s is running, Fusion 5 can run on it.
+
+//end::which[]
+
+== Multiple zones for high availability
+
+//tag::ha[]
+
+Fusion relies heavily on Zookeeper to maintain quorum, which implies you need at least 3 ZK pods in an ensemble. In the Fusion Helm chart, Zookeeper is deployed as a StatefulSet. With GKE, you can launch a link:https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters[regional cluster^] that distributes nodes across 3 availability zones. With a multi-zone setup, your cluster can withstand the loss of one zone without experiencing downtime; you may experience degraded performance from losing ⅓ of your total compute capacity assuming your pods are distributed evenly across zones. The multi-zonal cluster also ensures higher availability for the Kubernetes control plane services.
+
+Lucidworks provides affinity rules to ensure multiple pods per service get distributed across multiple zones, see
+ifdef::env-github[]
+link:3_operations.adoc#pod-affinity-rules[Pod Affinity Rules].
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-pod-affinity.html[Pod Affinity Rules]
+endif::[]
+
+When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the solr_zone property to distribute replicas across zones in the
+ifdef::env-github[]
+link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
+endif::[]
+ifndef::env-github[]
+link:/how-to/deploy-fusion-at-scale.html#7-solr-auto-scaling-policy[Solr Auto-scaling Policy]
+endif::[]
+section.
+
+//end::ha[]
+
+== Overview of Fusion microservices
+
+//tag::microservices[]
+
+The table below lists the Fusion microservices deployed by our Helm chart. Recognize that Fusion is a complex distributed application composed of many stateful and stateless services designed to support demanding search-oriented workloads at high scale.
+
+[cols="1a,1,1,1a,2,2",options="header"]
+|===
+|Microservice |Protocol |Deployment or StatefulSet |Node Pool Assignment |Autoscaling Supported |Description
+
+|`admin` |REST/HTTP |Deployment |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA |Exposes endpoints for admin tasks, such as creating applications and running jobs.
+
+|`admin-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the admin UI.
+
+|`auth-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the login form.
+
+|`connectors-classic` |REST/HTTP |StatefulSet |`analytics` or `system` |Yes (CPU or custom metric) |REST service for supporting non-RPC connector plugins.
+
+|`connectors-rest` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Routes REST API requests to connectors-classic and connectors-rpc.
+
+|`connectors-rpc` |gRPC |Deployment |`analytics` or `system` |Yes (CPU or custom metric) |gRPC service for managing SDK-based connector plugins.
+
+|`devops-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the DevOps UI.
+
+|`indexing` |REST/HTTP |Deployment |`search` or `analytics` depending on write-volume |Yes (CPU or custom metric) |Processes indexing requests.
+
+|`insights` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves the App Insights UI
+
+|`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and aunches the Spark driver pod for running Spark jobs
+
+|`job-rest-server` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and running Spark jobs.
+
+|`jupyter` |HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Jupyter notebook for ad hoc analytics and visualization.
+
+|`logstash` |HTTP |StatefulSet |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA |Collects logs from the other microservices and either indexes into system_logs or ships them to an external service like Elastic
+
+|`ml-model-service` |REST/HTTP and gRPC |Deployment |`search` |Yes (CPU or custom metric) |Exposes gRPC endpoints for generating predictions from ML models.
+
+|`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
+
+|`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
+
+|`rules-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Rules UI.
+
+|`solr` |HTTP |StatefulSet |At least 3 nodes in `search`, 2 in `analytics`, and 2 in `system` |Yes (CPU or custom metric) |Search engine.
+
+|`spark-driver` |n/a |single pod per job |`analytics` or dedicated Node Pool for Spark jobs |1 per job |Launched by the job-launcher to run a Spark job
+
+|`spark-executor` |n/a |one or more pods launched by the Spark driver for executing job tasks |`analytics` or dedicated Node Pool for Spark jobs |depends on job configuration; controlled by the spark.executor.instances setting |Executes tasks for a Spark job
+
+|`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
+
+Exposes a JDBC endpoint for the SQL service.
+
+|`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
+
+|`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
+
+|===
+
+//end::microservices[]
+
+== Ingress, TLS termination, API gateway
+
+//tag::ingress[]
+
+All external access to Fusion services should be routed through the Fusion proxy service, which serves as an API gateway and provides authentication and authorization. The most common approach is to set up a link:https://kubernetes.io/docs/concepts/services-networking/ingress/[Kubernetes Ingress^] that routes requests to Fusion services to the proxy service as shown in the example ingress definition below. Moreover, it is also common to do link:https://cloud.google.com/load-balancing/docs/https/#tls_support[TLS termination^] at the Ingress so that all traffic to/from the K8s cluster is encrypted but internal requests happen over unencrypted HTTP.
+
+```
+apiVersion: v1
+items:
+- apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    annotations:
+      ...
+    labels:
+      ...
+    name: <RELEASE>-api-gateway
+    namespace: <NAMESPACE>
+  spec:
+    rules:
+    - host: <HOSTNAME>
+      http:
+        paths:
+        - backend:
+            serviceName: proxy
+            servicePort: 6764
+          path: "/*"
+    tls:
+    - hosts:
+      - <HOSTNAME>
+      secretName: <RELEASE>-api-gateway-tls-secret
+  status:
+    loadBalancer:
+      ingress:
+      - ip: <SOME_IP>
+```
+
+If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer your specific K8s provider's documentation on creating an Ingress and TLS certificate.
+
+//end::ingress[]
+
+== Stateless sessions with JWT
+
+//tag::jwt[]
+
+The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in
+ifdef::env-github[]
+link:3_operations.adoc#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling^],
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-replicas-and-hpa.html#use-gatling-to-run-query-performance--load-tests[Query Load Tests with Gatling],
+endif::[]
+including how to refresh the JWT before it expires.
+
+All Fusion services require requests to include a JWT to identify the caller.
+
+//end::jwt[]
+
+== Workload isolation with multiple node pools
+
+//tag::workload-isolation[]
+
+You can run all Fusion services on a single link:https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools[Node Pool^] and Kubernetes will do its best to balance resource utilization across the nodes. However, Lucidworks recommends defining multiple link:https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools[Node Pools^] to separate services into "workload partitions" based on the type of traffic a service receives. Specifically, the Fusion Helm chart supports three optional partitions: *search*, *analytics*, and *system*. Workload isolation with Node Pools allows you to optimize resource utilization across the cluster to achieve better scalability, balance, and minimize infrastructure costs. It also helps with monitoring as you have better control over the traffic handled by each node in the cluster. To use this feature, you must define separate NodePools in your Kubernetes cluster ahead of time.
+
+.search
+
+As depicted in
+ifdef::env-github[]
+link:#fig1[Figure 1],
+endif::[]
+ifndef::env-github[]
+link:/fusion-server/{version}/concepts/deployment/index.html#fig1[Figure 1],
+endif::[]
+the *search* partition hosts the API gateway (aka proxy), query pipelines, ML model service, and a Solr StatefulSet that hosts collections that support high volume, low-latency reads, such as your primary search collection and the signals_aggr collection which serves signal boosting lookups during query execution. The search partition is where you want to invest in better hardware, such as using nodes with SSDs for better query performance; typically, SSDs would not be needed for analytics nodes. The services deployed in the search partition often have Horizontal Pod Autoscalers (HPA) configured. We'll cover how to configure the HPA for search-oriented services in
+ifdef::env-github[]
+link:3_operations.adoc#multiple-replicas-and-horizontal-pod-auto-scaling[Multiple replicas and horizontal pod auto-scaling].
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-replicas-and-hpa.html[Configure Replicas and Horizontal Pod Auto-Scaling].
+endif::[]
+
+When using multiple node pools to isolate / partition workloads, the Fusion Helm chart defines multiple StatefulSets for Solr. Each Solr StatefulSet uses the same Zookeeper connect string so are considered to be in the same Solr cluster; the partitioning of collections based on workload and zone is done with a Solr auto-scaling policy. The auto-scaling policy also ensures replicas get placed evenly between multiple availability zones (typically 3 for HA) so that your Fusion cluster can withstand the loss of one AZ and remain operational.
+
+.analytics
+
+The *analytics* partition hosts the Spark driver & executor pods, Spark job management services (job-rest-service and job-launcher), index pipelines, and a Solr StatefulSet for hosting analytics-oriented collections, such as the signals collection. The signals collection typically experiences high write volume (to track user activity) and batch-oriented read requests from Spark jobs that do large table scans on the collection throughout the day. In addition, the analytics Solr pods may have different resource settings than the search Solr pods, i.e. you don't need as much memory for these as they're not serving facet queries and other memory intensive workloads in Solr.
+
+TIP: When running in GKE, separating the Spark driver and executor pods into a dedicated Node Pool backed by preemptible nodes is a common pattern for reducing costs while increasing the compute capacity for running Spark jobs. You can also do this on EKS with spot instances. We'll cover this approach in more detail in the
+ifdef::env-github[]
+link:3_operations.adoc#spark-ops[Spark Ops]
+endif::[]
+ifndef::env-github[]
+link:3_operations.adoc#spark-ops[Spark Ops]
+endif::[]
+section.
+
+.system
+
+The *system* partition hosts all other Fusion services, such as the various stateless UI services (e.g. rules-ui), Prometheus/Grafana, as well as Solr pods hosting system collections like `system_blobs`. Lucidworks recommends running your Zookeeper ensemble in the system partition.
+
+The analytics, search, and system partitions are simply a recommended starting point--you can extend upon this model to refine your pod allocation by adding more Node Pools as needed. For instance, running Spark jobs on a dedicated pool of preemptible nodes is a pattern we've had great success with in our own K8s clusters at Lucidworks.
+
+//end::workload-isolation[]
+
+== High-performance query processing with auto-scaling
+
+//tag::auto-scaling[]
+
+To further illustrate key concepts about the Fusion 5 architecture, let's walk through how query execution works and the various microservices involved. There are two primary take-aways from this section. First, there are a number of microservices involved in query execution, which illustrates the value and importance of having a robust orchestration layer like Kubernetes. Second, Fusion comes well-configured out of the box so you don't have to worry about configuring all the details depicted in the diagram below:
+
+[[fig2]]
+.Figure 2: Fusion query execution
+
+image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/query-execution.png?raw=true[]
+At point A (far right), background Spark jobs aggregate signals to power the signal boosting stage and analyze signals for query rewriting (head/tail, synonym detection, and so on). At point B, Fusion uses a link:https://lucene.apache.org/solr/guide/8_3/solrcloud-autoscaling-overview.html[Solr auto-scaling policy^] in conjunction with K8s node pools to govern replica placement for various Fusion collections. For instance, to support high performance query traffic, we typically place the primary collection together with sidecar collections for query rewriting, signal boosting, and rules matching. Solr pods supporting high volume, low-latency reads are backed by a HPA linked to CPU or custom metrics in Prometheus. Fusion services store configuration, such as query pipeline definitions, in Zookeeper (point C lower left).
+
+At point 1, (far left), a query request comes into the cluster via a link:https://cloud.google.com/kubernetes-engine/docs/concepts/ingress[Kubernetes Ingress^]. The Ingress is configured to route requests to the Fusion API Gateway service. The gateway performs authentication and authorization to ensure the user has the correct permissions to execute the query. The Fusion API Gateway load-balances requests across multiple query pipeline services using native Kubernetes service discovery (point 2).
+
+The gateway issues a JWT to be sent to downstream services (point 3 in the diagram); this diagram is from the perspective of a request. An internal JWT holds identifying information about a user including their roles and permissions to allow Fusion services to perform fine-grained authorization. The JWT is returned as a Set-Cookie header to improve performance of subsequent requests. Alternatively, API requests can use the `/oauth2/token` endpoint in the Gateway to get the JWT using OAuth2 semantics.
+
+At point 4, the query service executes the pipeline stages to enrich the query before sending it to the primary collection. Typically, this involves a number of lookups to sidecar collections, such as the `<app>_query_rewrite` collection to perform spell correction, synonym expansion, and rules matching. Your query pipeline may also call out to the Fusion ML Model service to generate predictions, such as to determine query intent. The ML Model service may also use an HPA tied to CPU to scale out as needed to support desired QPS (point 5 in the diagram).
+
+After executing the query the primary collection, Fusion generates a *response* signal to track query request parameters and Solr response metrics, such as `numFound` and `qTime` (point 6). Raw signals are stored in the *signals* collection, which typically runs in the analytics partition in order to support high-volume writes.
+
+Behind the scenes, every Fusion microservice exposes detailed metrics. Prometheus scrapes the metrics using pod annotations. The query microservice exposes per stage metrics to help understand query performance (point 7). Moreover, every Fusion service ships logs to Logstash, which can be configured to index log messages into the system_logs collection in Solr or to an external service like Elastic (point 8).
+
+//end::auto-scaling[]
+
+=== Metrics with Prometheus and Grafana
+
+// tag::metrics[]
+The following diagram depicts how metrics work in a Fusion cluster:
+
+image:https://raw.githubusercontent.com/lucidworks/fusion-cloud-native/DOCS-2152-F5-survival-guide/survival_guide/metrics.png[]
+
+Notice in the diagram that Prometheus pulls (or "scrapes") metrics from Fusion services. Prometheus identifies which services to pull metrics from using pod annotations.  This is done for you when you
+ifdef::env-github[]
+// github link:
+link:2_planning.adoc#custom-values[create a custom values YAML file].
+endif::[]
+ifndef::env-github[]
+link:TBD[create a custom values YAML file].
+endif::[]
+After that you, can edit your custom values YAML to enable or disable metrics for specific services.
+
+For instance, to enable metrics for the Fusion `query-pipeline` service, you add the following pod annotations for the query service in the custom values YAML file:
+
+[source,yaml]
+----
+query-pipeline:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+----
+
+// end::metrics[]
+
+// end::body[]

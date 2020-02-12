@@ -1,0 +1,14 @@
+= Fusion 5 Survival Guide
+:toc:
+:toclevels: 3
+:toc-title:
+
+// tag::body[]
+
+The purpose of this guide is to help you install, configure, and run Fusion 5 in production with high availability on Kubernetes. It is assumed that you're already familiar with the basic installation and getting started concepts covered in https://github.com/lucidworks/fusion-cloud-native/README.adoc[the README].
+
+* link:1_concepts.adoc[Part 1: Foundational Concepts]
+* link:2_planning.adoc[Part 2: Plan Your Fusion Deployment]
+* link:3_operations.adoc[Part 3: Day Two Operations]
+
+// end::body[]
