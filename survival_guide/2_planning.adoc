@@ -316,7 +316,7 @@ In the above example the analytics partition will have 6 replicas (Solr pods), b
 
 The Solr pods will have a `fusion_node_type` system property set on them as shown below:
 
-image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/fusion_node_type.png?raw=true[]
+image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/fusion_node_type.png?raw=true[]
 
 You can use the `fusion_node_type` property in Solr auto-scaling policies to govern replica placement during collection creation.
 

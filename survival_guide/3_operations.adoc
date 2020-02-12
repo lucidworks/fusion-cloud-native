@@ -119,14 +119,14 @@ One of the first things you will want to do is to configure the Prometheus data 
 
 . Click *Add Data Source* and then click on *Prometheus* as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
 +
-image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/grafana-add-datasource.png?raw=true[]
+image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/grafana-add-datasource.png?raw=true[]
 . Enter `\http://<RELEASE>-prom-prometheus-server`
 
 . Configure any additional fields as desired (but defaults are fine), then click *Save and Test*, which should succeed.
 
 . Import the dashboards from the fusion-cloud-native repo:
 +
-image:https://github.com/lucidworks/fusion-cloud-native/blob/DOCS-2152-F5-survival-guide/survival_guide/grafana-import.png?raw=true[]
+image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/grafana-import.png?raw=true[]
 // end::grafana[]
 
 === Pod affinity rules
