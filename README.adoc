@@ -728,31 +728,37 @@ aks_<cluster>_<release>_upgrade_fusion.sh
 
 // tag::other[]
 
-If you're not running on managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+If you're not running on managed K8s platform such as GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
 
 [[helm-only]]
 === Use Helm v3 to Install Fusion
 
-You should upgrade to the latest version of Helm v3 for working with Fusion. If you also need to keep Helm V2 for other clusters,
-then just make sure Helm v3 is ahead of Helm V2 in your PATH in your working shell before proceeding with this section.
+You should upgrade to the latest version of Helm v3 for working with Fusion. If you need to keep Helm V2 for other clusters,
+ensure Helm V3 is ahead of Helm V2 in your working shell's PATH before proceeding.
 
 ==== Customize Fusion Chart Settings
 
-Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values yaml file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values yaml file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] as a template.
+Fusion aims to be well-configured out-of-the-box, but you can customize any of the built-in settings using a custom values `YAML` file. If you use one of our setup scripts, such as `setup_f5_gke.sh`, then it will create a custom values YAML file for you the first time you run it using the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example`^] as a template.
 
-If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customize_fusion_values.sh^] script to create a custom values yaml file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[customize_fusion_values.yaml.example^] template as a starting point (pass `--help` for usage details):
+If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[`customize_fusion_values.sh`^] script to create a custom values YAML file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example`^] template as a starting point:
 ```
 ./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
   -c <cluster> -r <release> \
   --provider <provider> --num-solr 1 --node-pool "<node_pool>"
 ```
-where `<provider>` is the K8s platform you're running on, such as `gke`, `<cluster>` is the name of your cluster, and `<release>` is the name you give to your Fusion release, such as `f5`.
 
-__NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods; you can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.__
+NOTE: Pass `--help` for usage details.
 
-This file is referred to as `${MY_VALUES}` in the commands below, be sure to replace it with the correct file name for your environment. Also, be sure to keep this file handy as you'll need it to customize Fusion settings and upgrade to a newer version.
+In this example:
+* `<provider>` is the K8s platform you're running on, such as `gke`
+* `<cluster>` is the name of your cluster
+* `<release>` is the name you give to your Fusion release, such as `f5`
 
-Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, such as the number of Solr and Zookeeper replicas.
+NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods. You can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.
+
+This file is referred to as `${MY_VALUES}` in the commands belo. Replace the filename with the correct filename for your environment. Keep this file handy, as you'll need it to customize Fusion settings and upgrade to a newer version.
+
+Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, including the number of Solr and Zookeeper replicas.
 
 ```
 RELEASE=f5
@@ -765,7 +771,7 @@ helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPAC
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
 
-===  Upgrade Existing Installation with Helm v3
+===  Upgrade Existing Installation with Helm V3
 
 To update an existing installation, do:
 ```
@@ -775,7 +781,7 @@ helm repo update
 helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --values "${MY_VALUES}"
 ```
 
-Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy, e.g.:
+Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate update policy:
 ```
   strategy:
     rollingUpdate:
@@ -784,14 +790,15 @@ Except for Zookeeper, all K8s deployments and statefulsets use a RollingUpdate u
     type: RollingUpdate
 ```
 
-Zookeepers use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
-Thus, after performing the upgrade, to get changes to Zookeeper (uncommon) to apply, you need to manually delete the pods, e.g.
+Zookeeper instances use `OnDelete` to avoid changing critical stateful pods in the Fusion deployment.
+To apply changes to Zookeeper after performing the upgrade (uncommon), you need to manually delete the pods. For example:
 ```
-kubectl delete po f5-zookeeper-0
+kubectl delete pod f5-zookeeper-0
 ```
-Do this one-by-one for each pod and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
 
-Alternatively, you can set the `updateStrategy` under the zookeeper section in your `"${MY_VALUES}"` file:
+IMPORTANT: Delete one pod at a time, and verify the new pod is healthy and serving traffic before deleting the next healthy pod.
+
+Alternatively, you can set the `updateStrategy` under the `zookeeper` section in your `"${MY_VALUES}"` file:
 
 ```
 solr:
@@ -803,9 +810,9 @@ solr:
 
 === RedHat OpenShift
 
-We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infraestructure Provider^] (Red Hat Customer Portal account is required). OpenShift Online services are not supported.
+We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infrastructure Provider^]. A Red Hat Customer Portal account is required. OpenShift Online services are not supported.
 
-In case tiller is required, the cluster security needs to be relaxed to allow images to run with different UIDs:
+In case Tiller is required, the cluster security needs to be relaxed to allow images to run with different UIDs:
 
 ```
 oc adm policy add-scc-to-group anyuid system:authenticated
@@ -893,7 +900,7 @@ f5-solr-0                              1/1     Running   0          19h
 f5-webapps-7d9497c485-bbtg9            1/1     Running   0          19h
 f5-zookeeper-0                         1/1     Running   0          19h
 ```
-The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in your custom values yaml file.
+The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in your custom values YAML file.
 Also, don't worry if you see some pods having been restarted as that just means they were too slow to come up and Kubernetes killed and restarted them.
 You do want to see at least one pod running for every service. If a pod is not running after waiting a sufficient amount of time,
 use `kubectl logs <pod_id>` to see the logs for that pod; to see the logs for previous versions of a pod, use: `kubectl logs <pod_id> -p`.
