@@ -30,14 +30,20 @@ Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusio
 
 Fusion relies heavily on Zookeeper to maintain quorum, which implies you need at least 3 ZK pods in an ensemble. In the Fusion Helm chart, Zookeeper is deployed as a StatefulSet. With GKE, you can launch a link:https://cloud.google.com/kubernetes-engine/docs/concepts/regional-clusters[regional cluster^] that distributes nodes across 3 availability zones. With a multi-zone setup, your cluster can withstand the loss of one zone without experiencing downtime; you may experience degraded performance from losing ⅓ of your total compute capacity assuming your pods are distributed evenly across zones. The multi-zonal cluster also ensures higher availability for the Kubernetes control plane services.
 
-Lucidworks provides affinity rules to ensure multiple pods per service get distributed across multiple zones, see link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.4oehsl3nw87j[Pod Affinity Rules^] later in this document.
+Lucidworks provides affinity rules to ensure multiple pods per service get distributed across multiple zones, see
+ifdef::env-github[]
+link:3_operations.adoc#pod-affinity-rules[Pod Affinity Rules].
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-pod-affinity.html[Pod Affinity Rules]
+endif::[]
 
 When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the solr_zone property to distribute replicas across zones in the
 ifdef::env-github[]
 link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
 endif::[]
 ifndef::env-github[]
-link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
+link:/how-to/deploy-fusion-at-scale.html#7-solr-auto-scaling-policy[Solr Auto-scaling Policy]
 endif::[]
 section.
 
@@ -150,7 +156,14 @@ If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo pr
 
 //tag::jwt[]
 
-The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in the link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.7wrxeua3noi8[Query Load Tests with Gatling^] section below, including how to refresh the JWT before it expires.
+The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in
+ifdef::env-github[]
+link:3_operations.adoc#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling^],
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-replicas-and-hpa.html#use-gatling-to-run-query-performance--load-tests[Query Load Tests with Gatling],
+endif::[]
+including how to refresh the JWT before it expires.
 
 All Fusion services require requests to include a JWT to identify the caller.
 
@@ -169,9 +182,15 @@ ifdef::env-github[]
 link:1_foundational_concepts.adoc#fig1[Figure 1],
 endif::[]
 ifndef::env-github[]
-link:1_foundational_concepts.adoc#fig1[Figure 1],
+link:/fusion-server/{version}/concepts/deployment/index.html#fig1[Figure 1],
 endif::[]
-the *search* partition hosts the API gateway (aka proxy), query pipelines, ML model service, and a Solr StatefulSet that hosts collections that support high volume, low-latency reads, such as your primary search collection and the signals_aggr collection which serves signal boosting lookups during query execution. The search partition is where you want to invest in better hardware, such as using nodes with SSDs for better query performance; typically, SSDs would not be needed for analytics nodes. The services deployed in the search partition often have Horizontal Pod Autoscalers (HPA) configured. We'll cover how to configure the HPA for search-oriented services in the link:https://docs.google.com/document/d/1Goo-3oRZZznXcTs1C-7bIo2KJ2W_5JS3Pp1LHoy1brk/edit#heading=h.yweny7j3wkv4[HPA Auto-scaling^] section below.
+the *search* partition hosts the API gateway (aka proxy), query pipelines, ML model service, and a Solr StatefulSet that hosts collections that support high volume, low-latency reads, such as your primary search collection and the signals_aggr collection which serves signal boosting lookups during query execution. The search partition is where you want to invest in better hardware, such as using nodes with SSDs for better query performance; typically, SSDs would not be needed for analytics nodes. The services deployed in the search partition often have Horizontal Pod Autoscalers (HPA) configured. We'll cover how to configure the HPA for search-oriented services in
+ifdef::env-github[]
+link:3_operations.adoc#multiple-replicas-and-horizontal-pod-auto-scaling[Multiple replicas and horizontal pod auto-scaling].
+endif::[]
+ifndef::env-github[]
+link:/how-to/configure-replicas-and-hpa.html[Configure Replicas and Horizontal Pod Auto-Scaling].
+endif::[]
 
 When using multiple node pools to isolate / partition workloads, the Fusion Helm chart defines multiple StatefulSets for Solr. Each Solr StatefulSet uses the same Zookeeper connect string so are considered to be in the same Solr cluster; the partitioning of collections based on workload and zone is done with a Solr auto-scaling policy. The auto-scaling policy also ensures replicas get placed evenly between multiple availability zones (typically 3 for HA) so that your Fusion cluster can withstand the loss of one AZ and remain operational.
 

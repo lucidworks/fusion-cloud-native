@@ -357,7 +357,7 @@ The amount of memory allocated to the driver and executors is controlled on a pe
 
 ==== Configuring credentials in the Kubernetes cluster
 
-//tag::spark-credentials
+//tag::spark-credentials[]
 
 AWS/GCS credentials can be configured per job or per cluster.
 
@@ -509,7 +509,7 @@ spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
 spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
 ----
 
-//end::spark-credentials
+//end::spark-credentials[]
 
 ==== How to get logs for a Spark job
 
@@ -530,7 +530,7 @@ k get pods -l spark-role=driver -l jobConfigId=<job-id>
 ----
 kubectl logs [DRIVER-POD-NAME]
 ----
-* Logs from running containers can be tailed using the -f parameter:
+* Logs from running containers can be tailed using the `-f` parameter:
 +
 ----
 kubectl logs -f [POD-NAME]
