@@ -219,16 +219,20 @@ NOTE: The indentation for the opening / closing braces is important for embeddin
 
 // tag::resources[]
 
-Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster. Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up-and-running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services. Lucidworks provides a template to help you get started with setting the appropriate resource limits, see: `example-values/resources.yaml`. However, you may need to refine the settings for your environment and workloads, especially for Solr.
+Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster.
+
+Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up and running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services.
+
+Lucidworks provides a https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/resources.yaml[`resources.yaml`] template to help you get started with setting the appropriate resource limits. However, you may need to refine the settings for your environment and workloads, especially for Solr.
 
 // end::resources[]
 
 [[spark-ops]]
 === Spark operations
 
-// tag::spark-ops[]
-
 In Fusion 5.x, Spark operates in native Kubernetes mode instead of standalone mode (like in Fusion 4.x). The sections below describe Spark operations in Fusion 5.0.
+
+// tag::spark-ops-intro[]
 
 ==== Cluster mode
 
@@ -297,7 +301,11 @@ The table below shows the default configurations for Spark. These settings are c
 
 |===
 
+// end::spark-ops-intro[]
+
 ==== Spark job resource allocation
+
+//tag::spark-resources[]
 
 ===== Number of instances and cores allocated
 
@@ -345,7 +353,11 @@ The amount of memory allocated to the driver and executors is controlled on a pe
 
 |===
 
+//end::spark-resources[]
+
 ==== Configuring credentials in the Kubernetes cluster
+
+//tag::spark-credentials
 
 AWS/GCS credentials can be configured per job or per cluster.
 
@@ -497,7 +509,11 @@ spark.kubernetes.executor.secretKeyRef.AWS_ACCESS_KEY_ID=aws-secret:key
 spark.kubernetes.executor.secretKeyRef.AWS_SECRET_ACCESS_KEY=aws-secret:secret
 ----
 
+//end::spark-credentials
+
 ==== How to get logs for a Spark job
+
+// tag::spark-logs[]
 
 * To get the initial logs that contain information about the pod spin up, do:
 +
@@ -522,24 +538,38 @@ kubectl logs -f [POD-NAME]
 
 Spark deletes failed and successful executor pods. Fusion provides a cleanup Kubernetes cron job that removes successfully completed driver pods every 15 minutes.
 
+// end::spark-logs[]
+
 ==== Pod cleanup
 
-Driver pods are cleaned up using a Kubernetes cron job that runs every 15 minutes to clean up pods using this command:
+//tag::pod-cleanup[]
+
+Spark driver pods are cleaned up using a Kubernetes cron job that runs every 15 minutes to clean up pods using this command:
 ----
 kubectl delete pods --namespace default --field-selector=status.phase=Succeeded -l spark-role=driver
 ----
-This cron job is created automatically when the job-launcher microservice is installed in the Fusion cluster.
+This cron job is created automatically when the `job-launcher` microservice is installed in the Fusion cluster.
+
+//end::pod-cleanup[]
 
 ==== Spark History Server
 
+//tag::history-intro[]
 While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the Spark History Server into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
+//end::history-intro[]
 
 ===== Installing Spark History Server
+
+//tag::history-install[]
 
 Spark History Server can be installed via its default Helm chart:
 ----
 helm install stable/spark-history-server --values values.yaml
 ----
+
+//end::history-install[]
+
+//tag::history-config[]
 
 ===== Recommended Configuration
 
@@ -669,7 +699,11 @@ spark:
                 history-secrets: /etc/secrets
 ----
 
+//end::history-config[]
+
 ===== Accessing The Spark History Server
+
+//tag::history-access[]
 
 As we have set up the History Server to only set up a ClusterIP, we will need to port forward the server using `kubectl`:
 ----
@@ -679,7 +713,7 @@ kubectl port-forward [POD_NAME] 18080:18080
 
 You can now access the Spark History Server at `\http://localhost:18080`.
 
-// end::spark-ops[]
+//end::history-access[]
 
 === Upgrades with Helm v3
 
@@ -687,13 +721,18 @@ You can now access the Spark History Server at `\http://localhost:18080`.
 
 One of the most powerful features provided by Kubernetes and a cloud-native microservices architecture is the ability to do a rolling update on a live cluster. Fusion 5 allows customers to upgrade from Fusion 5.0.2 to a later 5.x.y version on a live cluster with zero downtime or disruption of service.
 
-When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure stored configuration remains compatible in the same 5.x release line.
+When Kubernetes performs a rolling update to an individual microservice, there will be a mix of old and new services in the cluster concurrently (only briefly in most cases) and requests from other services will be routed to both versions. Consequently, Lucidworks ensures all changes we make to our service do not break the API interface exposed to other services in the same 5.x line of releases. We also ensure that the stored configuration remains compatible in the same 5.x release line.
 
-Lucidworks releases minor updates to individual services frequently, so our customers can pull in those upgrades using Helm at their discretion.
+Lucidworks releases minor updates to individual services frequently, so you can can pull in those upgrades using Helm at your discretion.
 
-To upgrade your cluster at any time, use the `--upgrade` option with our setup scripts in this repo.
+.How to upgrade Fusion
+. Clone the https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^], if you haven't already.
+. Locate the `setup_f5_<platform>.sh` script that matches your Kubernetes platform.
+. Run the script with the `--upgrade` option.
++
+TIP: To see what would be upgraded, pass the `--dry-run` option to the script.
 
-The scripts in this repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks. To see what would be upgraded, you can pass the `--dry-run` option to the script.
+The scripts in the fusion-cloud-native repo automatically pull in the latest chart updates from our Helm repository and deploy any updates needed by doing a diff of your current installation and the latest release from Lucidworks.
 
 // end::upgrades[]
 
