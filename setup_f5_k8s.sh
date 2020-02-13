@@ -16,6 +16,8 @@ FORCE=0
 CUSTOM_MY_VALUES=()
 MY_VALUES=()
 DRY_RUN=""
+HELM_CHART=""
+SOLR_REPLICAS=1
 SOLR_DISK_GB=50
 NODE_POOL=""
 
@@ -40,6 +42,7 @@ function print_usage() {
   echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
   echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
   echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --helm-chart  Custom fusion helm chart to install to k8s cluster\n"
   echo -e "  --values      Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
   echo -e "                (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
   echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
@@ -114,6 +117,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             CHART_VERSION="$2"
+            shift 2
+        ;;
+        --helm-chart)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
+              exit 1
+            fi
+            HELM_CHART="$2"
             shift 2
         ;;
         --values)
@@ -491,7 +502,12 @@ if [ "$is_helm_v3" != "" ]; then
     kubectl create namespace "${NAMESPACE}"
   fi
   # looks like Helm V3 doesn't like the -n parameter for the release name anymore
-  helm install "${RELEASE}" ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version "${CHART_VERSION}"
+  if [ "${HELM_CHART}" == "" ]; then
+    helm install "${RELEASE}" ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version "${CHART_VERSION}"
+  else
+    # only support helm3 for local k8s cluster
+    helm install "${RELEASE}" "${HELM_CHART}" --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version "${CHART_VERSION}"
+  fi
 else
   helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version "${CHART_VERSION}"
 fi
