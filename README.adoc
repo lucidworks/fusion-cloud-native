@@ -486,6 +486,15 @@ api-gateway:
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
 // end::upgrade-gke[]
+
+=== Delete a Fusion cluster from GKE
+
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/destroy_f5_gke.sh[`destroy_f5_gke.sh` script^] to delete Fusion 5.x along with its GKE cluster.
+To delete your gke cluster, simply do:
+```
+./destroy_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace>
+```
+
 // end::gke[]
 
 == Amazon Elastic Kubernetes Service (EKS)
