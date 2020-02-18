@@ -115,15 +115,24 @@ fi
 PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
 if [ ! -f "${PROMETHEUS_VALUES}" ]; then
   cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
-  sed -i''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-  sed -i''  -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+  else
+    sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+  fi
   echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
 fi
 
 GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
 if [ ! -f "${GRAFANA_VALUES}" ]; then
   cp example-values/grafana-values.yaml $GRAFANA_VALUES
-  sed -i''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+  else
+    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+  fi
   echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}. Keep this file handy as you'll need it to customize your Grafana installation.\n"
 fi
 
