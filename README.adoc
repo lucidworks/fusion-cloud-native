@@ -267,6 +267,7 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 
 === Upgrade Fusion on GKE
 
+// tag::upgrade-gke[]
 *NOTE: If you're currently running Fusion 5.0.1, then please use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>>*
 
 During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
@@ -460,7 +461,7 @@ api-gateway:
 ```
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
-
+// end::upgrade-gke[]
 // end::gke[]
 
 == Amazon Elastic Kubernetes Service (EKS)
@@ -575,6 +576,7 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 
 === Upgrade Fusion on EKS
 
+// tag::upgrade-eks[]
 During installation, the script generates a file named `eks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
 ./setup_f5_eks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
@@ -587,6 +589,7 @@ To make things easier for you, our setup script creates an upgrade script you ca
 ```
 eks_<cluster>_<release>_upgrade_fusion.sh
 ```
+// end::upgrade-eks[]
 
 === Provide access to the EKS cluster to other users
 
@@ -709,6 +712,8 @@ This way, you don't have to remember to pass the additional `tls-values.yaml` fi
 
 === Upgrade Fusion on AKS
 
+// tag::upgrade-aks[]
+
 During installation, the script generates a file named `aks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
 ./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
@@ -721,7 +726,7 @@ To make things easier for you, our setup script creates an upgrade script you ca
 ```
 aks_<cluster>_<release>_upgrade_fusion.sh
 ```
-
+// end::upgrade-aks[]
 // end::aks[]
 
 == Other Kubernetes Platforms
@@ -773,6 +778,7 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 
 ===  Upgrade Existing Installation with Helm V3
 
+// tag::upgrade-other[]
 To update an existing installation, do:
 ```
 RELEASE=f5
@@ -807,6 +813,7 @@ solr:
     updateStrategy:
       type: "RollingUpdate"
 ```
+// end::upgrade-other[]
 
 === RedHat OpenShift
 
