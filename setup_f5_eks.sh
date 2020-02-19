@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.3-2"
+CHART_VERSION="5.0.3-3"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
