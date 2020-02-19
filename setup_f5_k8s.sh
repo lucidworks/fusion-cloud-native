@@ -417,15 +417,24 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
   PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then
     cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
-    sed -i''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-    sed -i''  -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    else
+      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    fi
     echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
   fi
 
   GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
   if [ ! -f "${GRAFANA_VALUES}" ]; then
     cp example-values/grafana-values.yaml $GRAFANA_VALUES
-    sed -i''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    else
+      sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    fi
     echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}. Keep this file handy as you'll need it to customize your Grafana installation.\n"
   fi
 
@@ -514,9 +523,17 @@ kubectl config set-context --current --namespace=${NAMESPACE}
 
 UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
 cp upgrade_fusion.sh.example $UPGRADE_SCRIPT
-sed -i''  -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
-sed -i''  -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
-sed -i''  -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
-sed -i''  -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
-sed -i''  -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+else
+  sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+fi
 echo -e "\nCreating $UPGRADE_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
