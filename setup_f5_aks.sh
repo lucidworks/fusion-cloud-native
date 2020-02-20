@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.0.3-1"
+CHART_VERSION="5.0.3-3"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -9,7 +9,6 @@ AKS_KUBE_CONFIG="${KUBECONFIG:-~/.kube/config}"
 SCRIPT_CMD="$0"
 AZURE_RESOURCE_GROUP=
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 PURGE=0
@@ -217,6 +216,26 @@ fi
 
 if [ "$AZURE_RESOURCE_GROUP" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the Azure Resource Group name using: -p <azure resource group>\n   To create a new Resource Group you can do: az group create --name myResourceGroup --location eastus2"
+  exit 1
+fi
+
+valid="0-9a-zA-Z_\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
 fi
 

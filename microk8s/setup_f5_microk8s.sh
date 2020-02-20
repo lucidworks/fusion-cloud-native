@@ -2,7 +2,7 @@
 
 shopt -s expand_aliases
 
-CHART_VERSION="5.0.3-1"
+CHART_VERSION="5.0.3-3"
 SOLR_REPLICAS=1
 PROMETHEUS="none"
 SCRIPT_CMD="$0"

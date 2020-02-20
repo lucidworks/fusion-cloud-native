@@ -133,27 +133,43 @@ if [ "${NODE_POOL}" == "" ]; then
 fi
 
 cp customize_fusion_values.yaml.example $MY_VALUES
-sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
-sed -i ''  -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
-sed -i ''  -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
-sed -i ''  -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
-sed -i ''  -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
-
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
+  sed -i -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
+  sed -i -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
+  sed -i -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
+else
+  sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
+  sed -i '' -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i '' -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
+  sed -i '' -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
+  sed -i '' -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
+fi
 echo -e "\nCreated Fusion custom values yaml: ${MY_VALUES}\n"
 
 if [ "$PROMETHEUS_ON" == "true" ]; then
   PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
   if [ ! -f "${PROMETHEUS_VALUES}" ]; then
     cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
-    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    else
+      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
+      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    fi
     echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}\n"
   fi
 
   GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
   if [ ! -f "${GRAFANA_VALUES}" ]; then
     cp example-values/grafana-values.yaml $GRAFANA_VALUES
-    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    else
+      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+    fi
     echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}\n"
   fi
 fi
-
