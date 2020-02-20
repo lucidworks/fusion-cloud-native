@@ -122,7 +122,7 @@ class FusionQueryTraffic extends Simulation {
       case ("params", params) => {
         // TODO: Parse and transform the params from the CSV as needed ...
         // pass empty string to skip a line ...
-        params ++ "&_cookie=false&preferLocalShards=true"
+        params ++ "&_cookie=false"
       }
     }.random
 
