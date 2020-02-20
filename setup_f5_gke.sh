@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="n1-standard-4"
-CHART_VERSION="5.0.3-1"
+CHART_VERSION="5.0.3-3"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
@@ -9,7 +9,6 @@ SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
 GCLOUD_ZONE=us-west1
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 GCS_BUCKET=
@@ -35,7 +34,7 @@ function print_usage() {
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c            Name of the GKE cluster (required)\n"
   echo -e "  -p            GCP Project ID (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
   echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
@@ -258,6 +257,24 @@ if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
   exit 1
 fi
 
+valid="0-9a-zA-Z_\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
 gcloud --version > /dev/null 2<&1
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
@@ -320,7 +337,7 @@ if [ "$cluster_status" != "0" ]; then
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
-      --machine-type ${INSTANCE_TYPE}
+      --machine-type ${INSTANCE_TYPE} \
       --image-type "COS" \
       --disk-type "pd-standard" --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
@@ -377,7 +394,7 @@ INGRESS_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
 
   # need to create the namespace if it doesn't exist yet
-  if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
+  if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
     if [ "${UPGRADE}" != "1" ]; then
       kubectl create namespace "${NAMESPACE}"
       kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"

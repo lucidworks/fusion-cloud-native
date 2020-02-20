@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.3-1"
+CHART_VERSION="5.0.3-3"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
@@ -9,7 +9,6 @@ SCRIPT_CMD="$0"
 AWS_ACCOUNT=
 REGION=us-west-2
 CLUSTER_NAME=
-RELEASE=f5
 NAMESPACE=default
 UPGRADE=0
 CREATE_MODE=
@@ -209,6 +208,26 @@ fi
 
 if [ "$AWS_ACCOUNT" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the AWS project name using: -p <project>"
+  exit 1
+fi
+
+valid="0-9a-zA-Z_\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
   exit 1
 fi
 

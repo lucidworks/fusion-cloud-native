@@ -156,15 +156,7 @@ rules-ui:
       cpu: "50m"
       memory: "8Mi"
 
-solr:
-  javaMem: "-Xms4g -Xmx6g"
-  resources:
-    requests:
-      memory: 10Gi
-      cpu: 3
-    limits:
-      memory: 12Gi
-      cpu: 4
+# NOTE: Apply the Solr resource requests / limits in the solr: section of your main custom values yaml
 
 zookeeper:
   resources:
@@ -190,7 +182,7 @@ webapps:
   resources:
     limits:
       cpu: "2"
-      memory: "500Mi"
+      memory: 2Gi
     requests:
       cpu: "500m"
       memory: "400Mi"
