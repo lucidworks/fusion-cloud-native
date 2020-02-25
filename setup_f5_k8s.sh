@@ -444,7 +444,15 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
     helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 10.3.1
     kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
 
-    helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
+    helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES" \
+      --set-file dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
+      --set-file dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
+      --set-file dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
+      --set-file dashboards.default.dashboard_query_pipeline.json=monitoring/grafana/dashboard_query_pipeline.json \
+      --set-file dashboards.default.dashboard_solr_core.json=monitoring/grafana/dashboard_solr_core.json \
+      --set-file dashboards.default.dashboard_solr_node.json=monitoring/grafana/dashboard_solr_node.json \
+      --set-file dashboards.default.dashboard_solr_system.json=monitoring/grafana/dashboard_solr_system.json \
+      --set-file dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json
     kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
 
     echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"
