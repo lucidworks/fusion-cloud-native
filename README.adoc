@@ -8,6 +8,23 @@ We assume that you'll want to control how your production clusters are provision
 
 // tag::body[]
 
+// tag::releases[]
+
+=== Helm Chart Releases
+[width="90%",cols="2,2,10",options="header"]
+|=========================================================
+|Version|Date|Notes
+|5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
+|5.0.3-3|2020-02-19|Updated `apiVersion` to `apps/v1` for the logstash statefulset to support Kubernetes v1.17+. If you're running previous versions of the Fusion 5 Helm chart, you will need to delete the logstash statefulset before upgrading to `5.0.3-3` (or beyond); `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation does not delete the PVC, so the data will remain intact.
+|5.0.3-2|2020-01-23|Improved accuracy of histogram metrics reported for query pipelines. Improved the ML model service Helm chart to allow easier overriding of the Python sidecar image.
+|5.0.3-1|2020-01-08|Update `webapps` service to correctly deploy AppStudio WAR files
+|5.0.2|2019-12-18|Fusion 5.0.2 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.0.2-release-notes.html. Please be sure to upgrade to Helm v3 for installing Fusion 5.0.2.
+|=========================================================
+
+__Please update the `CHART_VERSION` in the upgrade script for your cluster to point at the latest version of the Helm chart.__
+
+// end::releases[]
+
 // tag::prerequisites[]
 == Prerequisites
 
