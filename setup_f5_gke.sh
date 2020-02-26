@@ -7,7 +7,7 @@ NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
-GCLOUD_ZONE=us-west1
+GCLOUD_REGION=us-west1
 CLUSTER_NAME=
 NAMESPACE=default
 UPGRADE=0
@@ -36,7 +36,7 @@ function print_usage() {
   echo -e "  -p            GCP Project ID (required)\n"
   echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
+  echo -e "  -z            GCP Region to launch the cluster in, defaults to 'us-west1'\n"
   echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
   echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
@@ -107,7 +107,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -z parameter!"
               exit 1
             fi
-            GCLOUD_ZONE="$2"
+            GCLOUD_REGION="$2"
             shift 2
         ;;
         -t)
@@ -293,7 +293,7 @@ fi
 
 current_value=$(gcloud config get-value compute/zone)
 if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
-  gcloud config set compute/zone "${GCLOUD_ZONE}"
+  gcloud config set compute/zone "${GCLOUD_REGION}"
 fi
 current_value=$(gcloud config get-value project)
 if [ "${current_value}" != "${GCLOUD_PROJECT}" ]; then
@@ -307,19 +307,15 @@ if [ "$cluster_status" != "0" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
 
-  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (K8s Master: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} zone ${GCLOUD_ZONE} for deploying Lucidworks Fusion 5 ...\n"
+  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (K8s Master: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} region ${GCLOUD_REGION} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
 
-    if [ "$GCLOUD_ZONE" == "us-west1" ]; then
-      echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
+    if [ "$GCLOUD_REGION" == "us-west1" ]; then
       GCLOUD_ZONE="us-west1-a"
     fi
 
-    # have to cut off the zone part for the --subnetwork arg
-    GCLOUD_REGION="$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")"
-
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -337,7 +333,7 @@ if [ "$cluster_status" != "0" ]; then
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -349,7 +345,7 @@ if [ "$cluster_status" != "0" ]; then
       --enable-stackdriver-kubernetes \
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
-      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_ZONE}/subnetworks/default" \
+      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/${GCLOUD_ZONE}/subnetworks/default" \
       --default-max-pods-per-node "110" \
       --enable-autoscaling --min-nodes "0" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
