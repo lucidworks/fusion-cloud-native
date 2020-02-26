@@ -19,7 +19,7 @@ api-gateway:
       memory: "3Gi"
     requests:
       cpu: "500m"
-      memory: "1Gi"
+      memory: "2500Mi"
 
 auth-ui:
   resources:
@@ -125,7 +125,7 @@ query-pipeline:
       memory: "4Gi"
     requests:
       cpu: "500m"
-      memory: "2Gi"
+      memory: "2500Mi"
 
 rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
