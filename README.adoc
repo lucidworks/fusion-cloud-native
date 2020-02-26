@@ -11,7 +11,7 @@ We assume that you'll want to control how your production clusters are provision
 // tag::releases[]
 
 === Helm Chart Releases
-[width="90%",cols="2,4,8",options="header"]
+[width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
 |5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
