@@ -241,6 +241,13 @@ altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Loc
 file is used.
 
 
+If you are already using a custom 'values.yaml' file, create an entry for `externalTrafficPolicy` under `api-gateway` service. 
+
+```
+api-gateway:
+  externalTrafficPolicy: Local
+```
+
 ==== Considerations when using the nginx ingress controller
 
 If you are using the `nginx` ingress controller to fulfil your ingress definitions there are a couple
