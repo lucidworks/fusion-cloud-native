@@ -7,7 +7,7 @@ NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
-GCLOUD_REGION=us-west1
+GCLOUD_ZONE=us-west1-a
 CLUSTER_NAME=
 NAMESPACE=default
 UPGRADE=0
@@ -36,7 +36,7 @@ function print_usage() {
   echo -e "  -p            GCP Project ID (required)\n"
   echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z            GCP Region to launch the cluster in, defaults to 'us-west1'\n"
+  echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1-a'\n"
   echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
   echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
@@ -107,7 +107,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -z parameter!"
               exit 1
             fi
-            GCLOUD_REGION="$2"
+            GCLOUD_ZONE="$2"
             shift 2
         ;;
         -t)
@@ -291,6 +291,9 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+# getting region
+GCLOUD_REGION="${GCLOUD_ZONE%-*}"
+
 current_value=$(gcloud config get-value compute/zone)
 if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
   gcloud config set compute/zone "${GCLOUD_REGION}"
@@ -302,6 +305,7 @@ fi
 
 gcloud beta container clusters list --filter="${CLUSTER_NAME}" | grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
+
 if [ "$cluster_status" != "0" ]; then
   if [ "$CREATE_MODE" == "" ]; then
     CREATE_MODE="multi_az" # the default ...
@@ -315,7 +319,7 @@ if [ "$cluster_status" != "0" ]; then
       GCLOUD_ZONE="us-west1-a"
     fi
 
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" --zone "${GCLOUD_ZONE}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -333,7 +337,7 @@ if [ "$cluster_status" != "0" ]; then
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" --zone "${GCLOUD_ZONE}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}"  \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -345,11 +349,12 @@ if [ "$cluster_status" != "0" ]; then
       --enable-stackdriver-kubernetes \
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
-      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/${GCLOUD_ZONE}/subnetworks/default" \
+      --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
       --default-max-pods-per-node "110" \
       --enable-autoscaling --min-nodes "0" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
-      --no-enable-autoupgrade --enable-autorepair
+      --no-enable-autoupgrade --enable-autorepair \
+      --node-locations  "${GCLOUD_REGION}-a","${GCLOUD_REGION}-b","${GCLOUD_REGION}-c"
   else
     echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
     echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
