@@ -15,11 +15,11 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1582641149297,
+  "id": 3,
+  "iteration": 1571335997775,
   "links": [],
   "panels": [
     {
-      "datasource": null,
       "gridPos": {
         "h": 8,
         "w": 12,
@@ -33,38 +33,32 @@
             "last"
           ],
           "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
             "mappings": [],
             "max": 100,
             "min": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 80
-                }
-              ]
-            },
+            "thresholds": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ],
             "unit": "reqps"
           },
-          "overrides": [],
+          "override": {},
           "values": false
         },
         "orientation": "auto",
         "showThresholdLabels": false,
         "showThresholdMarkers": true
       },
-      "pluginVersion": "6.6.1",
+      "pluginVersion": "6.3.5",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}[1m]))/60",
           "instant": false,
           "intervalFactor": 1,
           "refId": "A"
@@ -80,7 +74,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -89,7 +82,6 @@
         "x": 12,
         "y": 0
       },
-      "hiddenSeries": false,
       "id": 29,
       "legend": {
         "avg": false,
@@ -116,7 +108,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}[1m]))/60",
           "intervalFactor": 1,
           "legendFormat": "RPS",
           "refId": "A"
@@ -168,7 +160,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -177,7 +168,6 @@
         "x": 0,
         "y": 8
       },
-      "hiddenSeries": false,
       "id": 16,
       "legend": {
         "avg": false,
@@ -204,7 +194,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (outcome, uri)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum by (outcome, uri)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}[1m]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -255,7 +245,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -264,7 +253,6 @@
         "x": 12,
         "y": 8
       },
-      "hiddenSeries": false,
       "id": 37,
       "legend": {
         "avg": false,
@@ -291,7 +279,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (routeId,httpStatusCode,httpMethod,routeUri)(rate(gateway_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum by (routeId,httpStatusCode,httpMethod,routeUri)(rate(gateway_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}[1m]))",
           "legendFormat": "{{httpStatusCode}} {{httpMethod}} {{routeId}}",
           "refId": "A"
         }
@@ -342,7 +330,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -351,7 +338,6 @@
         "x": 0,
         "y": 16
       },
-      "hiddenSeries": false,
       "id": 10,
       "legend": {
         "avg": false,
@@ -378,7 +364,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[5m]))",
+          "expr": "sum by (level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}[5m]))",
           "legendFormat": "{{level}} messages",
           "refId": "A"
         }
@@ -429,7 +415,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -438,7 +423,6 @@
         "x": 12,
         "y": 16
       },
-      "hiddenSeries": false,
       "id": 8,
       "legend": {
         "avg": false,
@@ -465,7 +449,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}",
+          "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"api-gateway\"}",
           "legendFormat": "{{status}} {{method}} {{uri}}",
           "refId": "A"
         }
@@ -516,7 +500,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -525,7 +508,6 @@
         "x": 12,
         "y": 24
       },
-      "hiddenSeries": false,
       "id": 14,
       "legend": {
         "avg": false,
@@ -552,7 +534,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",app_kubernetes_io_component=\"api-gateway\"})",
+          "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",service=\"api-gateway\"})",
           "legendFormat": "{{level}} messages",
           "refId": "A"
         }
@@ -600,7 +582,7 @@
     }
   ],
   "refresh": false,
-  "schemaVersion": 22,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -608,10 +590,8 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "tags": [],
-          "text": "iantest",
-          "value": "iantest"
+          "text": "drg2",
+          "value": "drg2"
         },
         "datasource": "Prometheus",
         "definition": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
@@ -655,5 +635,5 @@
   "timezone": "",
   "title": "Gateway Metrics",
   "uid": "cACmdI2Zk",
-  "version": 1
+  "version": 32
 }

@@ -58,7 +58,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "system_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "expr": "system_cpu_usage{kubernetes_namespace=~\"$namespace\", service=~\"$service\"}",
           "legendFormat": "{{kubernetes_pod}}",
           "refId": "A"
         }
@@ -143,7 +143,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "expr": "process_cpu_usage{kubernetes_namespace=~\"$namespace\", service=~\"$service\"}",
           "legendFormat": "{{kubernetes_pod}}",
           "refId": "A"
         }
@@ -228,7 +228,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_gc_pause_seconds_count{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "expr": "jvm_gc_pause_seconds_count{kubernetes_namespace=~\"$namespace\", service=~\"$service\"}",
           "legendFormat": "{{kubernetes_pod}} {{action}}",
           "refId": "A"
         }
@@ -314,7 +314,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(jvm_classes_loaded_classes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}[5m])",
+          "expr": "rate(jvm_classes_loaded_classes{kubernetes_namespace=~\"$namespace\", service=~\"$service\"}[5m])",
           "legendFormat": "{{kubernetes_pod}}",
           "refId": "A"
         }
@@ -399,7 +399,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(kubernetes_pod,id)(rate(jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}[5m]))",
+          "expr": "sum by(kubernetes_pod,id)(rate(jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", service=~\"$service\", area=\"heap\"}[5m]))",
           "legendFormat": "{{kubernetes_pod}} {{id}}",
           "refId": "A"
         }
@@ -484,7 +484,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}",
+          "expr": "jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", service=~\"$service\", area=\"heap\"}",
           "legendFormat": "{{kubernetes_pod}} {{id}} Memory",
           "refId": "A"
         }
@@ -569,12 +569,12 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"runnable\"}",
+          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", service=~\"$service\", state=\"runnable\"}",
           "legendFormat": "{{kubernetes_pod}} {{state}} Threads",
           "refId": "A"
         },
         {
-          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"blocked\"}",
+          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", service=~\"$service\", state=\"blocked\"}",
           "legendFormat": "{{kubernetes_pod}} {{state}} Threads",
           "refId": "B"
         }
@@ -662,14 +662,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
+        "definition": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",service=~\".+\"},service)",
         "hide": 0,
         "includeAll": true,
         "label": "Service",
         "multi": true,
         "name": "service",
         "options": [],
-        "query": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
+        "query": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",service=~\".+\"},service)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
