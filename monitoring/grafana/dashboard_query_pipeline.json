@@ -59,7 +59,7 @@
       "pluginVersion": "6.5.2",
       "targets": [
         {
-          "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",service=\"query-pipeline\"}[1m]))/60",
+          "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",app_kubernetes_io_component=\"query-pipeline\"}[1m]))/60",
           "instant": false,
           "intervalFactor": 1,
           "refId": "A"
@@ -111,7 +111,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(kubernetes_pod)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",service=\"query-pipeline\"}[1m]))/60",
+          "expr": "sum by(kubernetes_pod)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod=~\"$pod\",app_kubernetes_io_component=\"query-pipeline\"}[1m]))/60",
           "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
@@ -1816,7 +1816,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by (outcome, uri, kubernetes_pod)(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"query-pipeline\"}[1m]))",
+              "expr": "sum by (outcome, uri, kubernetes_pod)(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"}[1m]))",
               "legendFormat": "",
               "refId": "A"
             }
@@ -1903,7 +1903,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",service=\"query-pipeline\"}",
+              "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"}",
               "legendFormat": "{{status}} {{method}} {{uri}}",
               "refId": "A"
             }
@@ -2005,7 +2005,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by(level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",service=\"query-pipeline\"}[5m]))",
+              "expr": "sum by(level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"}[5m]))",
               "legendFormat": "{{level}} messages",
               "refId": "A"
             }
@@ -2092,7 +2092,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",service=\"query-pipeline\"})",
+              "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"})",
               "legendFormat": "{{level}} messages",
               "refId": "A"
             }
@@ -2179,7 +2179,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "jetty_threads_current{kubernetes_namespace=~\"$namespace\",service=\"query-pipeline\"}",
+              "expr": "jetty_threads_current{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"}",
               "legendFormat": "{{kubernetes_pod}} max threads",
               "refId": "A"
             }
