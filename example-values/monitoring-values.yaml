@@ -1,11 +1,8 @@
 grafana:
   nodeSelector:
     {NODE_POOL}
-  server:
-    ingress:
-      enabled: true
-    service:
-      type: ClusterIP
+  service:
+    type: ClusterIP
   persistence:
     enabled: true
     type: pvc

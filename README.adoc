@@ -948,7 +948,7 @@ With Grafana, you can either setup a temporary port-forward to a Grafana pod or 
 To define a LoadBalancer, do (replace ${RELEASE} with your Helm release label):
 
 ```
-kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana --port=3000 --target-port=3000 
 ```
 
 You can use `kubectl get services --namespace <namespace>` to determine when the load balancer is setup and its IP address. Direct your browser to http://<GrafanaIP>:3000 and enter the username `admin@localhost` and the password that was returned in the previous step.
