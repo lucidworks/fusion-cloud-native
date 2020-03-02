@@ -63,6 +63,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`admin-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the admin UI.
 
+|`argo` |HTTP |Deployment |`system` |Yes (CPU or custom metric) |Orchestrates parallel jobs on Kubernetes.
+
 |`auth-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the login form.
 
 |`connectors-classic` |REST/HTTP |StatefulSet |`analytics` or `system` |Yes (CPU or custom metric) |REST service for supporting non-RPC connector plugins.
@@ -92,6 +94,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
 
 |`rules-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Rules UI.
+
+|`seldon-core` |REST/GRPC |Deployment |`system` |Yes (CPU or custom metric) |Serves models built in any model building framework.
 
 |`solr` |HTTP |StatefulSet |At least 3 nodes in `search`, 2 in `analytics`, and 2 in `system` |Yes (CPU or custom metric) |Search engine.
 

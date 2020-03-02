@@ -17,7 +17,8 @@ solr:
     tag: 8.3.1
   updateStrategy:
     type: "RollingUpdate"
-  javaMem: "-Xmx3g"
+  javaMem: "-Xmx3g -Dfusion_node_type=system"
+  solrGcTune: "-XX:+UseG1GC -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
   volumeClaimTemplates:
     storageSize: "{SOLR_DISK_GB}Gi"
   replicaCount: {SOLR_REPLICAS}
@@ -67,18 +68,15 @@ fusion-indexing:
     annotations:
       prometheus.io/port: "8765"
       prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
-
 
 query-pipeline:
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Dlogging.level.com.lucidworks.cloud=INFO"
+  javaToolOptions: "-Xms2g -Xmx2g -Dserver.jetty.max-threads=1000 -Dcom.lucidworks.httpclient.defaultMaxPerRoute=1000 -Dcom.lucidworks.httpclient.maxTotalConnections=1000 -Dhttp.maxConnections=1000"
   pod:
     annotations:
       prometheus.io/port: "8787"
       prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
 
 admin-ui:
   nodeSelector:
@@ -88,11 +86,11 @@ api-gateway:
   externalTrafficPolicy: "Local"
   nodeSelector:
     {NODE_POOL}
+  javaToolOptions: "-Xmx2g"
   pod:
     annotations:
       prometheus.io/port: "6764"
       prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
 
 auth-ui:
   nodeSelector:
