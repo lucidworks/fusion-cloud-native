@@ -289,6 +289,8 @@ api-gateway:
 ```
 This way you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
 
+// end::gke[]
+
 === Upgrade Fusion on GKE
 
 // tag::upgrade-gke[]
@@ -486,7 +488,6 @@ api-gateway:
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
 // end::upgrade-gke[]
-// end::gke[]
 
 == Amazon Elastic Kubernetes Service (EKS)
 
@@ -598,6 +599,8 @@ See https://eksctl.io/usage/vpc-networking/ for more information on the networki
 The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo or getting started purposes. However, you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
 See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
 
+// end::eks[]
+
 === Upgrade Fusion on EKS
 
 // tag::upgrade-eks[]
@@ -615,6 +618,7 @@ eks_<cluster>_<release>_upgrade_fusion.sh
 ```
 // end::upgrade-eks[]
 
+// tag::eks[]
 === Provide access to the EKS cluster to other users
 
 Initially, only the user that created the Amazon EKS cluster has `system:masters` permissions to configure the cluster. In order to extend the permissions, a `ConfigMap` should be created to allow access to IAM users or roles.
@@ -733,6 +737,7 @@ api-gateway:
       "kubernetes.io/ingress.class": "gce"
 ```
 This way, you don't have to remember to pass the additional `tls-values.yaml` file when upgrading.
+// end::aks[]
 
 === Upgrade Fusion on AKS
 
@@ -751,7 +756,6 @@ To make things easier for you, our setup script creates an upgrade script you ca
 aks_<cluster>_<release>_upgrade_fusion.sh
 ```
 // end::upgrade-aks[]
-// end::aks[]
 
 == Other Kubernetes Platforms
 
@@ -799,6 +803,7 @@ helm repo update
 helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
+// end::other[]
 
 ===  Upgrade Existing Installation with Helm V3
 
@@ -839,6 +844,7 @@ solr:
 ```
 // end::upgrade-other[]
 
+// tag::other[]
 === RedHat OpenShift
 
 We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infrastructure Provider^]. A Red Hat Customer Portal account is required. OpenShift Online services are not supported.
