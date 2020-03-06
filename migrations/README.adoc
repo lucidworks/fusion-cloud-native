@@ -18,7 +18,8 @@ After upgrading, you'll re-index once again to restore the `postingsFormat` usin
 
 ==== Prerequisites
 
-Before proceeding, please upgrade your Fusion 5 installation to the latest Helm chart: `5.0.3-4`
+Before proceeding, please https://github.com/lucidworks/fusion-cloud-native[follow the upgrade instructions
+ corresponding to your cloud platform here] to upgrade your Fusion 5 installation to the latest Helm chart: `5.0.3-4`.
 
 Make sure you're running on Zookeeper 3.5.6 and Solr 8.3.1 and that all collections are healthy.
 
@@ -66,9 +67,9 @@ kubectl run --generator=run-pod/v1 \
   --env="HELM_RELEASE=<CHANGEME>" \
   --env="ACTION=prepare" prepare-upgrade-solr841
 ```
-*Be sure to change the HELM_RELEASE value to the release name of your Fusion 5 installation.* You can find this using `helm list`
+*Be sure to change the HELM_RELEASE value to the release name (NOT the version) of your Fusion 5 installation.* You can find this using `helm list`
 against your Fusion 5 namespace (find the release that's using the "fusion" chart and look at the name column). Typically, the
-release name is the same as your namespace.
+release name is the same as your namespace name.
 
 Wait until the `prepare-upgrade-solr841` pod shows status `Completed`
 

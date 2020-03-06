@@ -294,7 +294,14 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 === Upgrade Fusion on GKE
 
 // tag::upgrade-gke[]
-*NOTE: If you're currently running Fusion 5.0.1, then please use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>>*
+*Before you begin: for some circumstances, you will need to perform additional or different steps*:
+
+* Currently running Fusion 5.0.1? Use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>> instead of the below
+instructions.
+
+* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
+does not delete the PVC, so the data will remain intact.
 
 During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
 
@@ -604,6 +611,12 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 === Upgrade Fusion on EKS
 
 // tag::upgrade-eks[]
+*Before you begin: for some circumstances, you will need to perform additional or different steps*:
+
+* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
+does not delete the PVC, so the data will remain intact.
+
 During installation, the script generates a file named `eks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
 ./setup_f5_eks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
@@ -743,6 +756,12 @@ This way, you don't have to remember to pass the additional `tls-values.yaml` fi
 
 // tag::upgrade-aks[]
 
+*Before you begin: for some circumstances, you will need to perform additional or different steps*:
+
+* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
+does not delete the PVC, so the data will remain intact.
+
 During installation, the script generates a file named `aks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
 ```
 ./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
@@ -808,6 +827,13 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 ===  Upgrade Existing Installation with Helm V3
 
 // tag::upgrade-other[]
+
+*Before you begin: for some circumstances, you will need to perform additional or different steps*:
+
+* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
+does not delete the PVC, so the data will remain intact.
+
 To update an existing installation, do:
 ```
 RELEASE=f5
