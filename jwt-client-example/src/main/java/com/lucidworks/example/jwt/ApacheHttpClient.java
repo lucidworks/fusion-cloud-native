@@ -48,7 +48,8 @@ public class ApacheHttpClient {
     long intervalMillis = Long.parseLong(intervalMillisString);
     String appId = System.getProperty("appId", "datagen");
     String search = System.getProperty("search", "blah+blah");
-    String queryUrl = System.getProperty("queryUrl", "/api/apps/" + appId + "/query/" + appId + "?q=" + search);
+    String queryUrl = System.getProperty("queryUrl",
+        "/api/apps/" + appId + "/query/" + appId + "?q=" + search);
 
     // Construct the http client we will use for all calls.
     final CloseableHttpClient httpClient = HttpClientBuilder.create()
@@ -120,7 +121,8 @@ public class ApacheHttpClient {
       LOGGER.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
 
       // schedule it to be refreshed (by calling this method again) before it expires
-      refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, queryClient), secondsUntilRefresh, TimeUnit.SECONDS);
+      refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, queryClient),
+          secondsUntilRefresh, TimeUnit.SECONDS);
 
     } catch (IOException e) {
       LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);

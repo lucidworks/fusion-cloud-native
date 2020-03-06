@@ -102,7 +102,8 @@ public class OkHttpClientExample {
       LOGGER.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
 
       // schedule it to be refreshed (by calling this method again) before it expires
-      refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, client), secondsUntilRefresh, TimeUnit.SECONDS);
+      refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, client),
+          secondsUntilRefresh, TimeUnit.SECONDS);
 
     } catch (IOException e) {
       LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
