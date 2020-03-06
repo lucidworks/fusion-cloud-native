@@ -20,7 +20,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Demonstrates how to use JWT authentication to do search queries and indexing against
+ * Demonstrates how to use JWT authentication to call
  * Fusion REST API, using Apache HttpClient.
  */
 public class ApacheHttpClient {
