@@ -1,0 +1,42 @@
+= Example App - Querying / Indexing in Fusion using JWT
+:toc:
+:toclevels: 5
+:toc-title:
+
+For optimal performance in Fusion, requests made to the REST API
+should use JSON Web Token (JWT) authentication. The alternative to JWT is HTTP Basic authentication, but this
+puts significant strain on Fusion due to the cost of computing the hash. This strain results in worsened
+querying and indexing performance and higher resource utilization by Fusion.
+
+Thus, HTTP Basic authentication should *NOT* be used, especially for high-throughput scenarios.
+
+This app provides examples for performing search and indexing queries against Fusion REST APIs using JWT. Examples are
+provided for various HTTP client libraries.
+
+== JWT Client Authentication Flow
+
+. Request a JWT using the `/ouath2/token` endpoint.
+. Save the JWT.
+. Schedule the JWT to be refreshed before the expiration time of the current JWT.
+. Use the saved JWT to issue requests to Fusion REST APIs.
+
+== Running the Example
+The following java system properties are used by the examples. System properties should be passed as JVM args like `-Dname=value`,
+NOT program arguments. In IntelliJ these would be specified in the "VM options" field for
+the run configuration.
+
+- apiUrl - URL to reach the Fusion API, for example `http://fusionhostname:6764`
+- user - Username to use to authenticate with Fusion API
+- password - Password to use to authenticate with Fusion API
+- intervalMillis - milliseconds to wait between queries, for example 1000 (for 1 second)
+- appId - ID of the app to issue queries against, like "MyApp"
+- search - Search terms to use against the default query profile, URL encoded like "tv+remotes"
+- queryUrl - By default, the example issues queries against the app's main query profile. This overrides
+the url and causes the appId and search properties to be ignored. For example: "/api/links"
+
+Run the desired class via your IDE, specifying the desired values for these as system properties in your run configuration.
+
+For example, to run this in IntelliJ, your VM options might look like this:
+```
+-DapiUrl=https://fusionhostname:6764 -Duser=admin -Dpassword=password123 -DintervalMillis=1000 -DappId=MyApp -Dsearch=tv+remotes
+```
