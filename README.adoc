@@ -299,7 +299,7 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 * Currently running Fusion 5.0.1? Use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>> instead of the below
 instructions.
 
-* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
 `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
 does not delete the PVC, so the data will remain intact.
 
@@ -613,7 +613,7 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 // tag::upgrade-eks[]
 *Before you begin: for some circumstances, you will need to perform additional or different steps*:
 
-* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
 `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
 does not delete the PVC, so the data will remain intact.
 
@@ -758,7 +758,7 @@ This way, you don't have to remember to pass the additional `tls-values.yaml` fi
 
 *Before you begin: for some circumstances, you will need to perform additional or different steps*:
 
-* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
 `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
 does not delete the PVC, so the data will remain intact.
 
@@ -830,7 +830,7 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 
 *Before you begin: for some circumstances, you will need to perform additional or different steps*:
 
-* Upgrading to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
+* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
 `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
 does not delete the PVC, so the data will remain intact.
 
