@@ -2,32 +2,26 @@ package com.lucidworks.example.jwt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jdk.nashorn.internal.ir.ObjectNode;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.*;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.*;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Base64;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Demonstrates how to use JWT authentication to do search queries and indexing against
- * Fusion REST API.
+ * Fusion REST API, using Apache HttpClient.
  */
 public class ApacheHttpClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApacheHttpClient.class);
@@ -56,17 +50,26 @@ public class ApacheHttpClient {
         String search = System.getProperty("search", "blah+blah");
         String queryUrl = System.getProperty("queryUrl", "/api/apps/" + appId + "/query/" + appId + "?q=" + search);
 
+        // Construct the http client we will use for all calls.
+        final CloseableHttpClient httpClient = HttpClientBuilder.create()
+                // We need this or we get warning logs from Apache HttpClient
+                // about unexpected cookies.
+                .disableCookieManagement()
+                // We need this because this client will be shared between
+                // our jwt refresh thread and our main query thread.
+                // This makes the httpClient thread safe.
+                .setConnectionManager(new PoolingHttpClientConnectionManager())
+                .build();
+
 
         // Populate our first JWT.
         // This method re-schedules itself to ensure the JWT is refreshed
         // before it expires.
-        refreshJwt(apiUrl, user, password);
+        refreshJwt(apiUrl, user, password, httpClient);
 
-        // Endlessly issue queries
-        CloseableHttpClient queryClient = HttpClientBuilder.create().disableCookieManagement().build();
-
+        LOGGER.info("Querying {}{} every {} milliseconds...", apiUrl, queryUrl, intervalMillis);
         while (true) {
-            executeQuery(apiUrl, queryUrl, queryClient);
+            executeQuery(apiUrl, queryUrl, httpClient);
             Thread.sleep(intervalMillis);
         }
 
@@ -80,7 +83,7 @@ public class ApacheHttpClient {
         // in an Authorization header.
         query.addHeader("Authorization", "Bearer " + jwt);
 
-        LOGGER.info("Querying {}", fullUrl);
+        LOGGER.debug("Querying {}", fullUrl);
         try (CloseableHttpResponse response = queryClient.execute(query)) {
             // ensure we got a 2xx (ok) response code
             int statusCode = response.getStatusLine().getStatusCode();
@@ -104,14 +107,7 @@ public class ApacheHttpClient {
      * Refreshes the current JWT by obtaining a new one from the Fusion REST API and
      * schedules this method to run again before the JWT expires.
      */
-    private static void refreshJwt(String apiUrl, String user, String password) {
-
-        CloseableHttpClient basicAuthClient = HttpClientBuilder.create()
-                // We must do this or we get warnings from apache httpclient about
-                // unexpected cookies.
-                .disableCookieManagement()
-                .build();
-
+    private static void refreshJwt(String apiUrl, String user, String password, CloseableHttpClient queryClient) {
         String loginUrl = apiUrl + "/oauth2/token";
         HttpPost getJWTRequest = new HttpPost(loginUrl);
         // add the basic authorization header that this endpoint requires.
@@ -123,7 +119,7 @@ public class ApacheHttpClient {
 
         // Execute the HttpPost to get the JWT
         LOGGER.info("Obtaining new JWT via {}", loginUrl);
-        try (CloseableHttpResponse response = basicAuthClient.execute(getJWTRequest)) {
+        try (CloseableHttpResponse response = queryClient.execute(getJWTRequest)) {
 
             // ensure we got a 2xx (ok) response code
             int statusCode = response.getStatusLine().getStatusCode();
@@ -153,7 +149,7 @@ public class ApacheHttpClient {
             LOGGER.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
 
             // schedule it to be refreshed (by calling this method again) before it expires
-            refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password), secondsUntilRefresh, TimeUnit.SECONDS);
+            refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, queryClient), secondsUntilRefresh, TimeUnit.SECONDS);
 
         } catch (IOException e) {
             LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
