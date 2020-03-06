@@ -3,6 +3,7 @@ package com.lucidworks.example.jwt;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jdk.nashorn.internal.ir.ObjectNode;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,6 +76,8 @@ public class ApacheHttpClient {
     private static void executeQuery(String apiUrl, String queryUrl, CloseableHttpClient queryClient) {
         String fullUrl = apiUrl + queryUrl;
         HttpGet query = new HttpGet(fullUrl);
+        // Authenticate using our current jwt by adding it
+        // in an Authorization header.
         query.addHeader("Authorization", "Bearer " + jwt);
 
         LOGGER.info("Querying {}", fullUrl);
@@ -101,32 +105,25 @@ public class ApacheHttpClient {
      * schedules this method to run again before the JWT expires.
      */
     private static void refreshJwt(String apiUrl, String user, String password) {
-        // As required, use HTTP Basic Authentication to retrieve the JWT.
-        CredentialsProvider basicAuthProvider = new BasicCredentialsProvider();
-        basicAuthProvider.setCredentials(
-                AuthScope.ANY,
-                new UsernamePasswordCredentials(user, password)
-        );
+
         CloseableHttpClient basicAuthClient = HttpClientBuilder.create()
-                .setDefaultCredentialsProvider(basicAuthProvider)
+                // We must do this or we get warnings from apache httpclient about
+                // unexpected cookies.
                 .disableCookieManagement()
                 .build();
+
         String loginUrl = apiUrl + "/oauth2/token";
         HttpPost getJWTRequest = new HttpPost(loginUrl);
+        // add the basic authorization header that this endpoint requires.
+        String auth = user + ":" + password;
+        String encodedAuth = Base64.getEncoder().encodeToString((auth).getBytes());
+        String authHeader = "Basic " + new String(encodedAuth);
+        getJWTRequest.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 
-        // We need this authCache so that we do "Preemptive Basic Authentication" -
-        // sending the credentials without waiting to be challenged.
-        // The /oauth2/token endpoint doesn't support non-preemptive Basic Authentication.
-        HttpHost targetHost = HttpHost.create(apiUrl);
-        AuthCache authCache = new BasicAuthCache();
-        authCache.put(targetHost, new BasicScheme());
-        final HttpClientContext context = HttpClientContext.create();
-        context.setCredentialsProvider(basicAuthProvider);
-        context.setAuthCache(authCache);
 
         // Execute the HttpPost to get the JWT
         LOGGER.info("Obtaining new JWT via {}", loginUrl);
-        try (CloseableHttpResponse response = basicAuthClient.execute(getJWTRequest, context)) {
+        try (CloseableHttpResponse response = basicAuthClient.execute(getJWTRequest)) {
 
             // ensure we got a 2xx (ok) response code
             int statusCode = response.getStatusLine().getStatusCode();
