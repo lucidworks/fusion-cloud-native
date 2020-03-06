@@ -55,37 +55,6 @@ public class OkHttpClientExample {
       executeQuery(apiUrl, queryUrl, client);
       Thread.sleep(intervalMillis);
     }
-
-
-  }
-
-  private static void executeQuery(String apiUrl, String queryUrl, OkHttpClient client) {
-    String fullUrl = apiUrl + queryUrl;
-    Request request = new Request.Builder()
-        .url(fullUrl)
-        // authenticate using our current jwt by putting it
-        // into an authorization header
-        .addHeader("Authorization", "Bearer " + jwt)
-        .get()
-        .build();
-
-    LOGGER.debug("Querying {}", fullUrl);
-    try (Response response = client.newCall(request).execute()) {
-      // ensure we got a 2xx (ok) response code
-      if (!response.isSuccessful()) {
-        LOGGER.error("Query failed: received non-2xx response {} from" +
-            " Fusion REST API. Exiting...", response.code());
-        //check for an entity and serialize it if there was one to make
-        //the error message more informative
-        if (response.body() != null) {
-          LOGGER.error("Error response body was: {}", response.body().string());
-        }
-        System.exit(-1);
-      }
-    } catch (IOException e) {
-      LOGGER.error("Query failed due to exception. Exiting...", e);
-      System.exit(-1);
-    }
   }
 
   /**
@@ -137,6 +106,35 @@ public class OkHttpClientExample {
 
     } catch (IOException e) {
       LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
+      System.exit(-1);
+    }
+  }
+
+  private static void executeQuery(String apiUrl, String queryUrl, OkHttpClient client) {
+    String fullUrl = apiUrl + queryUrl;
+    Request request = new Request.Builder()
+        .url(fullUrl)
+        // authenticate using our current jwt by putting it
+        // into an authorization header
+        .addHeader("Authorization", "Bearer " + jwt)
+        .get()
+        .build();
+
+    LOGGER.debug("Querying {}", fullUrl);
+    try (Response response = client.newCall(request).execute()) {
+      // ensure we got a 2xx (ok) response code
+      if (!response.isSuccessful()) {
+        LOGGER.error("Query failed: received non-2xx response {} from" +
+            " Fusion REST API. Exiting...", response.code());
+        //check for an entity and serialize it if there was one to make
+        //the error message more informative
+        if (response.body() != null) {
+          LOGGER.error("Error response body was: {}", response.body().string());
+        }
+        System.exit(-1);
+      }
+    } catch (IOException e) {
+      LOGGER.error("Query failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }

@@ -61,7 +61,6 @@ public class ApacheHttpClient {
         .setConnectionManager(new PoolingHttpClientConnectionManager())
         .build();
 
-
     // Populate our first JWT.
     // This method re-schedules itself to ensure the JWT is refreshed
     // before it expires.
@@ -71,35 +70,6 @@ public class ApacheHttpClient {
     while (true) {
       executeQuery(apiUrl, queryUrl, httpClient);
       Thread.sleep(intervalMillis);
-    }
-
-
-  }
-
-  private static void executeQuery(String apiUrl, String queryUrl, CloseableHttpClient queryClient) {
-    String fullUrl = apiUrl + queryUrl;
-    HttpGet query = new HttpGet(fullUrl);
-    // Authenticate using our current jwt by adding it
-    // in an Authorization header.
-    query.addHeader("Authorization", "Bearer " + jwt);
-
-    LOGGER.debug("Querying {}", fullUrl);
-    try (CloseableHttpResponse response = queryClient.execute(query)) {
-      // ensure we got a 2xx (ok) response code
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode < 200 || statusCode > 299) {
-        LOGGER.error("Query failed: received non-2xx response {} from" +
-            " Fusion REST API. Exiting...", statusCode);
-        //check for an entity and serialize it if there was one to make
-        //the error message more informative
-        if (response.getEntity() != null) {
-          LOGGER.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
-        }
-        System.exit(-1);
-      }
-    } catch (IOException e) {
-      LOGGER.error("Query failed due to exception. Exiting...", e);
-      System.exit(-1);
     }
   }
 
@@ -154,6 +124,33 @@ public class ApacheHttpClient {
 
     } catch (IOException e) {
       LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
+      System.exit(-1);
+    }
+  }
+
+  private static void executeQuery(String apiUrl, String queryUrl, CloseableHttpClient queryClient) {
+    String fullUrl = apiUrl + queryUrl;
+    HttpGet query = new HttpGet(fullUrl);
+    // Authenticate using our current jwt by adding it
+    // in an Authorization header.
+    query.addHeader("Authorization", "Bearer " + jwt);
+
+    LOGGER.debug("Querying {}", fullUrl);
+    try (CloseableHttpResponse response = queryClient.execute(query)) {
+      // ensure we got a 2xx (ok) response code
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (statusCode < 200 || statusCode > 299) {
+        LOGGER.error("Query failed: received non-2xx response {} from" +
+            " Fusion REST API. Exiting...", statusCode);
+        //check for an entity and serialize it if there was one to make
+        //the error message more informative
+        if (response.getEntity() != null) {
+          LOGGER.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
+        }
+        System.exit(-1);
+      }
+    } catch (IOException e) {
+      LOGGER.error("Query failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }
