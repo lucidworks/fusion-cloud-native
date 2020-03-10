@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * Fusion REST API, using OkHttp client.
  */
 public class OkHttpClientExample {
-  private static final Logger LOGGER = LoggerFactory.getLogger(OkHttpClientExample.class);
+  private static final Logger log = LoggerFactory.getLogger(OkHttpClientExample.class);
 
   // Object mapper to parse JSON responses from API
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -50,7 +50,7 @@ public class OkHttpClientExample {
     // before it expires.
     refreshJwt(apiUrl, user, password, client);
 
-    LOGGER.info("Querying {}{} every {} milliseconds...", apiUrl, queryUrl, intervalMillis);
+    log.info("Querying {}{} every {} milliseconds...", apiUrl, queryUrl, intervalMillis);
     while (true) {
       executeQuery(apiUrl, queryUrl, client);
       Thread.sleep(intervalMillis);
@@ -73,15 +73,15 @@ public class OkHttpClientExample {
 
 
     // Execute the HttpPost to get the JWT
-    LOGGER.info("Obtaining new JWT via {}", loginUrl);
+    log.info("Obtaining new JWT via {}", loginUrl);
     try (Response response = client.newCall(jwtRequest).execute()) {
       // ensure we got a 2xx (ok) response code
       if (!response.isSuccessful()) {
-        LOGGER.error("Attempt to retrieve JWT token failed: received non-2xx response {} from" +
+        log.error("Attempt to retrieve JWT token failed: received non-2xx response {} from" +
             " Fusion REST API. Exiting...", response.code());
         // log the error response if we got one
         if (response.body() != null) {
-          LOGGER.error("Error response body was: {}", response.body().string());
+          log.error("Error response body was: {}", response.body().string());
         }
         System.exit(-1);
       }
@@ -99,14 +99,14 @@ public class OkHttpClientExample {
       // hammering Fusion when it's giving us short expiration times.
       long graceSeconds = secondsUntilExpiration > 15L ? 10L : 2L;
       long secondsUntilRefresh = secondsUntilExpiration - graceSeconds;
-      LOGGER.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
+      log.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
 
       // schedule it to be refreshed (by calling this method again) before it expires
       refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, client),
           secondsUntilRefresh, TimeUnit.SECONDS);
 
     } catch (IOException e) {
-      LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
+      log.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }
@@ -121,21 +121,21 @@ public class OkHttpClientExample {
         .get()
         .build();
 
-    LOGGER.debug("Querying {}", fullUrl);
+    log.debug("Querying {}", fullUrl);
     try (Response response = client.newCall(request).execute()) {
       // ensure we got a 2xx (ok) response code
       if (!response.isSuccessful()) {
-        LOGGER.error("Query failed: received non-2xx response {} from" +
+        log.error("Query failed: received non-2xx response {} from" +
             " Fusion REST API. Exiting...", response.code());
         //check for an entity and serialize it if there was one to make
         //the error message more informative
         if (response.body() != null) {
-          LOGGER.error("Error response body was: {}", response.body().string());
+          log.error("Error response body was: {}", response.body().string());
         }
         System.exit(-1);
       }
     } catch (IOException e) {
-      LOGGER.error("Query failed due to exception. Exiting...", e);
+      log.error("Query failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }

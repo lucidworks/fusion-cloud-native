@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * Fusion REST API, using Apache HttpClient.
  */
 public class ApacheHttpClient {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ApacheHttpClient.class);
+  private static final Logger log = LoggerFactory.getLogger(ApacheHttpClient.class);
 
   // Object mapper to parse JSON responses from API
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -67,7 +67,7 @@ public class ApacheHttpClient {
     // before it expires.
     refreshJwt(apiUrl, user, password, httpClient);
 
-    LOGGER.info("Querying {}{} every {} milliseconds...", apiUrl, queryUrl, intervalMillis);
+    log.info("Querying {}{} every {} milliseconds...", apiUrl, queryUrl, intervalMillis);
     while (true) {
       executeQuery(apiUrl, queryUrl, httpClient);
       Thread.sleep(intervalMillis);
@@ -89,18 +89,18 @@ public class ApacheHttpClient {
 
 
     // Execute the HttpPost to get the JWT
-    LOGGER.info("Obtaining new JWT via {}", loginUrl);
+    log.info("Obtaining new JWT via {}", loginUrl);
     try (CloseableHttpResponse response = queryClient.execute(jwtRequest)) {
 
       // ensure we got a 2xx (ok) response code
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode < 200 || statusCode > 299) {
-        LOGGER.error("Attempt to retrieve JWT token failed: received non-2xx response {} from" +
+        log.error("Attempt to retrieve JWT token failed: received non-2xx response {} from" +
             " Fusion REST API. Exiting...", statusCode);
         //check for an entity and serialize it if there was one to make
         //the error message more informative
         if (response.getEntity() != null) {
-          LOGGER.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
+          log.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
         }
         System.exit(-1);
       }
@@ -118,14 +118,14 @@ public class ApacheHttpClient {
       // hammering Fusion when it's giving us short expiration times.
       long graceSeconds = secondsUntilExpiration > 15L ? 10L : 2L;
       long secondsUntilRefresh = secondsUntilExpiration - graceSeconds;
-      LOGGER.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
+      log.info("Successfully refreshed JWT, refreshing again in {} seconds", secondsUntilRefresh);
 
       // schedule it to be refreshed (by calling this method again) before it expires
       refreshTokenExecutor.schedule(() -> refreshJwt(apiUrl, user, password, queryClient),
           secondsUntilRefresh, TimeUnit.SECONDS);
 
     } catch (IOException e) {
-      LOGGER.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
+      log.error("Attempt to retrieve JWT token failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }
@@ -137,22 +137,22 @@ public class ApacheHttpClient {
     // in an Authorization header.
     query.addHeader("Authorization", "Bearer " + jwt);
 
-    LOGGER.debug("Querying {}", fullUrl);
+    log.debug("Querying {}", fullUrl);
     try (CloseableHttpResponse response = queryClient.execute(query)) {
       // ensure we got a 2xx (ok) response code
       int statusCode = response.getStatusLine().getStatusCode();
       if (statusCode < 200 || statusCode > 299) {
-        LOGGER.error("Query failed: received non-2xx response {} from" +
+        log.error("Query failed: received non-2xx response {} from" +
             " Fusion REST API. Exiting...", statusCode);
         //check for an entity and serialize it if there was one to make
         //the error message more informative
         if (response.getEntity() != null) {
-          LOGGER.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
+          log.error("Error response body was: {}", EntityUtils.toString(response.getEntity()));
         }
         System.exit(-1);
       }
     } catch (IOException e) {
-      LOGGER.error("Query failed due to exception. Exiting...", e);
+      log.error("Query failed due to exception. Exiting...", e);
       System.exit(-1);
     }
   }
