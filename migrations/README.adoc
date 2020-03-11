@@ -7,6 +7,12 @@ The migration process varies depending on your current version of Fusion.
 
 == Migrating from Fusion 5.0.x to 5.1.x
 
+If you're currently running Fusion 5.0.x, then you need to perform three steps before upgrading to 5.1.0. If you are installing Fusion 5.1.0 into a new namespace, then you can safely skip these steps.
+
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+
 === Prepare for Upgrade to Solr 8.4.1
 
 Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
@@ -101,6 +107,30 @@ kubectl delete po prepare-upgrade-solr841
 kubectl delete po restore-upgrade-solr841
 ```
 
-== Migrating from Fusion 4.2.x to 5.1.x
+=== Install Seldon Core CRD
 
-== Migrating from Fusion 4.1.x to 5.1.x
+Fusion 5.1.0 introduces https://www.seldon.io/tech/products/core/[Seldon Core] for ML model serving. Seldon Core installs Kuberentes Custom Resource Definitions (CRD). Due to a limitation in how Helm handles CRDs during upgrades to an existing cluster, you need to install the CRDs into a temp namespace before attempting an upgrade to your existing namespace.
+
+Run the following commands to create a temporary namespace and install the Seldon Core CRDs into the K8s cluster:
+```
+kubectl create namespace tmp-crd-install
+helm install --namespace tmp-crd-install tmp-crd lucidworks/fusion --version 5.1.0 --debug \
+  --set "solr.enabled=false" --set "fusion-admin.enabled=false" \
+  --set "fusion-indexing.enabled=false" --set "query-pipeline.enabled=false" \
+  --set "api-gateway.enabled=false" --set "classic-rest-service.enabled=false" \
+  --set "sql-service.enabled=false" --set "zookeeper.enabled=false" \
+  --set "job-launcher.enabled=false" --set "job-rest-service.enabled=false" \
+  --set "rest-service.enabled=false" --set "rpc-service.enabled=false" \
+  --set "logstash.enabled=false" --set "webapps.enabled=false"
+helm delete --namespace tmp-crd-install tmp-crd
+kubectl delete namespace tmp-crd-install
+```
+
+You may now proceed to upgrade to Fusion 5.1.0. Be sure to update the `CHART_VERSION` to `5.1.0` in your upgrade script.
+
+=== Delete Logstash StatefulSet
+
+If you're running Fusion 5.0.3-2 or earlier, then you need to delete the Logstash StatefulSet. The data will remain intact and Logstash will be restored correctly during the Fusion upgrade.
+```
+kubectl delete sts <RELEASE>-logstash
+```

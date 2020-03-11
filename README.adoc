@@ -14,6 +14,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.1.0|2020-03-12|Fusion 5.1.0 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.0-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
 |5.0.3-3|2020-02-19|Updated `apiVersion` to `apps/v1` for the logstash statefulset to support Kubernetes v1.17+. If you're running previous versions of the Fusion 5 Helm chart, you will need to delete the logstash statefulset before upgrading to `5.0.3-3` (or beyond); `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation does not delete the PVC, so the data will remain intact.
 |5.0.3-2|2020-01-23|Improved accuracy of histogram metrics reported for query pipelines. Improved the ML model service Helm chart to allow easier overriding of the Python sidecar image.
@@ -976,7 +977,7 @@ kubectl get svc
 
 For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion-server/5.0/deployment/kubernetes/microservices.html
 
-Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/tree/master/survival_guide[Fusion 5 Survival Guide] PDF in this repo.
+Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/tree/master/survival_guide[Fusion 5 Survival Guide] in this repo.
 
 === Upgrading with Zero Downtime
 
