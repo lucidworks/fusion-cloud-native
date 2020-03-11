@@ -109,9 +109,13 @@ kubectl delete po restore-upgrade-solr841
 
 === Install Seldon Core CRD
 
-Fusion 5.1.0 introduces https://www.seldon.io/tech/products/core/[Seldon Core] for ML model serving. Seldon Core installs Kuberentes Custom Resource Definitions (CRD). Due to a limitation in how Helm handles CRDs during upgrades to an existing cluster, you need to install the CRDs into a temp namespace before attempting an upgrade to your existing namespace.
+Fusion 5.1.0 introduces https://www.seldon.io/tech/products/core/[Seldon Core] for ML model serving. Seldon Core installs Kuberentes Custom Resource Definitions (CRD). Due to a limitation in how Helm handles CRDs during upgrades to an existing cluster, you may need to install the CRDs into a temp namespace before attempting an upgrade to your existing namespace.
 
-Run the following commands to create a temporary namespace and install the Seldon Core CRDs into the K8s cluster:
+Check if the Seldon Core CRDs are present in your cluster already
+```
+kubectl api-versions | grep machinelearning.seldon.io/v1
+```
+If this returns no results then run the following commands to create a temporary namespace and install the Seldon Core CRDs into the K8s cluster:
 ```
 kubectl create namespace tmp-crd-install
 helm install --namespace tmp-crd-install tmp-crd lucidworks/fusion --version 5.1.0 --debug \
