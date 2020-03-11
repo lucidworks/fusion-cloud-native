@@ -126,11 +126,22 @@ helm delete --namespace tmp-crd-install tmp-crd
 kubectl delete namespace tmp-crd-install
 ```
 
-You may now proceed to upgrade to Fusion 5.1.0. Be sure to update the `CHART_VERSION` to `5.1.0` in your upgrade script.
+To verify the Seldon Core CRDs were installed successfully, run:
+```
+k api-versions | grep machinelearning.seldon.io/v1;
+```
+You should see output like:
+```
+machinelearning.seldon.io/v1
+machinelearning.seldon.io/v1alpha2
+machinelearning.seldon.io/v1alpha3
+```
 
 === Delete Logstash StatefulSet
 
-If you're running Fusion 5.0.3-2 or earlier, then you need to delete the Logstash StatefulSet. The data will remain intact and Logstash will be restored correctly during the Fusion upgrade.
+If you're running Fusion `5.0.3-2` or earlier, then you need to delete the Logstash StatefulSet. The data will remain intact and Logstash will be restored correctly during the Fusion upgrade.
 ```
 kubectl delete sts <RELEASE>-logstash
 ```
+
+You may now proceed to upgrade to Fusion 5.1.0. Be sure to update the `CHART_VERSION` to `5.1.0` in your upgrade script.
