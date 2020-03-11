@@ -442,6 +442,7 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
       --set-file grafana.dashboards.default.dashboard_solr_node.json=monitoring/grafana/dashboard_solr_node.json \
       --set-file grafana.dashboards.default.dashboard_solr_system.json=monitoring/grafana/dashboard_solr_system.json \
       --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json \
+      --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
       --wait --render-subchart-notes
 
     echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
