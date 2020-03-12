@@ -474,6 +474,7 @@ fusion-indexing:
     annotations:
       prometheus.io/port: "8765"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 ```
@@ -483,6 +484,7 @@ query-pipeline:
     annotations:
       prometheus.io/port: "8787"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 ```
@@ -492,6 +494,7 @@ api-gateway:
     annotations:
       prometheus.io/port: "6764"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
@@ -997,7 +1000,7 @@ To see what would be upgraded, you can pass the `--dry-run` option to the script
 Get the initial Grafana password from a K8s secret by doing:
 
 ```
-kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-graf-grafana \
+kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-monitoring-grafana \
   -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ```
 
@@ -1005,23 +1008,14 @@ With Grafana, you can either setup a temporary port-forward to a Grafana pod or 
 To define a LoadBalancer, do (replace ${RELEASE} with your Helm release label):
 
 ```
-kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+kubectl expose deployment ${RELEASE}-monitoring-grafana --type=LoadBalancer --name=grafana --port=3000 --target-port=3000
 ```
 
 You can use `kubectl get services --namespace <namespace>` to determine when the load balancer is setup and its IP address. Direct your browser to http://<GrafanaIP>:3000 and enter the username `admin@localhost` and the password that was returned in the previous step.
 
 This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
 
-One of the first things you will want to do is to configure the Prometheus data source in Grafana. Go to the gear icon on the left and then to Data Sources.
-
-Click Add Data Source and then click on Prometheus as the data source type. It will bring you to a page where it will ask for HTTP URL for the Prometheus server.
-
-```
-http://<RELEASE>-prom-prometheus-server
-```
-
-Import dashboards from `monitoring/grafana/*.json`
-
+The dashboards and datasoure will be setup for you in grafana, simply navigate to `Dashboards` -> `Manage` to view the vailable dashboards
 // end::verify[]
 
 

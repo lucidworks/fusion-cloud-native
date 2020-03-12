@@ -68,6 +68,8 @@ fusion-indexing:
     annotations:
       prometheus.io/port: "8765"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
 
 query-pipeline:
   nodeSelector:
@@ -77,6 +79,7 @@ query-pipeline:
     annotations:
       prometheus.io/port: "8787"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 
 admin-ui:
   nodeSelector:
@@ -91,6 +94,7 @@ api-gateway:
     annotations:
       prometheus.io/port: "6764"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 
 auth-ui:
   nodeSelector:
