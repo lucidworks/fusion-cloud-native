@@ -744,26 +744,38 @@ kubectl get pods
 
 If all goes well, you should see a list of pods similar to:
 ```
-NAME                                     READY   STATUS    RESTARTS   AGE
-f5-admin-ui-669bb68f74-pjqtw           1/1     Running   0          19h
-f5-api-gateway-6f7fdd69d-bt2nc         1/1     Running   0          19h
-f5-auth-ui-b4dfd4f6d-f9tb6             1/1     Running   0          19h
-f5-classic-rest-service-0              1/1     Running   1          19h
-f5-devops-ui-768cf6f55b-wphsw          1/1     Running   0          19h
-f5-fusion-admin-5888f54447-hprt6       1/1     Running   0          19h
-f5-fusion-indexing-76dfb65dfd-929f4    1/1     Running   0          19h
-f5-insights-686464b75b-6pzw5           1/1     Running   0          19h
-f5-job-launcher-5d84c859c4-dl7s9       1/1     Running   0          19h
-f5-job-rest-server-fb99fcfd7-lmqvd     1/1     Running   0          19h
-f5-logstash-0                          1/1     Running   0          19h
-f5-ml-model-service-8574b96c68-jqt88   2/2     Running   0          17h
-f5-query-pipeline-77956f56f8-22wg7     1/1     Running   0          19h
-f5-rest-service-77ff7d45-rbrn4         1/1     Running   0          19h
-f5-rpc-service-67b6f4bf49-2d65g        1/1     Running   1          19h
-f5-rules-ui-65d59dc5b4-5ntq9           1/1     Running   0          19h
-f5-solr-0                              1/1     Running   0          19h
-f5-webapps-7d9497c485-bbtg9            1/1     Running   0          19h
-f5-zookeeper-0                         1/1     Running   0          19h
+NAME                                                        READY   STATUS    RESTARTS   AGE
+seldon-controller-manager-6675874894-qxwrv                  1/1     Running   0          8m45s
+f5-admin-ui-74d794f4f8-m5jms                                1/1     Running   0          8m45s
+f5-ambassador-fd6b9b5dc-7ghf6                               1/1     Running   0          8m43s
+f5-api-gateway-6b9998b9c-tmchk                              1/1     Running   0          8m45s
+f5-auth-ui-7565564b4c-rdc74                                 1/1     Running   0          8m42s
+f5-classic-rest-service-0                                   1/1     Running   3          8m44s
+f5-devops-ui-77bb867ffb-fbzxd                               1/1     Running   0          8m42s
+f5-fusion-admin-78b8f8fc7f-4d7l8                            1/1     Running   0          8m42s
+f5-fusion-indexing-599c8d448-xzsvm                          1/1     Running   0          8m44s
+f5-insights-665fd9f6fc-g5psw                                1/1     Running   0          8m43s
+f5-job-launcher-84dd4c5c96-p8528                            1/1     Running   0          8m44s
+f5-job-rest-server-6d44d964b8-xtnxw                         1/1     Running   0          8m45s
+f5-logstash-0                                               1/1     Running   0          8m45s
+f5-ml-model-service-6987dc94c9-9ppp8                        2/2     Running   1          8m45s
+f5-monitoring-grafana-5d499dbb58-pzw72                      1/1     Running   0          10m
+f5-monitoring-prometheus-kube-state-metrics-54d6678dv9h7h   1/1     Running   0          10m
+f5-monitoring-prometheus-pushgateway-7d65c65b85-vwrwf       1/1     Running   0          10m
+f5-monitoring-prometheus-server-0                           2/2     Running   0          10m
+f5-pm-ui-86cbc5bb65-nd2n8                                   1/1     Running   0          8m44s
+f5-pulsar-bookkeeper-0                                      1/1     Running   0          8m45s
+f5-pulsar-broker-b56cc776f-56msx                            1/1     Running   0          8m45s
+f5-query-pipeline-5d75d7d5f4-l2mdf                          1/1     Running   0          8m43s
+f5-rest-service-7bb6cfc65f-7wfs2                            1/1     Running   0          8m42s
+f5-rpc-service-987fdc648-dldwv                              1/1     Running   0          8m45s
+f5-rules-ui-6b9d55b78f-9hzzj                                1/1     Running   0          8m43s
+f5-solr-0                                                   1/1     Running   0          8m44s
+f5-solr-exporter-c4687c785-jsm7x                            1/1     Running   0          8m45s
+f5-ui-6cdbcc68c6-rj9cq                                      1/1     Running   0          8m45s
+f5-webapps-6d6bb9bfd-hm4qx                                  1/1     Running   0          8m45s
+f5-workflow-controller-7b66679fb7-sjbvp                     1/1     Running   0          8m44s
+f5-zookeeper-0                                              1/1     Running   0          8m45s
 ```
 The number of pods per deployment / statefulset will vary based on your cluster size and replicaCount settings in your custom values YAML file.
 Also, don't worry if you see some pods having been restarted as that just means they were too slow to come up and Kubernetes killed and restarted them.
