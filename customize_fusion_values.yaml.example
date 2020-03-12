@@ -143,3 +143,13 @@ rules-ui:
 webapps:
   nodeSelector:
     {NODE_POOL}
+
+pulsar:
+  broker:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+  bookkeeper:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8000"
