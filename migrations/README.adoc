@@ -5,6 +5,8 @@
 
 The latest version of Fusion 5 is 5.1.0. The migration process varies depending on your current version of Fusion.
 
+// tag::body[]
+
 == Migrating from Fusion 5.0.x to 5.1.x
 
 If you're currently running Fusion 5.0.2+, then you need to perform three steps before upgrading to 5.1.0. If you are installing Fusion 5.1.0 into a new namespace, then you can safely skip these steps.
@@ -321,3 +323,5 @@ api-gateway:
 ```
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
+
+// end::body[]
