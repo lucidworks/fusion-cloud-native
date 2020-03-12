@@ -34,14 +34,14 @@ This section covers prerequisites and background knowledge needed to help you un
 === Release Name and Namespace
 
 Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
-Use a short name for your release containing only letters, digits, underscore, and dashes.
+Use a short name for your release containing only letters, digits, underscore, and dashes (no dots).
 
-As of Helm v3, releases are managed at the namespace level, so you can have multiple releases
-with the same name across different namespaces in the same cluster. However, we recommend *NOT* doing this and use a unique release for every namespace; if you do use the same release
-label across multiple namespaces in the same cluster, then you need to take care to include the namespace in your custom values yaml file(s).
+As of Helm v3, releases are managed at the namespace level, so you can have multiple releases with the same name across different namespaces in the same cluster.
+However, we recommend *NOT* doing this and use a unique release for every namespace; if you do use the same release label across multiple namespaces in the same cluster,
+then you need to take care to include the namespace in your custom values yaml file(s).
 
 You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
-Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster in separate namespaces.
+Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster *in separate namespaces*.
 However, please [.underline]#do not# install more than one Fusion release in the same namespace.
 
 __NOTE: All Fusion services must run in the same namespace, i.e. you should not try to split a Fusion cluster across multiple namespaces.__
@@ -75,6 +75,9 @@ You should get into the habit of pulling this repo for the latest changes before
 cd fusion-cloud-native
 git pull
 ```
+
+Cloning the github repo is preferred so that you can pull in updates to the scripts, but if you are not a git user, then you can download the project: https://github.com/lucidworks/fusion-cloud-native/archive/master.zip.
+Once downloaded, extract the zip and cd into the `fusion-cloud-native-master` directory.
 
 // end::prerequisites[]
 
@@ -123,12 +126,12 @@ gcloud components update
 
 Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
 ```
-./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -r <release> -n <namespace>
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace>
 ```
 
-Use the `--help` option to see script usage. If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
+Use the `--help` option to see script usage. If you want the script to create a cluster for you, then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
-If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.0 but is not sufficient for production workloads.
+If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
 
 You can change the instance type using the `-i` parameter; see: https://cloud.google.com/compute/docs/regions-zones/#available for an list of which machine types are available in your desired region.
 
@@ -155,12 +158,13 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 . Run the setup script:
 +
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> --create demo
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> -n <namespace> --create demo
 ```
 +
 --
 * `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
 * `<project>` must match the name of an existing project in GKE.
+
 +
 Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
 * `<zone-name>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`
@@ -180,9 +184,11 @@ Fusion 5 Gateway service exposed at: <some-external-ip>:6764
 With a three-node regional cluster, nodes are deployed across three separate availability zones.
 
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> --create multi_az
+./setup_f5_gke.sh -c <cluster> -p <project> -z <region-name> -n <namespace> --create multi_az
 ```
-
+--
+* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`
+--
 In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
 
 When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
@@ -241,8 +247,10 @@ that can scale up and down freely it can prevent unwanted request failures. This
 altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Local` if the example values
 file is used.
 
+__You must use `externalTrafficPolicy`=`Local` for the Trusted HTTP Realm to work correctly.__
 
-If you are already using a custom 'values.yaml' file, create an entry for `externalTrafficPolicy` under `api-gateway` service. 
+
+If you are already using a custom 'values.yaml' file, create an entry for `externalTrafficPolicy` under `api-gateway` service.
 
 ```
 api-gateway:
@@ -295,33 +303,17 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 === Upgrade Fusion on GKE
 
 // tag::upgrade-gke[]
-*Before you begin: for some circumstances, you will need to perform additional or different steps*:
 
-* Currently running Fusion 5.0.1? Use the instructions at <<upgrade-to-502,Upgrade from 5.0.1>> instead of the below
-instructions.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
 
-* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
-`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
-does not delete the PVC, so the data will remain intact.
+During installation, the setup script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
 
-During installation, the script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
-
-After making changes to this file, you need to run the following command:
-```
-./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
-  --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
-```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2. Our setup script creates an upgrade script you can use to perform upgrades, see:
+In addition, the setup script creates a helper upgrade script to streamline the upgrade process. Look in the directory where you ran the setup script initially for a file named:
 
 ```
 gke_<cluster>_<release>_upgrade_fusion.sh
 ```
-
-If you're using the `default` namespace and see an error similar to the following, then simply pass the `--force` parameter when upgrading:
-```
-Namespace default is owned by: , by we are: OWNER please provide the `--force` parameter if you are sure you wish to upgrade this namespace
-```
-_This owner label check before upgrading is in place as a safeguard for shared clusters with Fusion deployed to multiple namespaces._
+where `<release>` is typically the same as your namespace unless you overrode the default value using the `-r` option.
 
 After running the upgrade, use `kubectl get pods` to see the changes being applied to your cluster. It may take several minutes to perform the upgrade as new Docker images need to be pulled from DockerHub.
 To see the versions of running pods, do:
@@ -329,175 +321,6 @@ To see the versions of running pods, do:
 kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 ```
 
-[[upgrade-to-502]]
-==== Upgrade from 5.0.1 to 5.0.2 to Zookeeper 3.5.6 and Solr 8.3.1
-
-Fusion 5.0.1 (and subsequent 5.0.2 pre-release versions, such as 5.0.2-7) runs Solr 8.2.0 and Zookeeper 3.4.14.
-Prior to upgrading to Fusion 5.0.2, you need to upgrade Solr to 8.3.1 in your existing cluster and perform some minor changes to the custom values yaml.
-
-When you upgrade to 5.0.2, Zookeeper will migrate from 3.4.14 to 3.5.6. Behind the scenes, we also had update the ZK Helm chart to work around an issue with purging logs (https://github.com/kubernetes-retired/contrib/issues/2942),
-so we'll have to delete the existing StatefulSet in order to switch charts during the upgrade.
-
-Prior to upgrading, list our your releases for Helm v2:
-
-```
-helm ls --all-namespaces
-```
-
-Once you're ready to upgrade, on a Mac, do:
-```
-brew upgrade kubernetes-helm
-```
-For other OS, download from https://github.com/helm/helm/releases
-
-Verify: helm version --short
-```
-v3.0.0+ge29ce2a
-```
-
-===== Migrate your release to Helm v3 using the helm-2to3 plugin (if needed)
-
-If you installed your F5 cluster using Helm v2, you need to migrate it to v3 using the process described here:
-https://helm.sh/blog/migrate-from-helm-v2-to-helm-v3/. Basically, you need to migrate the release metadata that lives in Tiller over to your local system.
-
-If you installed your cluster with Helm v3 originally, then you don't need to do this step. Just verify your release is shown by: `helm ls`
-
-During testing, we found upgrading Solr to 8.3.1 before moving to ZK 3.5.6 was more stable.
-
-Edit your custom values yaml file and change the Solr version to 8.3.1.
-```
-solr:
-  image:
-    tag: 8.3.1
-  updateStrategy:
-    type: "RollingUpdate"
-```
-
-Determine the version of the Fusion chart you are currently running (shown by `helm ls -n <namespace>`) as you'll need to pass that to the setup script when upgrading Solr to 8.3.1.
-
-For instance, your chart version may be: `fusion-5.0.2-7` in which case you would pass `--version 5.0.2-7`. The `-7` part of the version is considered a "pre-release" of 5.0.2 in the semantic versioning scheme, see: https://semver.org/
-
-```
-./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
-  --version <CHART_VERSION> \
-  --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
-```
-
-__Wait until solr is back up and heatlhy__
-
-*IMPORTANT: You need to edit your custom values file and move the Zookeeper settings out from under the `solr:` section to the main level, e.g. instead of:*
-
-```
-solr:
-  ...
-  zookeeper:
-    ...
-```
-
-You need:
-```
-solr:
-  ...
-
-zookeeper:
-  ...
-```
-
-At this point you're ready to switch over to ZK 3.5.6. However, we cannot do this with zero downtime, meaning your cluster will lose quorum momentarily.
-So plan to have a minute or so of downtime in this cluster. Also, to avoid as much downtime as possible, be ready to upgrade to 5.0.2 immediately after deleting the existing statefulset.
-
-When ready, do:
-
-```
-kubectl delete statefulset ${RELEASE}-solr
-kubectl delete statefulset ${RELEASE}-zookeeper
-```
-
-Deleting the StatefulSet does not remove the persistent volumes backing Zookeeper and Solr, so no data will be lost.
-
-After editing your custom values yaml file, run:
-
-```
-cd fusion-cloud-native
-
-./setup_f5_gke.sh -c <CLUSTER> -p <PROJECT> -z <ZONE> \
-  -n <NAMESPACE> -r <RELEASE> \
-    --values <MY_VALUES> --version 5.0.2 --upgrade --force
-```
-
-Wait a few minutes and then verify the new ZK establishes quorum:
-
-```
-kubectl get pods
-```
-
-It will take some time for the upgrade to rollout across all the services as K8s needs to pull new Docker images and then perform a rolling upgrade for each Fusion service.
-
-After upgrading, verify the versions of each pod:
-```
-kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
-```
-
-===== Install Prometheus / Grafana to Existing Cluster
-
-As of 5.0.2, the Fusion setup scripts provide the option to install Prometheus and Grafana using the `--prometheus` option.
-However, if you installed a previous version of Fusion 5.0.x, then the upgrade does not install Prometheus / Grafana for you.
-
-Once you complete the upgrade to Fusion 5.0.2, you can run the https://github.com/lucidworks/fusion-cloud-native/blob/master/install_prom.sh[install_prom.sh^] script to install these additional services into your namespace. Pass the `--help` option to see script usage details.
-
-For instance, to install into a GKE cluster and schedule the new pods in the default Node Pool, you would do:
-```
-./install_prom.sh -c <cluster> -r <release> -n <namespace> \
-  --node-pool "cloud.google.com/gke-nodepool: default-pool" --provider gke
-```
-
-Once Prometheus and Grafana are deployed, edit your custom values yaml file for Fusion to enable the Solr exporter:
-```
-solr:
-  ...
-  exporter:
-    enabled: true
-    podAnnotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "9983"
-      prometheus.io/path: "/metrics"
-    nodeSelector:
-      cloud.google.com/gke-nodepool: default-pool
-```
-
-Add pod annotations to the `query-pipeline`, `fusion-indexing`, `api-gateway` services as needed to allow Prometheus to scrape metrics:
-
-```
-fusion-indexing:
-  ...
-  pod:
-    annotations:
-      prometheus.io/port: "8765"
-      prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
-```
-
-```
-query-pipeline:
-  ...
-  pod:
-    annotations:
-      prometheus.io/port: "8787"
-      prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
-```
-
-```
-api-gateway:
-  ...
-  pod:
-    annotations:
-      prometheus.io/port: "6764"
-      prometheus.io/scrape: "true"
-      prometheus.io/path: "/actuator/prometheus"
-```
-
-After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
 // end::upgrade-gke[]
 
 == Amazon Elastic Kubernetes Service (EKS)
@@ -615,18 +438,8 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 === Upgrade Fusion on EKS
 
 // tag::upgrade-eks[]
-*Before you begin: for some circumstances, you will need to perform additional or different steps*:
 
-* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
-`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
-does not delete the PVC, so the data will remain intact.
-
-During installation, the script generates a file named `eks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
-```
-./setup_f5_eks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
-  --values eks_<cluster>_<release>_fusion_values.yaml --upgrade
-```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion, such as 5.0.2.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
 
 To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
 
@@ -760,18 +573,7 @@ This way, you don't have to remember to pass the additional `tls-values.yaml` fi
 
 // tag::upgrade-aks[]
 
-*Before you begin: for some circumstances, you will need to perform additional or different steps*:
-
-* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
-`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
-does not delete the PVC, so the data will remain intact.
-
-During installation, the script generates a file named `aks_<cluster>_<release>_fusion_values.yaml`. Use this file to customize Fusion settings. After making changes to this file, run the following command:
-```
-./setup_f5_aks.sh -c <existing_cluster> -p <aks_resource_group> -r <release> -n <namespace> \
-  --values aks_<cluster>_<release>_fusion_values.yaml --upgrade
-```
-You will also use the `--upgrade` option to upgrade to a newer version of Fusion.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
 
 To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
 
@@ -832,11 +634,7 @@ kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namesp
 
 // tag::upgrade-other[]
 
-*Before you begin: for some circumstances, you will need to perform additional or different steps*:
-
-* Upgrading from a version before release 5.0.3-3 to release 5.0.3-3 or higher? Delete the logstash statefulset before following the below instructions;
-`kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation
-does not delete the PVC, so the data will remain intact.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
 
 To update an existing installation, do:
 ```
@@ -1016,6 +814,7 @@ You can use `kubectl get services --namespace <namespace>` to determine when the
 This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
 
 The dashboards and datasoure will be setup for you in grafana, simply navigate to `Dashboards` -> `Manage` to view the vailable dashboards
+
 // end::verify[]
 
 
