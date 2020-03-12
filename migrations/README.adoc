@@ -297,6 +297,7 @@ fusion-indexing:
     annotations:
       prometheus.io/port: "8765"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 ```
@@ -306,6 +307,7 @@ query-pipeline:
     annotations:
       prometheus.io/port: "8787"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 ```
@@ -315,6 +317,7 @@ api-gateway:
     annotations:
       prometheus.io/port: "6764"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ```
 
 After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
