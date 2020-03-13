@@ -8,12 +8,12 @@
 //tag::intro[]
 The diagram below depicts a Fusion 5 cluster running in a single Kubernetes namespace for high availability:
 
-//tag::fig1
+//tag::fig1[]
 [[fig1]]
 .Figure 1: Fusion 5 running in GKE with multiple node pools for workload isolation
 
 image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/high-availability.png?raw=true[]
-//end::fig1
+//end::fig1[]
 
 //end::intro[]
 
