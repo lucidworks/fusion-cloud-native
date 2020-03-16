@@ -112,8 +112,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
 
-|`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
-
 Exposes a JDBC endpoint for the SQL service.
 
 |`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
