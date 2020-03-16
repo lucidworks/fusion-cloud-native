@@ -102,9 +102,15 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`solr` |HTTP |StatefulSet |At least 3 nodes in `search`, 2 in `analytics`, and 2 in `system` |Yes (CPU or custom metric) |Search engine.
 
+|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | Atleast 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
+
+|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | Atleast 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
+
 |`spark-driver` |n/a |single pod per job |`analytics` or dedicated Node Pool for Spark jobs |1 per job |Launched by the job-launcher to run a Spark job
 
 |`spark-executor` |n/a |one or more pods launched by the Spark driver for executing job tasks |`analytics` or dedicated Node Pool for Spark jobs |depends on job configuration; controlled by the spark.executor.instances setting |Executes tasks for a Spark job
+
+|`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
 
 |`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
 
