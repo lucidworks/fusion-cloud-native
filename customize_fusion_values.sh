@@ -149,27 +149,16 @@ fi
 echo -e "\nCreated Fusion custom values yaml: ${MY_VALUES}\n"
 
 if [ "$PROMETHEUS_ON" == "true" ]; then
-  PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
-  if [ ! -f "${PROMETHEUS_VALUES}" ]; then
-    cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
+  MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
+  if [ ! -f "${MONITORING_VALUES}" ]; then
+    cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
     else
-      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
     fi
-    echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}\n"
-  fi
-
-  GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
-  if [ ! -f "${GRAFANA_VALUES}" ]; then
-    cp example-values/grafana-values.yaml $GRAFANA_VALUES
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
-    else
-      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
-    fi
-    echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}\n"
+    echo -e "\nCreated Monitoring custom values yaml: ${MONITORING_VALUES}. Keep this file handy as you'll need it to customize your Monitoring installation.\n"
   fi
 fi

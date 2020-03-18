@@ -3,7 +3,7 @@
 # Platform agnostic script used by the other setup_f5_*.sh scripts to perform general K8s and Helm commands to install Fusion.
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 
-CHART_VERSION="5.0.3-4"
+CHART_VERSION="5.1.0"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
 PROMETHEUS="install"
@@ -414,40 +414,38 @@ if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
     NODE_POOL="{}"
   fi
 
-  PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
-  if [ ! -f "${PROMETHEUS_VALUES}" ]; then
-    cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
-    else
-      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
-    fi
-    echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
-  fi
 
-  GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
-  if [ ! -f "${GRAFANA_VALUES}" ]; then
-    cp example-values/grafana-values.yaml $GRAFANA_VALUES
+  MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
+  if [ ! -f "${MONITORING_VALUES}" ]; then
+    cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
     if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
     else
-      sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
+      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
     fi
-    echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}. Keep this file handy as you'll need it to customize your Grafana installation.\n"
+    echo -e "\nCreated Monitoring custom values yaml: ${MONITORING_VALUES}. Keep this file handy as you'll need it to customize your Monitoring installation.\n"
   fi
 
   if [ "${PROMETHEUS}" == "install" ]; then
     echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
 
-    helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 10.3.1
-    kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
+    helm dep up ./monitoring/helm/fusion-monitoring
 
-    helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
-    kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
+    helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+      --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
+      --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
+      --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
+      --set-file grafana.dashboards.default.dashboard_query_pipeline.json=monitoring/grafana/dashboard_query_pipeline.json \
+      --set-file grafana.dashboards.default.dashboard_solr_core.json=monitoring/grafana/dashboard_solr_core.json \
+      --set-file grafana.dashboards.default.dashboard_solr_node.json=monitoring/grafana/dashboard_solr_node.json \
+      --set-file grafana.dashboards.default.dashboard_solr_system.json=monitoring/grafana/dashboard_solr_system.json \
+      --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json \
+      --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
+      --wait --render-subchart-notes
 
-    echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"
+    echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
   fi
 
 fi
