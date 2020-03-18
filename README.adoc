@@ -60,8 +60,36 @@ brew upgrade kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
-The Fusion helm chart requires that helm is greater than version `2.12.0` but Lucidworks recommends upgrading to Helm v3.
+The Fusion helm chart requires that helm is greater than version `3.0.0`
 Check your Helm version by running `helm version`.
+
+==== Helm User Permissions
+
+If you require that fusion is installed by a user with minimal permissions, instead of
+an admin user, then the role and cluster role that will have to be assigned to the user
+within the namespace that you wish to install fusion in are documented in the `install-roles`
+directory.
+
+To use these role in a cluster, as an admin user first create the namespace that you wish to
+install fusion into:
+```
+k create namespace fusion-namespace
+```
+Apply the `role.yaml` and `cluster-role.yaml` files to that namespace
+
+```
+k apply -f cluster-role.yaml
+k apply -f --namespace fusion-namespace role.yaml
+```
+
+Then bind the rolebinding and clusterolebinding to the install user:
+
+```
+k create --namespace fusion-namespace rolebinding fusion-install-rolebinding --role fusion-installer --user <install_user>
+k create clusterrolebinding fusion-install-rolebinding --clusterrole fusion-installer --user <install_user>
+```
+
+You will then be able to run the `helm install` command as the `<install_user>`
 
 === Clone fusion-cloud-native from Github
 
