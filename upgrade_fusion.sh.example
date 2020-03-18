@@ -10,6 +10,10 @@ NAMESPACE=<NAMESPACE>
 CHART_VERSION=<CHART_VERSION>
 
 MY_VALUES="--values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
+<RESOURCES_YAML>
+<AFFINITY_YAML>
+<REPLICAS_YAML>
+
 # TODO: append more --values <file> args here as needed for your installation
 #MY_VALUES="${MY_VALUES} --values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"
 
@@ -19,7 +23,14 @@ if [ "${current_context}" == "" ]; then
   exit 1
 fi
 
+if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  kubectl create namespace "${NAMESPACE}"
+  OWNER_LABEL="${who_am_i//@/-}"
+  kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+  echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
+fi
+
 helm repo update
 
 echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES}"
-helm upgrade ${RELEASE} "lucidworks/fusion" --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
+helm upgrade ${RELEASE} "lucidworks/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}

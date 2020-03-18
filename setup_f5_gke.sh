@@ -260,6 +260,11 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
+if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
+  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
+  exit 1
+fi
+
 gcloud --version > /dev/null 2<&1
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
@@ -445,7 +450,7 @@ if [ ! -z "${INGRESS_VALUES}" ]; then
       PROMETHEUS_ON=false
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider "gke" --prometheus $PROMETHEUS_ON \
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --provider "gke" --prometheus $PROMETHEUS_ON \
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
     VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
   fi

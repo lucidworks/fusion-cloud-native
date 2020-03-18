@@ -2,11 +2,15 @@
 
 NODE_POOL=""
 SOLR_REPLICAS=3
-RELEASE=f5
 CLUSTER_NAME=
 PROMETHEUS_ON=true
 SOLR_DISK_GB=50
 PROVIDER=gke
+RESOURCES=false
+AFFINITY=false
+REPLICAS=false
+CHART_VERSION="5.1.0"
+NAMESPACE=default
 
 function print_usage() {
   CMD="$1"
@@ -18,13 +22,18 @@ function print_usage() {
 
   echo -e "\nUse this script to create a custom Fusion values yaml from a template"
   echo -e "\nUsage: $CMD <yaml-file-to-create> [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c               Cluster name (required)\n"
-  echo -e "  -r               Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  --provider       Name of your K8s provider, e.g. eks, aks, gke; defaults to 'gke'\n"
-  echo -e "  --prometheus     Enable Prometheus? true or false, defaults to true\n"
-  echo -e "  --num-solr       Number of Solr pods to deploy, defaults to 3\n"
-  echo -e "  --solr-disk-gb   Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
-  echo -e "  --node-pool      Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;\n                    defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  -c                      Cluster name (required)\n"
+  echo -e "  -n                      Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -r                      Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke; defaults to 'gke'\n"
+  echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
+  echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
+  echo -e "  --solr-disk-gb          Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --node-pool             Node pool label to assign pods to specific nodes, this option is only useful for existing\n                          clusters where you defined a custom node pool; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  --with-resource-limits  Flag to enable resource limits yaml, defaults to off\n"
+  echo -e "  --with-affinity-rules   Flag to enable pod affinity rules yaml, defaults to off\n"
+  echo -e "  --with-replicas         Flag to enable replicas yaml, defaults to off\n"
+  echo -e "\nIf you omit the <yaml-file-to-create> arg, then the script will create it using the naming convention:\n       <provider>_<cluster>_<release>_fusion_values.yaml\n"
 }
 
 SCRIPT_CMD="$0"
@@ -36,7 +45,13 @@ if [ "$MY_VALUES" == "" ]; then
 fi
 
 # start parsing
-shift 1
+if [[ $MY_VALUES == -* ]] ; then
+  # they didn't pass us the file name, so we'll compute it ..
+  MY_VALUES="" # clear and compute after processing args
+else
+  # assume $1 is the values file name they want ...
+  shift 1
+fi
 
 if [ $# -gt 1 ]; then
   while true; do
@@ -47,6 +62,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             CLUSTER_NAME="$2"
+            shift 2
+        ;;
+        -n)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -n parameter!"
+              exit 1
+            fi
+            NAMESPACE="$2"
             shift 2
         ;;
         -r)
@@ -72,6 +95,18 @@ if [ $# -gt 1 ]; then
             fi
             PROMETHEUS_ON="$2"
             shift 2
+        ;;
+        --with-resource-limits)
+            RESOURCES="true"
+            shift 1
+        ;;
+        --with-affinity-rules)
+            AFFINITY="true"
+            shift 1
+        ;;
+        --with-replicas)
+            REPLICAS="true"
+            shift 1
         ;;
         --num-solr)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
@@ -117,9 +152,33 @@ if [ $# -gt 1 ]; then
   done
 fi
 
+valid="0-9a-zA-Z_\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
 if [ "$CLUSTER_NAME" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the K8s cluster name using: -c <cluster>"
   exit 1
+fi
+
+if [ "$MY_VALUES" == "" ]; then
+  MY_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 fi
 
 if [ "${NODE_POOL}" == "" ]; then
@@ -130,6 +189,11 @@ if [ "${NODE_POOL}" == "" ]; then
   else
     NODE_POOL="{}"
   fi
+fi
+
+if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
+  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
+  exit 1
 fi
 
 cp customize_fusion_values.yaml.example $MY_VALUES
@@ -162,3 +226,75 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
     echo -e "\nCreated Monitoring custom values yaml: ${MONITORING_VALUES}. Keep this file handy as you'll need it to customize your Monitoring installation.\n"
   fi
 fi
+
+UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
+cp upgrade_fusion.sh.example $UPGRADE_SCRIPT
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+else
+  sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+fi
+
+if [ "$RESOURCES" == "true" ]; then
+  resyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_resources.yaml"
+  cp example-values/resources.yaml $resyaml
+  replace="MY_VALUES=\"\$MY_VALUES --values ${resyaml}\""
+
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<RESOURCES_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<RESOURCES_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  fi
+else
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+  fi
+fi
+
+if [ "$AFFINITY" == "true" ]; then
+  affyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"
+  cp example-values/affinity.yaml $affyaml
+  replace="MY_VALUES=\"\$MY_VALUES --values ${affyaml}\""
+
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<AFFINITY_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<AFFINITY_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  fi
+else
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+  fi
+fi
+
+if [ "$REPLICAS" == "true" ]; then
+  repyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_replicas.yaml"
+  cp example-values/replicas.yaml $repyaml
+  replace="MY_VALUES=\"\$MY_VALUES --values ${repyaml}\""
+
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<REPLICAS_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<REPLICAS_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+  fi
+else
+  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    sed -i -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
+  else
+    sed -i '' -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
+  fi
+fi
+
+echo -e "\nCreate $UPGRADE_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"

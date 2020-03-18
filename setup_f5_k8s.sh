@@ -377,7 +377,7 @@ if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
       NODE_POOL="{}"
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON \
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON \
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists.\n"
@@ -527,11 +527,17 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sed -i -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
   sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
   sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
 else
   sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
   sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
   sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
   sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
   sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
 fi
 echo -e "\nCreating $UPGRADE_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"

@@ -88,9 +88,7 @@ TIP: Keep the custom values YAML file in version control.  You will need to make
 . In your local copy of the fusion-cloud-native repo, run the `customize_fusion_values.sh` utility script to create a working copy of the custom values YAML file:
 +
 ```
-./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
-  -c <CLUSTER> \
-  -r <RELEASE> \
+./customize_fusion_values.sh  -c <CLUSTER> -n <NAMESPACE> \
   --num-solr 3 \
   --solr-disk-gb 100 \
   --prometheus true
@@ -101,7 +99,7 @@ You should name your custom values YAML file using the convention shown above, s
 --
 * `<provider>` is the K8s platform you’re running on, such as GKE.
 * `<cluster>` is the name of your cluster.
-* `<release>` is the name you give to your Fusion release, such as `f5`.
+* `<namespace>` is the K8s namespace where you want to install Fusion
 --
 +
 The script produces three output files:

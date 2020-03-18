@@ -231,6 +231,11 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
+if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
+  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
+  exit 1
+fi
+
 DEFAULT_MY_VALUES="eks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 hash aws
