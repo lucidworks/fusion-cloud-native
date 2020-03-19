@@ -191,21 +191,23 @@ if [ "${NODE_POOL}" == "" ]; then
   fi
 fi
 
-if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
-  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
-  exit 1
+ZK_REPLICAS=1
+if (( SOLR_REPLICAS > 2 )); then 
+  ZK_REPLICAS=3
 fi
 
 cp customize_fusion_values.yaml.example $MY_VALUES
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i -e "s|{ZK_REPLICAS}|${ZK_REPLICAS}|g" "$MY_VALUES"
   sed -i -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
   sed -i -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
 else
   sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i '' -e "s|{ZK_REPLICAS}|${ZK_REPLICAS}|g" "$MY_VALUES"
   sed -i '' -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i '' -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
