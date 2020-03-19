@@ -260,11 +260,6 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
-if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
-  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
-  exit 1
-fi
-
 gcloud --version > /dev/null 2<&1
 has_prereq=$?
 if [ $has_prereq == 1 ]; then

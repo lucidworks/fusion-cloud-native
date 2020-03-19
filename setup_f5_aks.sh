@@ -239,11 +239,6 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
-if [ "$SOLR_REPLICAS" != "1" ] && [ "$SOLR_REPLICAS" != "3" ]; then
-  echo -e "\nERROR: Please specify either 1 or 3 Solr replicas initially. You can add more later as needed.\n"
-  exit 1
-fi
-
 DEFAULT_MY_VALUES="aks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
 if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
@@ -570,4 +565,3 @@ source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "aks" -n "$
   --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
 exit $setup_result
-
