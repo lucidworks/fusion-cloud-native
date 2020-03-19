@@ -258,6 +258,7 @@ elif [ "$PURGE" == "1" ]; then
 
     if [ "$is_helm_v3" != "" ]; then
       helm delete ${RELEASE} --namespace ${NAMESPACE}
+      helm delete ${RELEASE}-monitoring --namespace ${NAMESPACE}
       helm delete ${RELEASE}-prom --namespace ${NAMESPACE}
       helm delete ${RELEASE}-graf --namespace ${NAMESPACE}
     else
@@ -390,11 +391,9 @@ if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
 fi
 
 # if we're installing, then wait up to 60s to see the metrics server online, which seems to help make installs more robust on new clusters
-if [ "$UPGRADE" != "1" ]; then
-  metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-  kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
-  echo ""
-fi
+metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+echo ""
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
   if [ "${UPGRADE}" != "1" ]; then
