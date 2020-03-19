@@ -1,5 +1,5 @@
 global:
-  zkReplicaCount: {SOLR_REPLICAS}
+  zkReplicaCount: {ZK_REPLICAS}
 
 sql-service:
   enabled: false
@@ -35,7 +35,7 @@ solr:
 zookeeper:
   nodeSelector:
     {NODE_POOL}
-  replicaCount: {SOLR_REPLICAS}
+  replicaCount: {ZK_REPLICAS}
   persistence:
     size: 15Gi
   resources: {}
