@@ -11,6 +11,8 @@ AFFINITY=false
 REPLICAS=false
 CHART_VERSION="5.1.0"
 NAMESPACE=default
+OUTPUT_SCRIPT=""
+ADDITIONAL_VALUES=()
 
 function print_usage() {
   CMD="$1"
@@ -33,6 +35,8 @@ function print_usage() {
   echo -e "  --with-resource-limits  Flag to enable resource limits yaml, defaults to off\n"
   echo -e "  --with-affinity-rules   Flag to enable pod affinity rules yaml, defaults to off\n"
   echo -e "  --with-replicas         Flag to enable replicas yaml, defaults to off\n"
+  echo -e "  --additional-values     Additional values files to add to the upgrade script, may be specified multiple times\n"
+  echo -e "  --output-script         The name of the generated upgrade script, defaults to <provider>_<cluster_name>_<release>_upgrade_fusion.sh \n"
   echo -e "\nIf you omit the <yaml-file-to-create> arg, then the script will create it using the naming convention:\n       <provider>_<cluster>_<release>_fusion_values.yaml\n"
 }
 
@@ -108,6 +112,14 @@ if [ $# -gt 1 ]; then
             REPLICAS="true"
             shift 1
         ;;
+        --additional-values)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --additional-values parameter!"
+              exit 1
+            fi
+            ADDITIONAL_VALUES+=("$2")
+            shift 2
+        ;;
         --num-solr)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --num-solr parameter!"
@@ -130,6 +142,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             NODE_POOL="$2"
+            shift 2
+        ;;
+        --output-script)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --output-script parameter!"
+              exit 1
+            fi
+            OUTPUT_SCRIPT="$2"
             shift 2
         ;;
         -help|-usage|--help|--usage)
@@ -181,6 +201,10 @@ if [ "$MY_VALUES" == "" ]; then
   MY_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 fi
 
+if [ "${OUTPUT_SCRIPT}" == "" ]; then
+  OUTPUT_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
+fi
+
 if [ "${NODE_POOL}" == "" ]; then
   if [ "${PROVIDER}" == "eks" ]; then
     NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
@@ -192,7 +216,7 @@ if [ "${NODE_POOL}" == "" ]; then
 fi
 
 ZK_REPLICAS=1
-if (( SOLR_REPLICAS > 2 )); then 
+if (( SOLR_REPLICAS > 2 )); then
   ZK_REPLICAS=3
 fi
 
@@ -213,6 +237,8 @@ else
   sed -i '' -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
 fi
 echo -e "\nCreated Fusion custom values yaml: ${MY_VALUES}\n"
+BASE_CUSTOM_VALUES_REPLACE="MY_VALUES=\"\$MY_VALUES --values ${MY_VALUES}\""
+
 
 if [ "$PROMETHEUS_ON" == "true" ]; then
   MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
@@ -229,74 +255,90 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
   fi
 fi
 
-UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
-cp upgrade_fusion.sh.example $UPGRADE_SCRIPT
+cp upgrade_fusion.sh.example "${OUTPUT_SCRIPT}"
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+  sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$OUTPUT_SCRIPT"
+  sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$OUTPUT_SCRIPT"
+  sed -i -e "s|<RELEASE>|${RELEASE}|g" "$OUTPUT_SCRIPT"
+  sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$OUTPUT_SCRIPT"
+  sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$OUTPUT_SCRIPT"
+  sed -i -e "s|<BASE_CUSTOM_VALUES>|${BASE_CUSTOM_VALUES_REPLACE}|g" "${OUTPUT_SCRIPT}"
+
 else
-  sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
+  sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$OUTPUT_SCRIPT"
+  sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$OUTPUT_SCRIPT"
+  sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$OUTPUT_SCRIPT"
+  sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$OUTPUT_SCRIPT"
+  sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$OUTPUT_SCRIPT"
+  sed -i '' -e "s|<BASE_CUSTOM_VALUES>|${BASE_CUSTOM_VALUES_REPLACE}|g" "${OUTPUT_SCRIPT}"
 fi
 
 if [ "$RESOURCES" == "true" ]; then
   resyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_resources.yaml"
-  cp example-values/resources.yaml $resyaml
+  cp example-values/resources.yaml "${resyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${resyaml}\""
 
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<RESOURCES_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<RESOURCES_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<RESOURCES_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<RESOURCES_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<RESOURCES_YAML>||g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<RESOURCES_YAML>||g" "$OUTPUT_SCRIPT"
   fi
 fi
 
 if [ "$AFFINITY" == "true" ]; then
   affyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"
-  cp example-values/affinity.yaml $affyaml
+  cp example-values/affinity.yaml "${affyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${affyaml}\""
 
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<AFFINITY_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<AFFINITY_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<AFFINITY_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<AFFINITY_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<AFFINITY_YAML>||g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<AFFINITY_YAML>||g" "$OUTPUT_SCRIPT"
   fi
 fi
 
 if [ "$REPLICAS" == "true" ]; then
   repyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_replicas.yaml"
-  cp example-values/replicas.yaml $repyaml
+  cp example-values/replicas.yaml "${repyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${repyaml}\""
 
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<REPLICAS_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<REPLICAS_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<REPLICAS_YAML>|${replace}|g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<REPLICAS_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i -e "s|<REPLICAS_YAML>||g" "$OUTPUT_SCRIPT"
   else
-    sed -i '' -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
+    sed -i '' -e "s|<REPLICAS_YAML>||g" "$OUTPUT_SCRIPT"
   fi
 fi
 
-echo -e "\nCreate $UPGRADE_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
+ADDITIONAL_VALUES_STRING=""
+if [ ! -z "${ADDITIONAL_VALUES[*]}" ]; then
+  for v in "${ADDITIONAL_VALUES[@]}"; do
+    ADDITIONAL_VALUES_STRING="${ADDITIONAL_VALUES_STRING} --values ${v}"
+  done
+  ADDITIONAL_VALUES_STRING="MY_VALUES=\"\$MY_VALUES $ADDITIONAL_VALUES_STRING\""
+fi
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  sed -i -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
+else
+  sed -i '' -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
+fi
+
+
+echo -e "\nCreate $OUTPUT_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
