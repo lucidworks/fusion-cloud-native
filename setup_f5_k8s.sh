@@ -414,6 +414,10 @@ done
 
 # If we are not upgrading then generate the values files and upgrade script
 if [ "$UPGRADE" != "1" ]; then
+  if [ -f "${UPGRADE_SCRIPT}" ]; then
+    echo "There is already an upgrade script ${UPGRADE_SCRIPT} present, please use a new release name or upgrade your current release"
+    exit 1
+  fi
   if [ ! -f "${DEFAULT_MY_VALUES}" ]; then
 
     PROMETHEUS_ON=true
@@ -450,7 +454,7 @@ set -e
 ( "${SCRIPT_DIR}/${UPGRADE_SCRIPT}" "${DRY_RUN}" )
 set +e
 
-if [ ! -z "${INGRESS_HOSTNAME}"]; then
+if [ ! -z "${INGRESS_HOSTNAME}" ]; then
   ingress_setup
 else
   proxy_url
