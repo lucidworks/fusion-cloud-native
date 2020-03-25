@@ -114,6 +114,25 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
+if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
+  echo -e "\nAdding the stable chart repo to helm repo list"
+  helm repo add stable https://kubernetes-charts.storage.googleapis.com
+fi
+
+if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  kubectl create namespace "${NAMESPACE}"
+  if [ "$PROVIDER" == "gke" ]; then
+    who_am_i=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+  else
+    who_am_i=""
+  fi
+  OWNER_LABEL="${who_am_i//@/-}"
+  if [ "${OWNER_LABEL}" != "" ]; then
+    kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+  fi
+  echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
+fi
+
 if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-monitoring"; then
   echo -e "\nERROR: There is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-monitoring\n"
   exit 1

@@ -2,10 +2,12 @@
 
 # Platform agnostic script used by the other setup_f5_*.sh scripts to perform general K8s and Helm commands to install Fusion.
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 CHART_VERSION="5.1.0"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
+TLS_ENABLED="0"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 CLUSTER_NAME=
@@ -17,7 +19,8 @@ CUSTOM_MY_VALUES=()
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
-NODE_POOL=""
+SOLR_REPLICAS=1
+NODE_POOL="{}"
 
 function print_usage() {
   CMD="$1"
@@ -29,24 +32,27 @@ function print_usage() {
 
   echo -e "\nUse this script to install Fusion 5 on an existing Kubernetes cluster"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c            Name of the K8s cluster (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  --provider    Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'k8s'\n"
-  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
-  echo -e "                where you defined a custom node pool, wrap the arg in double-quotes\n"
-  echo -e "  --ingress     Ingress hostname\n"
-  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
-  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
-  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
-  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values      Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
-  echo -e "                (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
-  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --dry-run     Perform a dry-run of the upgrade to see what would change\n"
-  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster."
-  echo -e "                Be careful! This operation cannot be undone.\n"
-  echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
+  echo -e "  -c                Name of the K8s cluster (required)\n"
+  echo -e "  -r                Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  --provider        Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'k8s'\n"
+  echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
+  echo -e "                    where you defined a custom node pool, wrap the arg in double-quotes\n"
+  echo -e "  --ingress         Ingress hostname\n"
+  echo -e "  --tls             Whether tls on the ingress\n"
+  echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                    'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --version         Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values          Custom values file containing config overrides in addition to the default gke_<cluster>_<namespace>_fusion_values.yaml"
+  echo -e "                    (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
+  echo -e "  --upgrade         Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run         Perform a dry-run of the upgrade to see what would change\n"
+  echo -e "  --purge           Uninstall and purge all Fusion objects from the specified namespace and cluster."
+  echo -e "                    Be careful! This operation cannot be undone.\n"
+  echo -e "  --force           Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
+  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
 }
 
 if [ $# -gt 0 ]; then
@@ -92,6 +98,10 @@ if [ $# -gt 0 ]; then
             INGRESS_HOSTNAME="$2"
             shift 2
         ;;
+        --tls)
+            TLS_ENABLED=1
+            shift 1
+        ;;
         --prometheus)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --prometheus parameter!"
@@ -100,6 +110,23 @@ if [ $# -gt 0 ]; then
             PROMETHEUS="$2"
             shift 2
         ;;
+        --num-solr)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-solr parameter!"
+              exit 1
+            fi
+            SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --solr-disk-gb)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --solr-disk-gb parameter!"
+              exit 1
+            fi
+            SOLR_DISK_GB=$2
+            shift 2
+        ;;
+
         --node-pool)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
@@ -160,6 +187,7 @@ if [ $# -gt 0 ]; then
   done
 fi
 
+# Sanity check we have the required variables
 if [ "$CLUSTER_NAME" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the Kubernetes cluster name using: -c <cluster>"
   exit 1
@@ -185,8 +213,13 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
+# The default values file that will be created for the cluster
 DEFAULT_MY_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 
+# The name of the upgrade script that will be created to upgrade fusion
+UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
+
+# Check our prerequisites are in place
 hash kubectl
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
@@ -201,9 +234,22 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+# Log our current kube context for the user
 current=$(kubectl config current-context)
-echo -e "\nUsing kubeconfig: $current\n"
+echo -e "Using kubeconfig: $current"
 
+# Setup our owner label so we can check ownership of namespaces
+if [ "$PROVIDER" == "gke" ]; then
+  who_am_i=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+else
+  who_am_i=""
+fi
+OWNER_LABEL="${who_am_i//@/-}"
+
+echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
+
+# Determine if we have helm v3
+# TODO drop support for helm v2
 is_helm_v3=$(helm version --short | grep v3)
 
 if [ "${is_helm_v3}" == "" ]; then
@@ -221,11 +267,11 @@ else
   echo -e "Using Helm v3 ($is_helm_v3)"
 fi
 
+# If we are upgrading
 if [ "${UPGRADE}" == "1" ]; then
-
-  kubectl get namespace "${NAMESPACE}"
-  namespace_exists=$?
-  if [ "$namespace_exists" != "0" ]; then
+  # Make sure the namespace exists
+  if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+    echo -e "\nNamespace ${NAMESPACE} not found, if this is a new cluster please run an install first"
     exit 1
   fi
 
@@ -233,14 +279,14 @@ if [ "${UPGRADE}" == "1" ]; then
   # accidentally upgrade a release from someone elses namespace
   namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
   if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
-    echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to upgrade this namespace"
+    echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to upgrade this namespace"
     exit 1
   fi
 elif [ "$PURGE" == "1" ]; then
-
   kubectl get namespace "${NAMESPACE}"
   namespace_exists=$?
   if [ "$namespace_exists" != "0" ]; then
+    echo -e "\nNamespace ${NAMESPACE} not found so assuming ${RELEASE_NAME} has already been purged"
     exit 1
   fi
 
@@ -248,7 +294,7 @@ elif [ "$PURGE" == "1" ]; then
   # accidentally purge someone elses release
   namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
   if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
-    echo -e "Namespace "${NAMESPACE}" is owned by: ${namespace_owner}, by we are: "${OWNER_LABEL}" please provide the --force parameter if you are sure you wish to purge this namespace"
+    echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to purge this namespace"
     exit 1
   fi
 
@@ -257,21 +303,21 @@ elif [ "$PURGE" == "1" ]; then
   if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
 
     if [ "$is_helm_v3" != "" ]; then
-      helm delete ${RELEASE} --namespace ${NAMESPACE}
-      helm delete ${RELEASE}-monitoring --namespace ${NAMESPACE}
-      helm delete ${RELEASE}-prom --namespace ${NAMESPACE}
-      helm delete ${RELEASE}-graf --namespace ${NAMESPACE}
+      helm delete "${RELEASE}" --namespace "${NAMESPACE}"
+      helm delete "${RELEASE}-monitoring" --namespace "${NAMESPACE}"
+      helm delete "${RELEASE}-prom" --namespace "${NAMESPACE}"
+      helm delete "${RELEASE}-graf" --namespace "${NAMESPACE}"
     else
-      helm del --purge ${RELEASE}
+      helm del --purge "${RELEASE}"
     fi
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job ${RELEASE}-api-gateway --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
+    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
     kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
     kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l release=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app.kubernetes.io/instance=${RELEASE} --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    kubectl delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete serviceaccount --namespace "${NAMESPACE}" ${RELEASE}-api-gateway-jks-create
+    kubectl delete serviceaccount --namespace "${NAMESPACE}" "${RELEASE}-api-gateway-jks-create"
     if [ "${NAMESPACE}" != "default" ] && [ "${NAMESPACE}" != "kube-public" ] && [ "${NAMESPACE}" != "kube-system" ]; then
       kubectl delete namespace "${NAMESPACE}" --grace-period=0 --force --timeout=10s
     fi
@@ -302,14 +348,15 @@ else
   # We should be good to install now
 fi
 
+# report_ns logs a message to the user informing them how to change the default namespace
 function report_ns() {
   if [ "${NAMESPACE}" != "default" ]; then
     echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
   fi
 }
 
+# proxy_url prints how to access the proxy via a LoadBalancer service
 function proxy_url() {
-
   if [ "${PROVIDER}" == "eks" ]; then
     export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
   else
@@ -329,9 +376,8 @@ function proxy_url() {
   fi
 }
 
+# ingress_setup informs the user how to finish setting up the DNS records for their ingress with hostname
 function ingress_setup() {
-  # Patch yaml for now, until fix gets into helm charts
-  kubectl patch --namespace "${NAMESPACE}" ingress "${RELEASE}-api-gateway" -p "{\"spec\":{\"rules\":[{\"host\": \"${INGRESS_HOSTNAME}\", \"http\":{\"paths\":[{\"backend\": {\"serviceName\": \"proxy\", \"servicePort\": 6764}, \"path\": \"/*\"}]}}]}}"
   echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
   loops=24
   while (( loops > 0 )); do
@@ -346,107 +392,14 @@ function ingress_setup() {
   done
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
+  if [ "$TLS_ENABLED" == "1" ]; then
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
-  echo -e "Add the contents of tls-values.yaml to ${DEFAULT_MY_VALUES} under the api-gateway section."
+  fi
   report_ns
 }
 
-lw_helm_repo=lucidworks
-
-if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
-  echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-  helm repo add ${lw_helm_repo} https://charts.lucidworks.com
-fi
-
-if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
-  echo -e "\nAdding the stable chart repo to helm repo list"
-  helm repo add stable https://kubernetes-charts.storage.googleapis.com
-fi
-
-# If no custom values are passed, and we are not upgrading, then supply a default values yaml
-if [ -z $CUSTOM_MY_VALUES ] && [ "$UPGRADE" != "1" ]; then
-  if [ ! -f "${DEFAULT_MY_VALUES}" ]; then
-
-    CREATED_MY_VALUES=1
-
-    PROMETHEUS_ON=true
-    if [ "${PROMETHEUS}" == "none" ]; then
-      PROMETHEUS_ON=false
-    fi
-
-    if [ "${NODE_POOL}" == "" ]; then
-      NODE_POOL="{}"
-    fi
-
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --provider ${PROVIDER} --prometheus $PROMETHEUS_ON \
-      --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
-  else
-    echo -e "\nValues file $DEFAULT_MY_VALUES already exists.\n"
-  fi
-  MY_VALUES=( ${DEFAULT_MY_VALUES} )
-fi
-
 if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
   MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
-# if we're installing, then wait up to 60s to see the metrics server online, which seems to help make installs more robust on new clusters
-metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
-echo ""
-
-if ! kubectl get namespace "${NAMESPACE}" > /dev/null; then
-  if [ "${UPGRADE}" != "1" ]; then
-    kubectl create namespace "${NAMESPACE}"
-    kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
-  fi
-fi
-
-# Make sure we have all the updated charts
-helm repo update
-
-# Don't mess with upgrading the Prom / Grafana charts during upgrade
-# just let the user do that manually with Helm as needed
-if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
-
-  if [ "${NODE_POOL}" == "" ]; then
-    NODE_POOL="{}"
-  fi
-
-
-  MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
-  if [ ! -f "${MONITORING_VALUES}" ]; then
-    cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
-      sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
-      sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
-    else
-      sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
-      sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
-    fi
-    echo -e "\nCreated Monitoring custom values yaml: ${MONITORING_VALUES}. Keep this file handy as you'll need it to customize your Monitoring installation.\n"
-  fi
-
-  if [ "${PROMETHEUS}" == "install" ]; then
-    echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
-
-    helm dep up ./monitoring/helm/fusion-monitoring
-
-    helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
-      --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
-      --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
-      --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
-      --set-file grafana.dashboards.default.dashboard_query_pipeline.json=monitoring/grafana/dashboard_query_pipeline.json \
-      --set-file grafana.dashboards.default.dashboard_solr_core.json=monitoring/grafana/dashboard_solr_core.json \
-      --set-file grafana.dashboards.default.dashboard_solr_node.json=monitoring/grafana/dashboard_solr_node.json \
-      --set-file grafana.dashboards.default.dashboard_solr_system.json=monitoring/grafana/dashboard_solr_system.json \
-      --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json \
-      --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
-      --wait --render-subchart-notes
-
-    echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
-  fi
-
 fi
 
 # build up a list of multiple --values args to pass to Helm
@@ -456,87 +409,53 @@ for v in "${MY_VALUES[@]}"; do
     echo -e "\nERROR: Custom values file ${v} not found! Please check your --values arg(s)\n"
     exit 1
   fi
-  VALUES_STRING="${VALUES_STRING} --values ${v}"
+  VALUES_STRING="${VALUES_STRING} --additional-values ${v}"
 done
 
-if [ "$UPGRADE" == "1" ]; then
+# If we are not upgrading then generate the values files and upgrade script
+if [ "$UPGRADE" != "1" ]; then
+  if [ -f "${UPGRADE_SCRIPT}" ]; then
+    echo "There is already an upgrade script ${UPGRADE_SCRIPT} present, please use a new release name or upgrade your current release"
+    exit 1
+  fi
+  if [ ! -f "${DEFAULT_MY_VALUES}" ]; then
 
-  if [ "${VALUES_STRING}" == "" ]; then
-    # no values passed to upgrade, but if the default exists, we'll just use it or error out
-    if [ -f "${DEFAULT_MY_VALUES}" ]; then
-      VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
-    else
-      echo -e "\nERROR: Missing one or more custom values yaml files for upgrade!\nAt a minimum, you must pass --values ${DEFAULT_MY_VALUES} to upgrade your cluster.\n"
-      exit 1
+    PROMETHEUS_ON=true
+    if [ "${PROMETHEUS}" == "none" ]; then
+      PROMETHEUS_ON=false
     fi
-  fi
 
-  if [ "${DRY_RUN}" == "" ]; then
-    echo -e "\nUpgrading the Fusion 5 release ${RELEASE} in namespace ${NAMESPACE} to version ${CHART_VERSION} with custom values from ${MY_VALUES[*]}"
+     ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --with-resource-limits --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
-    echo -e "\nSimulating an update of the Fusion ${RELEASE} installation into the ${NAMESPACE} namespace with custom values from ${MY_VALUES[*]}"
+    echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi
-
-  helm upgrade ${RELEASE} "${lw_helm_repo}/fusion" --namespace "${NAMESPACE}" ${VALUES_STRING} ${DRY_RUN} --version "${CHART_VERSION}"
-  upgrade_status=$?
-  if [ "${TLS_ENABLED}" == "1" ]; then
-    ingress_setup
-  else
-    proxy_url
-  fi
-  exit $upgrade_status
 fi
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES[*]}"
-echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES[*]} file(s) in version control.\n"
+# Don't mess with upgrading the Prom / Grafana charts during upgrade
+# just let the user do that manually with Helm as needed
+if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
+  if [ "${PROMETHEUS}" == "install" ]; then
+    ( "${SCRIPT_DIR}/install_prom.sh" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --node-pool "${NODE_POOL}" )
+  fi
+fi
+
+if [ "$UPGRADE" == "1" ]; then
+  if [ ! -f "${SCRIPT_DIR}/${UPGRADE_SCRIPT}" ]; then
+    echo -e "\nUpgrade script ${SCRIPT_DIR}/${UPGRADE_SCRIPT} not found, if this is a new cluster please run an install first"
+    exit 1
+  fi
+else
+  echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}}"
+fi
 
 # let's exit immediately if the helm install command fails
 set -e
-if [ "$is_helm_v3" != "" ]; then
-  if ! kubectl get namespace "${NAMESPACE}"; then
-    kubectl create namespace "${NAMESPACE}"
-  fi
-  # looks like Helm V3 doesn't like the -n parameter for the release name anymore
-  helm install "${RELEASE}" ${lw_helm_repo}/fusion --timeout=240s --namespace "${NAMESPACE}" ${VALUES_STRING} --version "${CHART_VERSION}"
-else
-  helm install ${lw_helm_repo}/fusion --timeout 240 --namespace "${NAMESPACE}" -n "${RELEASE}" ${VALUES_STRING} --version "${CHART_VERSION}"
-fi
+( "${SCRIPT_DIR}/${UPGRADE_SCRIPT}" "${DRY_RUN}" )
 set +e
 
-echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-echo -e "\nWaiting up to 2 minutes to see the Fusion Admin deployment come online ...\n"
-kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=120s --namespace "${NAMESPACE}"
-
-echo -e "\nHelm releases:"
-helm ls --namespace "${NAMESPACE}"
-
-if [ "${TLS_ENABLED}" == "1" ]; then
+if [ ! -z "${INGRESS_HOSTNAME}" ]; then
   ingress_setup
 else
   proxy_url
 fi
-kubectl config set-context --current --namespace=${NAMESPACE}
-
-UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
-cp upgrade_fusion.sh.example $UPGRADE_SCRIPT
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
-  sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
-  sed -i -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
-else
-  sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<RELEASE>|${RELEASE}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<RESOURCES_YAML>||g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<AFFINITY_YAML>||g" "$UPGRADE_SCRIPT"
-  sed -i '' -e "s|<REPLICAS_YAML>||g" "$UPGRADE_SCRIPT"
-fi
-echo -e "\nCreating $UPGRADE_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
