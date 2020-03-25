@@ -16,6 +16,7 @@ If you're currently running Fusion 5.0.0 - 5.0.1, then please follow the <<upgra
 . Prepare Upgrade Solr 8.4.1
 . Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
 . Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
 
 === Prepare for Upgrade to Solr 8.4.1
 
@@ -153,6 +154,38 @@ kubectl delete sts <RELEASE>-logstash
 ```
 
 You may now proceed to upgrade to Fusion 5.1.0. Be sure to update the `CHART_VERSION` to `5.1.0` in your upgrade script.
+
+=== Update Prometheus Scrape Path
+
+Please add the `prometheus.io/path: "/actuator/prometheus"` annotation to the `api-gateway`, `query-pipeline`, and `fusion-indexing` sections of your custom values yaml:
+```
+query-pipeline:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+api-gateway:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+fusion-indexing:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+```
+Also, we've added a new Grafana dashboard for monitoring Pulsar topic metrics, see: https://github.com/lucidworks/fusion-cloud-native/blob/master/monitoring/grafana/pulsar_grafana_dashboard.json
+
+We've also updated several of the existing Grafana dashboards. As of 5.1.0, the dashboards are imported automatically during installation, but pre-5.1.0 you needed to import the dashboards manually. Please re-import the latest updates from: https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana
 
 [[upgrade-to-502]]
 == Upgrade from 5.0.1 to 5.0.2 to Zookeeper 3.5.6 and Solr 8.3.1
