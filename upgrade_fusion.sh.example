@@ -17,7 +17,6 @@ MY_VALUES=""
 # TODO: append more --values <file> args here as needed for your installation
 #MY_VALUES="${MY_VALUES} --values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"
 
-
 DRY_RUN=""
 DRY_RUN_REQUESTED="${1:-}"
 
@@ -61,7 +60,7 @@ kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespac
 echo ""
 
 echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
-  echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the ${MY_VALUES//--values} file(s) in version control.\n"
+echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:\n${MY_VALUES//--values}\n"
 
 helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
 
@@ -76,3 +75,4 @@ if [ "$NAMESPACE" != "$current_ns" ]; then
 fi
 echo ""
 helm ls
+echo ""
