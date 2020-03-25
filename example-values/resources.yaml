@@ -2,6 +2,34 @@
 # components. In general these resources allow for overprovisioning of a node
 # If this is not desired then change the requested values to match the limits.
 
+# Let Solr take 1/2 of a n1-standard-4
+solr:
+  resources:
+    limits:
+      cpu: 1900m
+      memory: "8Gi"
+    requests:
+      cpu: 1400m
+      memory: "8Gi"
+
+pulsar:
+  broker:
+    resources:
+      requests:
+        cpu: 1200m
+        memory: 3Gi
+      limits:
+        cpu: 2400m
+        memory: 5Gi
+  bookkeeper:
+    resources:
+      requests:
+        cpu: 1200m
+        memory: 3Gi
+      limits:
+        cpu: 2400m
+        memory: 5Gi
+
 admin-ui:
   resources:
     limits:

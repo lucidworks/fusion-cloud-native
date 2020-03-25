@@ -600,8 +600,7 @@ Fusion aims to be well-configured out-of-the-box, but you can customize any of t
 
 If you're working with Helm directly and not using one of our setup scripts, then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[`customize_fusion_values.sh`^] script to create a custom values YAML file from our https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example`^] template as a starting point:
 ```
-./customize_fusion_values.sh <provider>_<cluster>_<release>_fusion_values.yaml \
-  -c <cluster> -r <release> \
+./customize_fusion_values.sh  -c <cluster> -n <namespace> \
   --provider <provider> --num-solr 1 --node-pool "<node_pool>"
 ```
 
@@ -610,7 +609,7 @@ NOTE: Pass `--help` for usage details.
 In this example:
 * `<provider>` is the K8s platform you're running on, such as `gke`
 * `<cluster>` is the name of your cluster
-* `<release>` is the name you give to your Fusion release, such as `f5`
+* `<namespace>` is the K8s namespace where you plan to install Fusion
 
 NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods. You can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.
 
@@ -618,16 +617,14 @@ This file is referred to as `${MY_VALUES}` in the commands belo. Replace the fil
 
 Review the settings in the custom values YAML file to ensure the defaults are appropriate for your environment, including the number of Solr and Zookeeper replicas.
 
+Add the Lucidworks Helm repo:
 ```
-RELEASE=f5
-NAMESPACE=default
-
-helm version --short
 helm repo add lucidworks https://charts.lucidworks.com
-helm repo update
-helm install ${RELEASE} lucidworks/fusion --timeout=240s --namespace "${NAMESPACE}" --values "${MY_VALUES}" --version 5.0.2
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 ```
+
+The `customize_fusion_values.sh` script creates an upgrade script to install/upgrade Fusion into Kubernetes using Helm. Look in the directory where you ran `customize_fusion_values.sh` for a script named like:
+`<provider>_<cluster>_<namespace>_upgrade_fusion.sh`. Run this script to install Fusion.
+
 // end::other[]
 
 ===  Upgrade Existing Installation with Helm V3

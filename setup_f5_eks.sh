@@ -1,4 +1,5 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE="m5.2xlarge"
 CHART_VERSION="5.1.0"
@@ -15,9 +16,7 @@ CREATE_MODE=
 PURGE=0
 FORCE=0
 AMI="auto"
-CUSTOM_MY_VALUES=()
 MY_VALUES=()
-ML_MODEL_STORE="fusion"
 DRY_RUN=""
 SOLR_DISK_GB=50
 
@@ -149,7 +148,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            CUSTOM_MY_VALUES+=("$2")
+            MY_VALUES+=("$2")
             shift 2
         ;;
         --create)
@@ -231,8 +230,6 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
-DEFAULT_MY_VALUES="eks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
-
 hash aws
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
@@ -276,6 +273,7 @@ if [ $has_prereq == 1 ]; then
   echo -e "\nERROR: Must install helm before proceeding with this script! See: https://helm.sh/docs/using_helm/#quickstart"
   exit 1
 fi
+
 
 aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" list-clusters --query "clusters" |  grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
@@ -337,7 +335,7 @@ if [ "$PURGE" == "1" ]; then
     FORCE_ARG=" --force"
   fi
 
-  source ./setup_f5_k8s.sh -c ${CLUSTER_NAME} -r ${RELEASE} -n ${NAMESPACE} --purge ${FORCE_ARG}
+  ( "${SCRIPT_DIR}/setup_f5_k8s.sh" -c "${CLUSTER_NAME}" -r "${RELEASE}" -n "${NAMESPACE}" --purge ${FORCE_ARG} )
   exit 0
 fi
 
@@ -348,44 +346,16 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
-lw_helm_repo=lucidworks
 
-echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-helm repo list | grep "https://charts.lucidworks.com"
-if [ $? ]; then
-  helm repo add "${lw_helm_repo}" https://charts.lucidworks.com
-fi
+echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 
-helm repo update
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES[*]}"
-
-if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
-  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
+# Pass in custom values
 VALUES_STRING=""
-if [ "${UPGRADE}" == "1" ] && [ -z "$MY_VALUES" ] && [ -f "${DEFAULT_MY_VALUES}" ]; then
-  MY_VALUES=( ${DEFAULT_MY_VALUES} )
-fi
-
 for v in "${MY_VALUES[@]}"; do
-  if [ ! -f "${v}" ]; then
-    echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
-    exit 1
-  fi
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
 
-if [ -z "${ADDITIONAL_VALUES}" ]; then
-  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
-fi
-
-# Invoke the generic K8s setup script to complete the install/upgrade
-INGRESS_ARG=""
-if [ ! -z "${INGRESS_HOSTNAME}" ]; then
-  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME}"
-fi
 
 UPGRADE_ARGS=""
 if [ "${UPGRADE}" == "1" ]; then
@@ -412,8 +382,8 @@ if [ "${NODE_POOL}" == "" ]; then
 fi
 
 # for debug only
-#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
-source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${UPGRADE_ARGS}"
+( "${SCRIPT_DIR}/setup_f5_k8s.sh" -c "$CLUSTER_NAME" -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
+  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" ${VALUES_STRING}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result

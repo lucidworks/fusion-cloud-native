@@ -7,21 +7,25 @@
   ],
   "set-policy": {
     "analytics": [
-      {"node": "#ANY", "shard": "#EACH", "replica":"<3", "strict": false},
-      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
+      {"replica" : "<3", "node":"#ANY"},
+      {"node": "#ANY", "shard": "#EACH", "replica":"<3"},
+      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH","strict": false},
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH","strict": false},
       {"replica": "#ALL", "sysprop.fusion_node_type": "analytics"}
     ],
     "search": [
+      {"replica" : "<2", "node":"#ANY"},
       {"node": "#ANY", "shard": "#EACH", "replica":"<2"},
+      {"replica": "#ALL", "type": "TLOG", "nodeset":{"sysprop.fusion_node_type": "analytics"}},
+      {"replica": "#ALL", "type": "PULL", "nodeset":{"sysprop.fusion_node_type": "search"}},
+      {"replica": "#ALL", "type": "NRT", "nodeset":{"sysprop.fusion_node_type": "search"}},
       {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
-      {"replica": "#ALL", "sysprop.fusion_node_type": "search"}
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false}
     ],
     "system": [
-      {"node": "#ANY", "shard": "#EACH", "replica":"<3", "strict": false},
-      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH", "strict": false},
-      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict": false},
+      {"node": "#ANY", "shard": "#EACH", "replica":"<3"},
+      {"replica":"#EQUAL", "shard":"#EACH", "sysprop.solr_zone":"#EACH","strict": false},
+      {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH","strict": false},
       {"replica": "#ALL", "sysprop.fusion_node_type": "system"}
     ]
   }

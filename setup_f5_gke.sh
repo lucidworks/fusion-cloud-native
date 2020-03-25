@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+
 INSTANCE_TYPE="n1-standard-4"
 CHART_VERSION="5.1.0"
 GKE_MASTER_VERSION="-"
@@ -15,7 +17,6 @@ GCS_BUCKET=
 CREATE_MODE=
 PURGE=0
 FORCE=0
-CUSTOM_MY_VALUES=()
 MY_VALUES=()
 ML_MODEL_STORE="fusion"
 DRY_RUN=""
@@ -175,7 +176,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            CUSTOM_MY_VALUES+=("$2")
+            MY_VALUES+=("$2")
             shift 2
         ;;
         --create)
@@ -375,6 +376,12 @@ fi
 gcloud container clusters get-credentials $CLUSTER_NAME
 current=$(kubectl config current-context)
 
+# Pass in custom values
+VALUES_STRING=""
+for v in "${MY_VALUES[@]}"; do
+  VALUES_STRING="${VALUES_STRING} --values ${v}"
+done
+
 INGRESS_VALUES=""
 if [ "${TLS_ENABLED}" == "1" ]; then
 
@@ -398,7 +405,7 @@ spec:
 EOF
 
   TLS_VALUES="tls-values.yaml"
-  INGRESS_VALUES="${INGRESS_VALUES} --values tls-values.yaml"
+  INGRESS_VALUES="${INGRESS_VALUES} --values tls-values.yaml --tls"
   tee "${TLS_VALUES}" << END
 api-gateway:
   service:
@@ -416,48 +423,13 @@ api-gateway:
 END
 fi
 
-DEFAULT_MY_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
-
-if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
-  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
-VALUES_STRING=""
-if [ "${UPGRADE}" == "1" ] && [ -z "$MY_VALUES" ] && [ -f "${DEFAULT_MY_VALUES}" ]; then
-  MY_VALUES=( ${DEFAULT_MY_VALUES} )
-fi
-
-for v in "${MY_VALUES[@]}"; do
-  if [ ! -f "${v}" ]; then
-    echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
-    exit 1
-  fi
-  VALUES_STRING="${VALUES_STRING} --values ${v}"
-done
-
-if [ ! -z "${INGRESS_VALUES}" ]; then
-  # since we're passing INGRESS_VALUES to the setup_f5_k8s script,
-  # we might need to create the default from the template too
-  if [ -z "${VALUES_STRING}" ] && [ "${UPGRADE}" != "1" ] && [ ! -f "${DEFAULT_MY_VALUES}" ]; then
-
-    PROMETHEUS_ON=true
-    if [ "${PROMETHEUS}" == "none" ]; then
-      PROMETHEUS_ON=false
-    fi
-
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -r $RELEASE --provider "gke" --prometheus $PROMETHEUS_ON \
-      --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
-    VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
-  fi
-
-  VALUES_STRING="${VALUES_STRING} ${INGRESS_VALUES}"
-fi
 
 # Invoke the generic K8s setup script to complete the install/upgrade
 INGRESS_ARG=""
 if [ ! -z "${INGRESS_HOSTNAME}" ]; then
-  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME}"
+  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME} ${INGRESS_VALUES}"
 fi
+
 
 UPGRADE_ARGS=""
 if [ "${UPGRADE}" == "1" ]; then
@@ -479,7 +451,7 @@ fi
 
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
-source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+( ${SCRIPT_DIR}/setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result
