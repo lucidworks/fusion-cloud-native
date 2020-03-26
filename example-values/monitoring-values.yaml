@@ -50,8 +50,8 @@ prometheus:
     statefulSet:
       enabled: true
     persistentVolume:
-      size: 10Gi
-    retention: 48h
+      size: 20Gi
+    retention: 36h
     global:
       scrape_interval: 5s
       scrape_timeout: 3s
