@@ -2,6 +2,33 @@
 # components. In general these resources allow for overprovisioning of a node
 # If this is not desired then change the requested values to match the limits.
 
+solr:
+  resources:
+    requests:
+      cpu: 900m
+      memory: "8Gi"
+    limits:
+      cpu: 1200m
+      memory: "8Gi"
+
+pulsar:
+  broker:
+    resources:
+      requests:
+        cpu: 800m
+        memory: 3Gi
+      limits:
+        cpu: 1400m
+        memory: 4Gi
+  bookkeeper:
+    resources:
+      requests:
+        cpu: 800m
+        memory: 3Gi
+      limits:
+        cpu: 1400m
+        memory: 4Gi
+
 admin-ui:
   resources:
     limits:
@@ -19,7 +46,7 @@ api-gateway:
       memory: "3Gi"
     requests:
       cpu: "500m"
-      memory: "1Gi"
+      memory: "2500Mi"
 
 auth-ui:
   resources:
@@ -125,7 +152,7 @@ query-pipeline:
       memory: "4Gi"
     requests:
       cpu: "500m"
-      memory: "2Gi"
+      memory: "2500Mi"
 
 rest-service:
   #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"

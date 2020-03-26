@@ -96,7 +96,7 @@ If you're running Prometheus and Grafana for monitoring the performance and heal
 +
 [source,bash]
 ----
-kubectl get secret --namespace "${NAMESPACE}" f5-graf-grafana \
+kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-monitoring-grafana \
   -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ----
 
@@ -104,7 +104,7 @@ kubectl get secret --namespace "${NAMESPACE}" f5-graf-grafana \
 +
 [source,bash]
 ----
-kubectl expose deployment ${RELEASE}-graf-grafana --type=LoadBalancer --name=grafana
+kubectl expose deployment ${RELEASE}-monitoring-grafana --type=LoadBalancer --name=grafana --port=3000 --target-port=3000
 ----
 
 . Use `kubectl get services --namespace <namespace>` to verify that the load balancer is set up and its IP address.

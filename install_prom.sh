@@ -1,9 +1,6 @@
 #!/bin/bash
 
 PROVIDER=gke
-CLUSTER_NAME=
-RELEASE=f5
-NAMESPACE=default
 NODE_POOL=""
 
 function print_usage() {
@@ -17,8 +14,8 @@ function print_usage() {
   echo -e "\nUse this script to install Prometheus and Grafana into an existing Fusion 5 cluster"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c            Name of the K8s cluster (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -n            Kubernetes namespace to install Fusion 5 into (required)\n"
+  echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
   echo -e "                where you defined a custom node pool, wrap the arg in double-quotes\n"
   echo -e "  --provider    Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'gke'\n"
@@ -92,13 +89,52 @@ if [ "$CLUSTER_NAME" == "" ]; then
   exit 1
 fi
 
-if [ "$RELEASE" == "" ]; then
-  print_usage "$SCRIPT_CMD" "Please provide the Helm release name using: -r <release>"
+if [ "$NAMESPACE" == "" ]; then
+  print_usage "$SCRIPT_CMD" "Please provide the K8s namespace using: -n <namespace>"
   exit 1
 fi
 
-if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-prom"; then
-  echo -e "\nERROR: There is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-prom\n"
+valid="0-9a-zA-Z_\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  exit 1
+fi
+
+if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
+  echo -e "\nAdding the stable chart repo to helm repo list"
+  helm repo add stable https://kubernetes-charts.storage.googleapis.com
+fi
+
+if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  kubectl create namespace "${NAMESPACE}"
+  if [ "$PROVIDER" == "gke" ]; then
+    who_am_i=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
+  else
+    who_am_i=""
+  fi
+  OWNER_LABEL="${who_am_i//@/-}"
+  if [ "${OWNER_LABEL}" != "" ]; then
+    kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+  fi
+  echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
+fi
+
+if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-monitoring"; then
+  echo -e "\nERROR: There is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-monitoring\n"
   exit 1
 fi
 
@@ -112,36 +148,35 @@ if [ "${NODE_POOL}" == "" ]; then
   fi
 fi
 
-PROMETHEUS_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_prom_values.yaml"
-if [ ! -f "${PROMETHEUS_VALUES}" ]; then
-  cp example-values/prometheus-values.yaml $PROMETHEUS_VALUES
+MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
+if [ ! -f "${MONITORING_VALUES}" ]; then
+  cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-    sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+    sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
   else
-    sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$PROMETHEUS_VALUES"
-    sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "$PROMETHEUS_VALUES"
+    sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
+    sed -i '' -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
   fi
-  echo -e "\nCreated Prometheus custom values yaml: ${PROMETHEUS_VALUES}. Keep this file handy as you'll need it to customize your Prometheus installation.\n"
+  echo -e "\nCreated Monitoring custom values yaml: ${MONITORING_VALUES}. Keep this file handy as you'll need it to customize your Monitoring installation.\n"
 fi
 
-GRAFANA_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_graf_values.yaml"
-if [ ! -f "${GRAFANA_VALUES}" ]; then
-  cp example-values/grafana-values.yaml $GRAFANA_VALUES
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
-  else
-    sed -i ''  -e "s|{NODE_POOL}|${NODE_POOL}|g" "$GRAFANA_VALUES"
-  fi
-  echo -e "\nCreated Grafana custom values yaml: ${GRAFANA_VALUES}. Keep this file handy as you'll need it to customize your Grafana installation.\n"
-fi
 
 echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
 
-helm upgrade ${RELEASE}-prom stable/prometheus --install --namespace "${NAMESPACE}" -f "$PROMETHEUS_VALUES" --version 9.0.0
-kubectl rollout status statefulsets/${RELEASE}-prom-prometheus-server --timeout=180s --namespace "${NAMESPACE}"
+helm dep up ./monitoring/helm/fusion-monitoring
 
-helm upgrade ${RELEASE}-graf stable/grafana --install --namespace "${NAMESPACE}" -f "$GRAFANA_VALUES"
-kubectl rollout status deployments/${RELEASE}-graf-grafana --timeout=60s --namespace "${NAMESPACE}"
+helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+  --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
+  --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
+  --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
+  --set-file grafana.dashboards.default.dashboard_query_pipeline.json=monitoring/grafana/dashboard_query_pipeline.json \
+  --set-file grafana.dashboards.default.dashboard_solr_core.json=monitoring/grafana/dashboard_solr_core.json \
+  --set-file grafana.dashboards.default.dashboard_solr_node.json=monitoring/grafana/dashboard_solr_node.json \
+  --set-file grafana.dashboards.default.dashboard_solr_system.json=monitoring/grafana/dashboard_solr_system.json \
+  --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json \
+  --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
+  --render-subchart-notes --wait
 
-echo -e "\n\nSuccessfully installed Prometheus (${RELEASE}-prom) and Grafana (${RELEASE}-graf) into the ${NAMESPACE} namespace.\n"
+echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
+helm ls
