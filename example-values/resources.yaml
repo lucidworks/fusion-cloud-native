@@ -2,7 +2,14 @@
 # components. In general these resources allow for overprovisioning of a node
 # If this is not desired then change the requested values to match the limits.
 
-# Note configure Solr requests in the main custom values yaml
+solr:
+  resources:
+    requests:
+      cpu: 900m
+      memory: "7Gi"
+    limits:
+      cpu: 1400m
+      memory: "8Gi"
 
 pulsar:
   broker:
