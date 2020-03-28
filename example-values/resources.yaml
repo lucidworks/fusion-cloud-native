@@ -5,29 +5,29 @@
 solr:
   resources:
     requests:
-      cpu: 900m
-      memory: "7Gi"
+      cpu: 700m
+      memory: "6Gi"
     limits:
-      cpu: 1400m
-      memory: "8Gi"
+      cpu: 1100m
+      memory: "6Gi"
 
 pulsar:
   broker:
     resources:
       requests:
-        cpu: 700m
-        memory: 3Gi
+        cpu: 600m
+        memory: 2500Mi
       limits:
-        cpu: 1100m
-        memory: 4Gi
+        cpu: 800m
+        memory: 3Gi
   bookkeeper:
     resources:
       requests:
         cpu: 700m
-        memory: 3Gi
+        memory: 2500Mi
       limits:
-        cpu: 1100m
-        memory: 4Gi
+        cpu: 800m
+        memory: 3Gi
 
 admin-ui:
   resources:
@@ -41,11 +41,11 @@ admin-ui:
 api-gateway:
   resources:
     requests:
-      cpu: "500m"
+      cpu: "400m"
       memory: "1500Mi"
     limits:
-      cpu: "1"
-      memory: "2Gi"
+      cpu: "900m"
+      memory: "1800Mi"
 
 auth-ui:
   resources:
@@ -59,11 +59,11 @@ auth-ui:
 classic-rest-service:
   resources:
     requests:
-      cpu: "500m"
+      cpu: "400m"
       memory: "1500Mi"
     limits:
-      cpu: "800m"
-      memory: "2Gi"
+      cpu: "600m"
+      memory: "2100Mi"
 
 devops-ui:
   resources:
@@ -77,20 +77,20 @@ devops-ui:
 fusion-admin:
   resources:
     requests:
-      cpu: "500m"
-      memory: "2Gi"
+      cpu: "400m"
+      memory: "1600Mi"
     limits:
       cpu: "800m"
-      memory: "2500Mi"
+      memory: "2300Mi"
 
 fusion-indexing:
   resources:
     requests:
-      cpu: "500m"
-      memory: "1500Mi"
+      cpu: "400m"
+      memory: "800Mi"
     limits:
-      cpu: "900m"
-      memory: "2Gi"
+      cpu: "700m"
+      memory: "1800Mi"
 
 insights:
   resources:
@@ -103,21 +103,21 @@ insights:
 
 job-launcher:
   resources:
-    limits:
-      memory: 1Gi
-      cpu: 1
     requests:
       memory: 600Mi
-      cpu: 500m
+      cpu: 300m
+    limits:
+      memory: 1200Mi
+      cpu: 700m
 
 job-rest-server:
   resources:
     requests:
-      memory: 1Gi
-      cpu: 250m
+      memory: 600Mi
+      cpu: 300m
     limits:
-      memory: 1.5Gi
-      cpu: 750m
+      memory: 1200Mi
+      cpu: 700m
 
 ml-model-service:
   pythonService:
@@ -141,28 +141,28 @@ query-pipeline:
   resources:
     requests:
       cpu: "500m"
-      memory: "2500Mi"
+      memory: "1500Mi"
     limits:
-      cpu: "1500m"
-      memory: "4Gi"
+      cpu: "1100m"
+      memory: "2300Mi"
 
 rest-service:
   resources:
     requests:
       cpu: "200m"
-      memory: 1Gi
+      memory: 500Mi
     limits:
       cpu: "400m"
-      memory: 2Gi
+      memory: 1Gi
 
 rpc-service:
   resources:
     requests:
       cpu: "200m"
-      memory: "2Gi"
+      memory: "1200Mi"
     limits:
-      cpu: "1500m"
-      memory: "3Gi"
+      cpu: "700m"
+      memory: "2200Mi"
 
 rules-ui:
   resources:
@@ -177,10 +177,10 @@ zookeeper:
   resources:
     requests:
       memory: 1Gi
-      cpu: 250m
+      cpu: 300m
     limits:
-      memory: 2Gi
-      cpu: 800m
+      memory: 1500Mi
+      cpu: 700m
 
 sql-service:
   resources:
