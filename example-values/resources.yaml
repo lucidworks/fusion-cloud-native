@@ -15,175 +15,163 @@ pulsar:
   broker:
     resources:
       requests:
-        cpu: 800m
+        cpu: 700m
         memory: 3Gi
       limits:
-        cpu: 1400m
+        cpu: 1100m
         memory: 4Gi
   bookkeeper:
     resources:
       requests:
-        cpu: 800m
+        cpu: 700m
         memory: 3Gi
       limits:
-        cpu: 1400m
+        cpu: 1100m
         memory: 4Gi
 
 admin-ui:
   resources:
-    limits:
-      cpu: "100m"
-      memory: "32Mi"
     requests:
       cpu: "50m"
       memory: "8Mi"
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
 
 api-gateway:
-  # javaToolOptions: ""
   resources:
-    limits:
-      cpu: "2"
-      memory: "3Gi"
     requests:
       cpu: "500m"
-      memory: "2500Mi"
+      memory: "1500Mi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
 
 auth-ui:
   resources:
-    limits:
-      cpu: "100m"
-      memory: "32Mi"
     requests:
       cpu: "50m"
       memory: "8Mi"
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
 
 classic-rest-service:
-  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
-    limits:
-      cpu: "2"
-      memory: "3Gi"
     requests:
       cpu: "500m"
+      memory: "1500Mi"
+    limits:
+      cpu: "800m"
       memory: "2Gi"
 
 devops-ui:
   resources:
-    limits:
-      cpu: "100m"
-      memory: "32Mi"
     requests:
       cpu: "50m"
       memory: "8Mi"
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
 
 fusion-admin:
-  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
-    limits:
-      cpu: "1"
-      memory: "3Gi"
     requests:
       cpu: "500m"
       memory: "2Gi"
+    limits:
+      cpu: "800m"
+      memory: "2500Mi"
 
 fusion-indexing:
-  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
   resources:
-    limits:
-      cpu: "1500m"
-      memory: "3Gi"
     requests:
       cpu: "500m"
+      memory: "1500Mi"
+    limits:
+      cpu: "900m"
       memory: "2Gi"
 
 insights:
   resources:
-    limits:
-      cpu: "300m"
-      memory: "1.5Gi"
     requests:
       cpu: "100m"
+      memory: "500Mi"
+    limits:
+      cpu: "300m"
       memory: "1Gi"
 
 job-launcher:
-  #javaToolOptions: ""
   resources:
+    limits:
+      memory: 1Gi
+      cpu: 1
     requests:
       memory: 600Mi
       cpu: 500m
-    limits:
-      memory: 1Gi
-      cpu: 2
 
 job-rest-server:
-  #javaToolOptions: "-Xmx1024m -Xms256m"
   resources:
-      requests:
-        memory: 1Gi
-        cpu: 250m
-      limits:
-        memory: 1.5Gi
-        cpu: 750m
+    requests:
+      memory: 1Gi
+      cpu: 250m
+    limits:
+      memory: 1.5Gi
+      cpu: 750m
 
 ml-model-service:
-  #javaToolOptions: ""
   pythonService:
     resources:
       requests:
         memory: 1Gi
-        cpu: 1
+        cpu: 500m
       limits:
-        memory: 4Gi
-        cpu: 3
+        memory: 3Gi
+        cpu: 800m
   javaService:
     resources:
       requests:
         memory: 2Gi
-        cpu: 1
+        cpu: 500m
       limits:
-        memory: 4Gi
-        cpu: 3
+        memory: 3Gi
+        cpu: 800m
 
 query-pipeline:
-  #javaToolOptions: ""
   resources:
-    limits:
-      cpu: "2500m"
-      memory: "4Gi"
     requests:
       cpu: "500m"
       memory: "2500Mi"
+    limits:
+      cpu: "1500m"
+      memory: "4Gi"
 
 rest-service:
-  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
-    limits:
-      cpu: "400m"
-      memory: 2Gi
     requests:
       cpu: "200m"
       memory: 1Gi
+    limits:
+      cpu: "400m"
+      memory: 2Gi
 
 rpc-service:
-  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
   resources:
-    limits:
-      cpu: "1500m"
-      memory: "3Gi"
     requests:
       cpu: "200m"
       memory: "2Gi"
+    limits:
+      cpu: "1500m"
+      memory: "3Gi"
 
 rules-ui:
   resources:
-    limits:
-      cpu: "100m"
-      memory: "32Mi"
     requests:
       cpu: "50m"
       memory: "8Mi"
-
-# NOTE: Apply the Solr resource requests / limits in the solr: section of your main custom values yaml
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
 
 zookeeper:
   resources:
@@ -192,24 +180,22 @@ zookeeper:
       cpu: 250m
     limits:
       memory: 2Gi
-      cpu: 1
+      cpu: 800m
 
 sql-service:
-  #jvmOptions: "-XX:+UseG1GC -XX:+PrintGC -Xloggc:/work/sql-gc-%t.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -Xms4g -Xmx4g"
   resources:
+    requests:
+      cpu: "500m"
+      memory: 2Gi
     limits:
       cpu: "1"
       memory: 5Gi
-    requests:
-      cpu: "200m"
-      memory: 2Gi
 
 webapps:
-  #javaToolOptions: ""
   resources:
-    limits:
-      cpu: "2"
-      memory: 2Gi
     requests:
-      cpu: "500m"
-      memory: "400Mi"
+      cpu: "200m"
+      memory: "500Mi"
+    limits:
+      cpu: "600m"
+      memory: 2Gi
