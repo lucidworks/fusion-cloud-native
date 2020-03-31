@@ -575,7 +575,7 @@ While logs from the Spark driver and executor pods can be viewed using `kubectl 
 
 //tag::history-install[]
 
-Spark History Server can be installed via its Helm chart and a specifc `values.yaml` file to override the defaults:
+Spark History Server can be installed via its publicly-available Helm chart. To accomplish this, we must create a `values.yaml` file to configure it.
 ----
 helm install stable/spark-history-server --values values.yaml
 ----
@@ -600,7 +600,7 @@ service:
 
 nfs.enableExampleNFS: false
 ----
-The `service` key sets up the history server on an internal IP within your cluster but does not create an external LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
+Note that, by default, the Spark History Server Helm chart creates an external LoadBalancer, exposing it to outside access. This is usually undesirable. In the above, we prevent this via the `service` key - the history server will only be set up on an internal IP within your cluster and will not be exposed externally. Later, we will show how to properly access the history server.
 
 The `key` and `secret` fields provide the Spark History Server with the details of where it will find an account with access to the Google Cloud Storage bucket given in `logDirectory`. In the following example, we're going to set up a new service account that will be shared between the Spark History Server and the Spark driver/executors for both viewing and writing logs.
 
@@ -703,9 +703,9 @@ s3:
 
 ===== Configuring Spark
 
-After the History Server has been set up, then the config map for Fusion's job-launcher will need its `application.yaml` key will need to be updated with these Spark settings so the driver and executors know where to write out their logs.
+After starting the history server, we must update the config map for Fusion's job-launcher so it can write logs to the same location that Spark History Server is reading from.
 
-In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to a Google Cloud Storage bucket.
+In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to the same Google Cloud Storage bucket we configured the history server to read from.
 
 [source,bash]
 ----
