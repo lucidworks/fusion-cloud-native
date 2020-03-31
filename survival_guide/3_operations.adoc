@@ -606,7 +606,7 @@ The `key` and `secret` fields provide the Spark History Server with the details 
 
 The `nfs.enableExampleNFS` option turns off the NFS server that the Spark History Server sets up by default, as we won't be needing it in our installation.
 
-In order to give the Spark History Server access to the Google Cloud Storage bucket where the logs will be kept, we use `gcloud`'s `create` to create a new service account, and then `keys create` to create a JSON keypair which we will shortly upload into our cluster as a Kubernetes secret.
+In order to give the Spark History Server access to the Google Cloud Storage bucket where the logs will be kept, we use `gcloud` to create a new service account, and then `keys create` to create a JSON keypair which we will shortly upload into our cluster as a Kubernetes secret.
 
 [source,bash]
 ----
