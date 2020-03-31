@@ -590,7 +590,7 @@ Our recommended configuration for using the Spark History Server with Fusion is 
 [source,yaml]
 ----
 gcs:
-  enableGCS: false
+  enableGCS: true
   secret: history-secrets
   key: sparkhistory.json
   logDirectory: gs://[BUCKET_NAME]
@@ -699,11 +699,22 @@ s3:
 
 ===== Configuring Spark
 
-After the History Server has been set up, then the Fusion job-launcher deployment ConfigMap’s `application.yaml` key will need to be updated with these Spark settings so the driver and executors know where to write out their logs. In this example, we’re redirecting to a GCS bucket:
+After the History Server has been set up, then the config map for Fusion's job-launcher will need its `application.yaml` key will need to be updated with these Spark settings so the driver and executors know where to write out their logs.
+
+In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to a Google Cloud Storage bucket.
+
+[source,bash]
+----
+kubectl edit cm spark-history-job-launcher
+----
+
+Update the `spark` key with these settings and then restart the `job-launcher` pod.
+
 
 [source,yaml]
 ----
 spark:
+  …
   eventLog:
     enabled: true
     compress: true
@@ -723,6 +734,7 @@ spark:
     executor:
       secrets:
         history-secrets: /etc/secrets
+  …
 ----
 
 //end::history-config[]
