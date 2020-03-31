@@ -726,7 +726,7 @@ spark:
           service:
             account:
               json:
-                keyfile: /etc/secrets/[ACCOUNT_NAME].json]
+                keyfile: /etc/secrets/[ACCOUNT_NAME].json
   kubernetes:
     driver:
       secrets:
