@@ -597,10 +597,14 @@ gcs:
 service:
   type: ClusterIP
   port: 18080
+
+nfs.enableExampleNFS: false
 ----
 The `service` key sets up the history server on an internal IP within your cluster but does not create an external LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
 
 The `key` and `secret` fields provide the Spark History Server with the details of where it will find an account with access to the Google Cloud Storage bucket given in `logDirectory`. In the following example, we're going to set up a new service account that will be shared between the Spark History Server and the Spark driver/executors for both viewing and writing logs.
+
+The `nfs.enableExampleNFS` option turns off the NFS server that the History Server sets up by default, as we won't be needing it in our installation.
 
 [source,bash]
 ----
