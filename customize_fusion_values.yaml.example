@@ -141,6 +141,7 @@ rules-ui:
     {NODE_POOL}
 
 webapps:
+  javaToolOptions: "-Xmx1g"
   nodeSelector:
     {NODE_POOL}
 
