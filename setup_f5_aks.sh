@@ -32,30 +32,31 @@ function print_usage() {
 
   echo -e "\nUse this script to install Fusion 5 on AKS; optionally create a AKS cluster in the process"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c            Name of the AKS cluster (required)\n"
-  echo -e "  -p            Azure resource group (required). If the given group doesn't exist, this script creates it using:"
-  echo -e "                    az group create --name <GROUP_NAME> --location <LOCATION>\n"
-  echo -e "  -r            Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z            Azure location to launch the cluster in, defaults to the location for your Resource Group\n"
-  echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
-  echo -e "  -y            Initial node count, defaults to '${NODE_COUNT}'\n"
-  echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
-  echo -e "                then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
-  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
-  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
-  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1\n"
-  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
-  echo -e "                where you defined a custom node pool, wrap the arg in double-quotes\n"
-  echo -e "  --aks         AKS Kubernetes version; defaults to ${AKS_MASTER_VERSION}\n"
-  echo -e "  --preview     Enable PREVIEW mode when creating the cluster to experiment with unreleased options\n"
-  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values      Custom values file containing config overrides; defaults to aks_<cluster>_<release>_fusion_values.yaml\n"
-  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster."
-  echo -e "                Be careful! This operation cannot be undone.\n"
+  echo -e "  -c                Name of the AKS cluster (required)\n"
+  echo -e "  -p                Azure resource group (required). If the given group doesn't exist, this script creates it using:"
+  echo -e "                        az group create --name <GROUP_NAME> --location <LOCATION>\n"
+  echo -e "  -r                Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -z                Azure location to launch the cluster in, defaults to the location for your Resource Group\n"
+  echo -e "  -i                Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -y                Initial node count, defaults to '${NODE_COUNT}'\n"
+  echo -e "  -t                Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
+  echo -e "                    then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                    'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
+  echo -e "                    where you defined a custom node pool, wrap the arg in double-quotes\n"
+  echo -e "  --aks             AKS Kubernetes version; defaults to ${AKS_MASTER_VERSION}\n"
+  echo -e "  --preview         Enable PREVIEW mode when creating the cluster to experiment with unreleased options\n"
+  echo -e "  --version         Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values          Custom values file containing config overrides; defaults to aks_<cluster>_<release>_fusion_values.yaml\n"
+  echo -e "  --upgrade         Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --purge           Uninstall and purge all Fusion objects from the specified namespace and cluster."
+  echo -e "                    Be careful! This operation cannot be undone.\n"
 }
 
 if [ $# -gt 0 ]; then
@@ -135,6 +136,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --solr-disk-gb)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --solr-disk-gb parameter!"
+              exit 1
+            fi
+            SOLR_DISK_GB=$2
             shift 2
         ;;
         --prometheus)
@@ -562,6 +571,6 @@ fi
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
 source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "aks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} --num-solr "${SOLR_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
 setup_result=$?
 exit $setup_result
