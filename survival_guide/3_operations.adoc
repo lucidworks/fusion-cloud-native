@@ -575,7 +575,7 @@ While logs from the Spark driver and executor pods can be viewed using `kubectl 
 
 //tag::history-install[]
 
-Spark History Server can be installed via its default Helm chart:
+Spark History Server can be installed via its Helm chart and a specifc `values.yaml` file to override the defaults:
 ----
 helm install stable/spark-history-server --values values.yaml
 ----
@@ -590,31 +590,44 @@ Our recommended configuration for using the Spark History Server with Fusion is 
 [source,yaml]
 ----
 gcs:
-    enableGCS: false
-    secret: history-secrets
-    key: [SECRET_KEY_NAME].json
-    logDirectory: gs://[BUCKET_NAME]
+  enableGCS: false
+  secret: history-secrets
+  key: sparkhistory.json
+  logDirectory: gs://[BUCKET_NAME]
 service:
-    type: ClusterIP
-    port: 18080
+  type: ClusterIP
+  port: 18080
 ----
-We override the default `service.type` of `LoadBalancer` with `ClusterIP` to keep the History Server from being accessible to outside connections without port-forwarding.
+The `service` key sets up the history server on an internal IP within your cluster but does not create an external LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
 
-You may need to set up your secret for full access to the cloud bucket:
+The `key` and `secret` fields provide the Spark History Server with the details of where it will find an account with access to the Google Cloud Storage bucket given in `logDirectory`. In the following example, we're going to set up a new service account that will be shared between the Spark History Server and the Spark driver/executors for both viewing and writing logs.
+
 [source,bash]
 ----
-$ export ACCOUNT_NAME=[SECRET_KEY_NAME]
+$ export ACCOUNT_NAME=sparkhistory
 $ export GCP_PROJECT_ID=[PROJECT_ID]
 $ gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "${ACCOUNT_NAME}"
 $ gcloud iam service-accounts keys create "${ACCOUNT_NAME}.json" --iam-account "${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
 $ gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} --member "serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role roles/storage.admin
 $ gsutil iam ch serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com:objectAdmin gs://[BUCKET_NAME]
 ----
-The service key sets up the history server on an internal IP within your cluster but does not create a LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
+
+First, we use `create` to create a new service account, and then `keys create` to create a JSON keypair which we will shortly upload into our cluster as a Kubernetes secret. We then give our service account the `storage/admin` role, allowing it to perform create and view operations, and the final `gsutil` command applies our service account to our chosen bucket. If you have an existing service account you wish to use instead, you can skip the `create` command, though you will still need to create the JSON keypair and ensure that the existing account can read and write to the log bucket.
+
+We now need to upload the JSON keypair into the cluster as a secret:
+
+[source,bash]
+----
+kubectl -n [NAMESPACE] create secret generic history-secrets --from-file=sparkhistory.json
+----
+
+With all this in place, the Spark History Server can now be installed with `helm install stable/spark-history-server --values values.yaml`.
 
 ===== Other Configurations
 
 ====== Azure
+
+Azure is a similar process to Google Kubernetes Engine, except our logs will be stored in Azure Blob Storage, and we can either use SAS token or key access.
 
 [source,bash]
 ----
@@ -631,24 +644,24 @@ For SAS token access, `values.yaml` should look like:
 [source,yaml]
 ----
 wasbs:
-    enableWASBS: true
-    secret: azure-secrets
-    sasKeyName: azure-blob-sas-key
-    storageAccountNameKeyName: azure-storage-account-name
-    containerKeyName: azure-blob-container-name
-    logDirectory: [BUCKET-NAME]
+  enableWASBS: true
+  secret: azure-secrets
+  sasKeyName: azure-blob-sas-key
+  storageAccountNameKeyName: azure-storage-account-name
+  containerKeyName: azure-blob-container-name
+  logDirectory: [BUCKET_NAME]
 ----
 For non-SAS access:
 [source,yaml]
 ----
 wasbs:
-    enableWASBS: true
-    secret: azure-secrets
-    sasKeyMode: false
-    storageAccountKeyName: azure-storage-account-key
-    storageAccountNameKeyName: azure-storage-account-name
-    containerKeyName:  azure-blob-container-name
-    logDirectory: [BUCKET-NAME]
+  enableWASBS: true
+  secret: azure-secrets
+  sasKeyMode: false
+  storageAccountKeyName: azure-storage-account-key
+  storageAccountNameKeyName: azure-storage-account-name
+  containerKeyName:  azure-blob-container-name
+  logDirectory: [BUCKET_NAME]
 ----
 
 ====== AWS
@@ -667,8 +680,8 @@ For IAM, your `values.yaml` will be:
 [source,yaml]
 ----
 s3:
-    enableS3: true
-    logDirectory: s3a://[BUCKET-NAME]
+  enableS3: true
+  logDirectory: s3a://[BUCKET_NAME]
 ----
 (Note the Hadoop `s3a://` link instead of `s3://`.)
 
@@ -677,11 +690,11 @@ With a access/secret pair, you’ll need to add the secret:
 [source,yaml]
 ----
 s3:
-    enableS3: true
-    enableIAM: false
-    accessKeyName: aws-access-key
-    secretKeyName: aws-secret-key
-    logDirectory: s3a://[BUCKET-NAME]
+  enableS3: true
+  enableIAM: false
+  accessKeyName: aws-access-key
+  secretKeyName: aws-secret-key
+  logDirectory: s3a://[BUCKET_NAME]
 ----
 
 ===== Configuring Spark
@@ -691,25 +704,25 @@ After the History Server has been set up, then the Fusion job-launcher deploymen
 [source,yaml]
 ----
 spark:
-    eventLog:
-        enabled: true
-        compress: true
-        dir: gs://[BUCKET-NAME]
-    hadoop:
-        google:
-            cloud:
-                auth:
-                    service:
-                        account:
-                            json:
-                                keyfile: /etc/secrets/[SECRET_KEY_NAME].json]
-    kubernetes:
-        driver:
-            secrets:
-                history-secrets: /etc/secrets
-        executor:
-            secrets:
-                history-secrets: /etc/secrets
+  eventLog:
+    enabled: true
+    compress: true
+    dir: gs://[BUCKET_NAME]
+  hadoop:
+    google:
+      cloud:
+        auth:
+          service:
+            account:
+              json:
+                keyfile: /etc/secrets/[ACCOUNT_NAME].json]
+  kubernetes:
+    driver:
+      secrets:
+        history-secrets: /etc/secrets
+    executor:
+      secrets:
+        history-secrets: /etc/secrets
 ----
 
 //end::history-config[]
