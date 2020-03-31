@@ -141,7 +141,9 @@ rules-ui:
     {NODE_POOL}
 
 webapps:
-  javaToolOptions: "-Xmx1g"
+  livenessProbe:
+    initialDelaySeconds: 60
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false"
   nodeSelector:
     {NODE_POOL}
 
