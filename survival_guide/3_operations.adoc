@@ -615,6 +615,7 @@ $ export GCP_PROJECT_ID=[PROJECT_ID]
 $ gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "${ACCOUNT_NAME}"
 $ gcloud iam service-accounts keys create "${ACCOUNT_NAME}.json" --iam-account "${
 ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+----
 
 We then give our service account the `storage/admin` role, allowing it to perform create and view operations, and the final `gsutil` command applies our service account to our chosen bucket. If you have an existing service account you wish to use instead, you can skip the `create` command, though you will still need to create the JSON keypair and ensure that the existing account can read and write to the log bucket.
 
