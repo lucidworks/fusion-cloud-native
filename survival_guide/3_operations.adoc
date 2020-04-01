@@ -18,32 +18,9 @@ endif::[]
 ifndef::env-github[]
 link:/how-to/deploy-fusion-at-scale.html[deploy a working cluster],
 endif::[]
-we recommend creating a simple upgrade script that hard-codes the various parameters and alleviates the need to remember which parameters to pass to the script. This is especially helpful when working with multiple K8s clusters.
+we recommend using the upgrade script created by the `customize_fusion_values.sh` script. The upgrade script hard-codes the various parameters and alleviates the need to remember which parameters to pass to the script. This is especially helpful when working with multiple K8s clusters. Make sure you check the script into version control alongside your custom values YAML files.
 
-. Rename the https://github.com/lucidworks/fusion-cloud-native/blob/master/upgrade_fusion.sh.example[example script^] provided in the fusion-cloud-native repo using the same naming convention you used to name your custom value YAML file:
-+
-[source,bash]
-----
-cp upgrade_fusion.sh.example <provider>_<cluster>_<release>_upgrade_fusion.sh
-----
-
-. Edit the script to hard-code the various parameters for your cluster, such as:
-+
-----
-PROVIDER=gke
-CLUSTER_NAME=search
-RELEASE=f5
-NAMESPACE=default
-CHART_VERSION=5.0.2
-----
-
-. Append all custom values YAML files to the `MY_VALUES` variable in the upgrade script, such as:
-+
-----
-MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
-----
-
-. Check the script into version control alongside your custom values YAML files.
+Whenever you make a change to one of the custom values yaml files for your cluster, you need to run the upgrade script to apply the changes. The script simply calls `helm upgrade` with the correct parameters and `--values` options. Remember that if you run `helm upgrade` without passing the custom values yaml files, the deployment will revert back to using chart defaults, which you never want to do.
 
 TIP: The script assumes your kubeconfig is pointing to the correct cluster; if not, it fails fast. Be sure to select the correct kubeconfig before running the script. The script also assumes the use of Helm v3.
 
@@ -92,28 +69,30 @@ If you're running Prometheus and Grafana for monitoring the performance and heal
 
 .How to configure Grafana
 
-. If you used the `--prometheus` install option when installing Fusion, then you need to get the initial Grafana password from a K8s secret by doing:
+. If you used the `install_prom.sh` script to install Prometheus / Grafana into your Fusion namespace, then you need to get the initial Grafana password from a K8s secret by doing:
 +
 [source,bash]
 ----
 kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-monitoring-grafana \
   -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ----
+To see the name of the Grafana deployment, do: `kubectl get deploy`
 
-. With Grafana, you can either set up a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s `LoadBalancer`. To define a `LoadBalancer`, do (replace `${RELEASE}` with your Helm release label):
+. With Grafana, you can either set up a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s `LoadBalancer`. To define a `LoadBalancer`, do (replace `${RELEASE}` with your Helm release label, typically the same as your namespace):
 +
 [source,bash]
 ----
 kubectl expose deployment ${RELEASE}-monitoring-grafana --type=LoadBalancer --name=grafana --port=3000 --target-port=3000
 ----
 
-. Use `kubectl get services --namespace <namespace>` to verify that the load balancer is set up and its IP address.
+. Use `kubectl get services --namespace <namespace>` to verify that the load balancer is set up and has an external IP address.
 
 . Direct your browser to `\http://<GrafanaIP>:3000` and enter the username `admin@localhost` and the password that was returned in the previous step.
 +
 This will log you into the application. It is recommended that you create another administrative user with a more desirable password.
 +
-One of the first things you will want to do is to configure the Prometheus data source in Grafana.
+If you used the `install_prom.sh` script, then a default Prometheus data source will already be configured for you.
+If not, then you need to configure the Prometheus data source in Grafana.
 
 . Go to the gear icon on the left and then go to *Data Sources*.
 
@@ -124,22 +103,38 @@ image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_gui
 
 . Configure any additional fields as desired (but defaults are fine), then click *Save and Test*, which should succeed.
 
-. Import the dashboards from the fusion-cloud-native repo:
+. If you used the `install_prom.sh` script, then Fusion's default Grafana dashboards will already be imported. If not, import the dashboards from the fusion-cloud-native repo:
 +
 image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/grafana-import.png?raw=true[]
 // end::grafana[]
+
+=== Resource limits
+
+// tag::resources[]
+
+Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster, especially for proof-of-concept / getting started clusters. Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up and running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services.
+
+For production like environments, you should define resource limits to help K8s schedule pods correctly across the nodes in your cluster. This is especially important for K8s clusters that host other namespaces besides Fusion.
+
+If you used the `--with-resource-limits` option when running the `./customize_fusion_values.sh` script, then you already have resource limits configured for your cluster.
+
+Look for a file named `<provider>_<cluster>_<namespace>_fusion_resources.yaml`; if you do not have this file, simply copy https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/resources.yaml[`resources.yaml`] to help you get started with setting the appropriate resource limits.
+
+You can refine the resource requests / limits as you test your cluster's behavior while preparing to go to production with Fusion.
+
+// end::resources[]
 
 === Pod affinity rules
 
 // tag::affinity[]
 
-The https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] sets affinity rules for all of the Fusion components where the cluster is spread over multiple availability zones. All components have the same affinity setup which follows this logic:
+Affinity rules govern how pods for Fusion components are scheduled across the cluster. All components have the same affinity setup which follows this logic:
 
 * When scheduling, prefer to put a pod on a node that is in an availability zone that doesn't already have a running instance of this component.
 
 * Require that pods are all deployed on a host that doesn't have a running instance of the component that is being scheduled.
 
-This means that the loss of a host will bring down at most one component. However, the cluster will be at least as large as the number of replicas in the largest deployment.
+This means that the loss of a host will bring down at most one component. However, the cluster will need to be at least as large as the number of replicas in the largest deployment.
 
 If you need to run a large number of a certain type of component, then consider relaxing the "required" policy by changing it to a "preferred" policy on hostname by changing
 
@@ -151,7 +146,9 @@ to
      preferredDuringSchedulingIgnoredDuringExecution:
 ----
 
-for the `kubernetes.io/hostname` policies. We recommend copying the https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
+for the `kubernetes.io/hostname` policies.
+
+If you used the `--with-affinity-rules` option when running the `./customize_fusion_values.sh` script, then you already have pod affinity rules configured for your cluster. If not, then we recommend copying the https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/affinity.yaml[`example-values/affinity.yaml` file^] and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_affinity.yaml`.
 
 Append the following to your
 ifdef::env-github[]
@@ -171,7 +168,11 @@ MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_affinity.yaml"
 
 // tag::auto-scaling[]
 
-You can configure multiple replicas and horizontal pod autoscalers (tied to CPU usage) using the `example-values/replicas.yaml` file. Once you're ready to apply the replica and HPA settings from the replicas.yaml file, we recommend copying the example file and renaming it using our convention: `<provider>_<cluster>_<release>_fusion_replicas.yaml`
+You can configure multiple replicas and horizontal pod autoscalers (tied to CPU usage) for Fusion components.
+
+If you used the `--with-replicas` option when running the `./customize_fusion_values.sh` script, then you already have replicas configured for your cluster.
+
+If not, then copy the example file (`example-values/replicas.yaml`) and rename it using our convention: `<provider>_<cluster>_<release>_fusion_replicas.yaml`
 
 Append the following to your
 ifdef::env-github[]
@@ -185,7 +186,164 @@ endif::[]
 MY_VALUES="${MY_VALUES} --values gke_search_f5_fusion_replicas.yaml"
 ----
 
-==== Use Gatling to run query performance / load tests
+=== Tune Fusion Application Performance
+
+In this section, we cover a variety of topics to help you get the best Search performance for your Fusion application.
+
+If you have not created an application yet, proceed to the Fusion Admin UI to create your first application. For the purposes of this section, we'll use a sample application named `dcommerce`.
+
+==== Fix Solr Collection Replica Placement
+
+If you're using multiple Solr StatefulSets, such as to partition Solr pods into `search`, `analytics`, and `system` pools, then you need to use a Solr auto-scaling policy to govern replica placement for Fusion collections.
+
+Open a port-forward to a Solr pod in the cluster.
+----
+kubectl port-forward <SOLR_POD_ID> 8983
+----
+
+Inspect the Solr auto-scaling policy in the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/policy.json[policy.json^] file. The syntax is rather cryptic, but it basically defines a separate policy for search, analytics, and system oriented collections.
+
+Run the `./update_policy.sh` script to add the Solr auto-scaling policy from policy.json into the Solr cluster.
+
+Unfortunately, due to a limitation in Solr (https://issues.apache.org/jira/browse/SOLR-14347), replicas do not get placed correctly for Solr collections created by Fusion during application creation.
+
+Consequently, you'll need to delete the Solr collections and re-create them using a BASH script.
+
+The recommended approach is to adapt the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/update_app_coll_layout.sh[update_app_coll_layout.sh^] script for your application, such as setting the correct number of shards, replicas, replica types, and policy for each collection used by your Fusion application.
+Make a copy of the `update_app_coll_layout.sh` script and set the vars at the top for the specific app, in this case `dcommerce`.
+
+For this example, we'll use the following settings:
+
+[width="90%",cols="4,2,5,2",options="header"]
+|=========================================================
+|Collection|Shards|Replicas|Policy
+|dcommerce|1|2 tlog, 3 pull|search
+|dcommerce_signals_aggr|1|2 tlog, 3 pull|search
+|dcommerce_query_rewrite|1|2 tlog, 3 pull|search
+|dcommerce_user_prefs|1|2 nrt|search
+|dcommerce_signals|3|2 nrt|analytics
+|dcommerce_query_rewrite_staging|1|2 nrt|analytics
+|dcommerce_job_reports|1|2 nrt|analytics
+|=========================================================
+
+Here's an example for our `dcommerce` app, adjust to meet your specific use case:
+----
+#!/bin/bash
+
+APP="dcommerce"
+SOLR="http://localhost:8983"
+
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_signals"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_signals_aggr"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_query_rewrite_staging"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_query_rewrite"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_job_reports"
+curl "$SOLR/solr/admin/collections?action=DELETE&name=${APP}_user_prefs"
+
+# analytics oriented collections
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_signals&collection.configName=${APP}_signals&numShards=3&replicationFactor=2&policy=analytics&maxShardsPerNode=2"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_query_rewrite_staging&collection.configName=${APP}_query_rewrite_staging&numShards=1&replicationFactor=2&policy=analytics"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_job_reports&collection.configName=${APP}_job_reports&numShards=1&replicationFactor=2&policy=analytics"
+
+# search oriented collections
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}&collection.configName=${APP}&numShards=1&tlogReplicas=2&pullReplicas=3&policy=search"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_signals_aggr&collection.configName=${APP}_signals_aggr&numShards=1&tlogReplicas=2&pullReplicas=3&policy=search"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_query_rewrite&collection.configName=${APP}_query_rewrite&numShards=1&tlogReplicas=2&pullReplicas=3&policy=search"
+curl "$SOLR/solr/admin/collections?action=CREATE&name=${APP}_user_prefs&collection.configName=${APP}_user_prefs&numShards=1&replicationFactor=2&policy=search"
+----
+
+Notice that script deletes Solr collections and re-creates them with the correct auto-scaling policy in place. Obviously, you should not run this on collections that have data without backing up the data first.
+
+For more information about Solr replica types, see: https://lucene.apache.org/solr/guide/8_4/shards-and-indexing-data-in-solrcloud.html#types-of-replicas
+
+==== Tune Solr Commit Settings
+
+Fusion collections are created with a default commit within set to 10 secs. This overrides the commit settings set for a collection in the `solrconfig.xml`.
+
+Commit within 10 seconds is too aggressive for production environments as it will cause Solr to open a new search and flush all caches.
+For environments where optimal performance is important, you may want to disable the commit within setting for your collections and instead rely solely on auto soft and hard commits.
+
+Disable commit within using the `update_commit_within_f5.sh` script, for instance:
+----
+./update_commit_within_f5.sh --collection dcommerce --gateway GATEWAY_URL --commit_within -1
+----
+Replace `GATEWAY_URL` with the URL of the K8s Ingress or IP for the Fusion API Gateway. Repeat this process for all Fusion collections.
+
+TIP: You can get the IP of the Gateway pod using: `export LW_K8S_GATEWAY_IP=$(kubectl --namespace ${LW_K8S_NAMESPACE} get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')`
+
+Configure soft / hard auto commit settings in solrconfig.xml (via the Fusion Admin UI), such as:
+----
+    <autoCommit>
+      <maxTime>60000</maxTime>
+      <openSearcher>false</openSearcher>
+    </autoCommit>
+
+    <autoSoftCommit>
+      <maxTime>300000</maxTime>
+    </autoSoftCommit>
+----
+You want the auto soft-commit setting to be as long as possible (in millis) to avoid re-opening searchers too often, which invalidates your caches.
+
+You should also consider disabling commits / optimize requests coming from external client applications by configuring the `IgnoreCommitOptimizeUpdateProcessorFactory` in your update processor chain(s).
+
+----
+    <processor class="solr.IgnoreCommitOptimizeUpdateProcessorFactory">
+      <int name="statusCode">200</int>
+      <str name="responseMessage">Thou shall not issue a commit!</str>
+    </processor>
+----
+This prevents external client applications that you do not control from committing (or optimizing) too often. For most production environments, you should rely solely on the auto-commit settings in solrconfig.xml.
+
+==== Enable Buffering for Index Pipelines
+
+For each index pipeline, ensure the `Buffer Documents and Send Them to Solr in Batches` option is enabled for the Solr Index stage.
+
+==== Tune Solr Cache Settings
+
+Solr has a number of caches, such as the filter cache, that have a major impact on performance. For many production environments, the max size for these caches is too small and should be increased.
+Be sure to look at the metrics for your caches after running load tests to determine if you need to tune them. Cache configuration is done in the solrconfig.xml for each collection using the Fusion Admin UI.
+
+Typically the three most important caches to tune are:
+----
+    <filterCache class="solr.FastLRUCache"
+                 size="5000"
+                 maxRamMB="64"
+                 autowarmCount="0"/>
+
+    <queryResultCache class="solr.LRUCache"
+                      size="6000"
+                      maxRamMB="250"
+                      autowarmCount="0"/>
+
+    <documentCache class="solr.LRUCache"
+                   size="25000"
+                   maxRamMB="64"
+                   autowarmCount="0"/>
+----
+
+TIP: Be careful with `autowarmCount` as that will impact how long it takes for a new searcher to open.
+
+==== Query Pipeline Routing Parameters
+
+If you're using a separate `search` pool for search oriented collections, then you'll want to add the `lw.nodeFilter=host:solr-search` parameter to the main query pipeline(s) to ensure queries get routed from Fusion to Solr Search pods only.
+
+If you're using PULL replicas for search collections, then you should also pass `shards.preference=replica.type:PULL,replica.location:local` to Solr.
+
+This ensures that queries get routed to PULL replicas only and favors the local replica if it exists.
+
+You should also provide these parameters for sidecar queries, such as in the tagger, rules, and signals boost stages.
+
+==== Async Query Stages
+
+The tagger and rules stages can be configured with a max time constraint that enforces an upper bound on how long these stages can take. Behind the scenes, this requires executing the sidecar request in a background thread.
+
+In addition, it's common to configure your pipeline to do the rules lookup and signals boost concurrently using Fusion asynchronous stage support. If you're using these features, please ensure you pass the following Java system property:
+----
+-Djava.util.concurrent.ForkJoinPool.common.parallelism=1
+----
+
+=== Use Gatling to run query performance / load tests
 
 Lucidworks recommends running query performance tests to establish a baseline number of pods for the proxy, query pipeline, and Solr services. You can use the gatling-qps project provided in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] as a starting point for building a query load test. Gatling.io is a load test framework that provides a powerful Scala-based DSL for constructing performance test scenarios. See `FusionQueryTraffic.scala` in the repo as a starting point for building query performance tests for Fusion 5.
 
@@ -228,17 +386,6 @@ NOTE: The indentation for the opening / closing braces is important for embeddin
 
 // end::auto-scaling[]
 
-=== Resource limits
-
-// tag::resources[]
-
-Lucidworks recommends installing Fusion without resource limits initially as they can over-complicate the initial setup of your cluster.
-
-Resource requests / limits directly impact the number of nodes needed to deploy Fusion. Once your installation is up and running with a critical mass of data, then you can start to fine-tune resource limits for Fusion services.
-
-Lucidworks provides a https://github.com/lucidworks/fusion-cloud-native/blob/master/example-values/resources.yaml[`resources.yaml`] template to help you get started with setting the appropriate resource limits. However, you may need to refine the settings for your environment and workloads, especially for Solr.
-
-// end::resources[]
 
 [[spark-ops]]
 === Spark operations
@@ -246,6 +393,19 @@ Lucidworks provides a https://github.com/lucidworks/fusion-cloud-native/blob/mas
 In Fusion 5.x, Spark operates in native Kubernetes mode instead of standalone mode (like in Fusion 4.x). The sections below describe Spark operations in Fusion 5.0.
 
 // tag::spark-ops-intro[]
+
+==== Node Selectors
+
+You can control which nodes Spark executors are scheduled on using Spark configuration property for a job:
+----
+spark.kubernetes.node.selector.<LABEL>=<LABEL_VALUE>
+----
+For instance, if a node is labeled with `fusion_node_type=spark_only`, then you would scheduled Spark executor pods to run on that node using:
+----
+spark.kubernetes.node.selector.fusion_node_type=spark_only
+----
+
+TIP: Spark version 2.4.x does not support tolerations for Spark pods; consequently, Spark pods cannot be scheduled on any nodes with taints.
 
 ==== Cluster mode
 

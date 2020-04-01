@@ -41,14 +41,14 @@ ifndef::env-github[]
 link:/how-to/configure-pod-affinity.html[Pod Affinity Rules]
 endif::[]
 
-When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the solr_zone property to distribute replicas across zones in the
+When running in a multi-zone cluster, each Solr node has a solr_zone system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`. We'll cover how to use the `solr_zone` property to distribute replicas across zones in the
 ifdef::env-github[]
 link:2_planning.adoc#solr-autoscaling[Solr Auto-scaling Policy]
 endif::[]
 ifndef::env-github[]
 link:/how-to/deploy-fusion-at-scale.html#7-solr-auto-scaling-policy[Solr Auto-scaling Policy]
 endif::[]
-section.
+section. Setting the `solr_zone` property for Solr pods requires the Solr service account to have a ClusterRoleBinding that allows it to get node metadata from the K8s API service.
 
 //end::ha[]
 
@@ -94,6 +94,10 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
 
+|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | Atleast 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
+
+|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | Atleast 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
+
 |`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
 
 |`rules-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Rules UI.
@@ -101,10 +105,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`seldon-core` |REST/GRPC |Deployment |`system` |Yes (CPU or custom metric) |Serves models built in any model building framework.
 
 |`solr` |HTTP |StatefulSet |At least 3 nodes in `search`, 2 in `analytics`, and 2 in `system` |Yes (CPU or custom metric) |Search engine.
-
-|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | Atleast 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
-
-|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | Atleast 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
 
 |`spark-driver` |n/a |single pod per job |`analytics` or dedicated Node Pool for Spark jobs |1 per job |Launched by the job-launcher to run a Spark job
 
@@ -277,6 +277,7 @@ query-pipeline:
     annotations:
       prometheus.io/port: "8787"
       prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 ----
 
 // end::metrics[]

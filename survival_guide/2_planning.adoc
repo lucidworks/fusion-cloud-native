@@ -28,7 +28,7 @@ See these topics for platform-specific instructions:
 * link:/how-to/how-to-deploy-aks.html[Azure Kubernetes Service (AKS)]
 endif::[]
 
-At the end of this topic, you will use the same script again, this time to deploy a customized Fusion cluster.
+While the `setup_f5_*.sh` scripts are handy for getting started / proof-of-concept purposes, this section walks you through the planning process for building a production ready environment.
 
 [[prerequisites]]
 === Meet the prerequisites
@@ -65,8 +65,7 @@ v3.0.0+ge29ce2a
 Collect the following information about your K8s environment:
 +
 ** *CLUSTER*: Cluster name (passed to our setup scripts using the `-c` arg)
-** *NAMESPACE*: K8s namespace where your Fusion cluster is running
-** *RELEASE*: The unique Helm release name to use for Fusion, such as `f5`
+** *NAMESPACE*: K8s namespace where to install Fusion; a namespace should only contain lowercase letters (a-z), digits (0-9), or dash. No periods or underscores allowed.
 +
 *Tips:*
 +
@@ -84,7 +83,7 @@ Work with your K8s / Docker admin team to determine how to get the Fusion images
 Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion.  Our setup scripts (`setup_f5_*.sh`) use this file to create a custom values YAML for your cluster if it does not already exist.
 We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you get started.
 
-TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation.  You will also need it to perform upgrades.
+TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation. You will also need it to perform upgrades; if you try to upgrade your Fusion installation and neglect to provide the custom values yaml, your deployment will revert to chart defaults.
 
 . In your local copy of the fusion-cloud-native repo, run the `customize_fusion_values.sh` utility script to create a working copy of the custom values YAML file:
 +
@@ -92,24 +91,28 @@ TIP: Keep the custom values YAML file in version control.  You will need to make
 ./customize_fusion_values.sh  -c <CLUSTER> -n <NAMESPACE> --provider <PROVIDER> \
   --num-solr 3 \
   --solr-disk-gb 100 \
-  --prometheus true
+  --prometheus true \
+  --with-resource-limits \
+  --with-affinity-rules
 ```
 +
 The script will create a custom values YAML using the naming convention: `<provider>_<cluster>_<namespace>_fusion_values.yaml`, e.g. `gke_search_f5_fusion_values.yaml`
 +
 --
-* `<provider>` is the K8s platform you’re running on, such as GKE.
+* `<provider>` is the K8s platform you’re running on, such as `gke`.
 * `<cluster>` is the name of your cluster.
 * `<namespace>` is the K8s namespace where you want to install Fusion
 --
-+
-The script produces three output files:
+
+The script creates the following files using the naming convention: `<provider>_<cluster>_<namespace>_`:
 --
-* `<provider>_<cluster>_<namespace>_fusion_values.yaml`, your main configuration file.
-* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`, for Prometheus/Grafana; see the next section.  Of course if you don't want to use Prometheus, simply pass `--prometheus false` to the script.
-* `<provider>_<cluster>_<namespace>_upgrade_fusion.sh`, utility script for installing / upgrading Fusion
+* `<provider>_<cluster>_<namespace>_fusion_values.yaml`: Main custom values yaml used to override Helm chart defaults for Fusion microservices.
+* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`: Custom values yaml used to configure Prometheus and Grafana.
+* `<provider>_<cluster>_<namespace>_fusion_resources.yaml`: Resource requests and limits for all Microservices.
+* `<provider>_<cluster>_<namespace>_fusion_affinity.yaml`: Pod affinity rules to ensure mulitple replicas for a single service are evenly distributed across zones and nodes.
+* `<provider>_<cluster>_<namespace>_upgrade_fusion.sh`: Script used to install and/or upgrade Fusion using the aforementioned custom values yaml files.
 --
-+
+
 TIP: Pass the `--help` parameter to see script usage details
 
 The script provides additional flags to configure resource requests/limits (`--with-resource-limits`), replica counts (`--with-replicas`), and pod affinity rules (`--with-affinity-rules`) for Fusion services.
@@ -142,41 +145,12 @@ endif::[]
       annotations:
         prometheus.io/port: "8787"
         prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
 ----
 
-. Commit all three output files to version control.
+. Commit all output files from the `./customize_fusion_values.sh` script to version control.
 
 Once we go through all of the configuration topics in this topic, you'll have a well-configured custom values YAML file for your Fusion 5 installation. You'll then use this file during the Helm v3 installation at the end of this topic.
-
-[[monitoring-alerting]]
-=== Configure monitoring and alerting
-
-Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster.
-
-The `--prometheus true` option shown link:#custom-values[above] activates the Solr metrics exporter service and adds pod annotations so that Prometheus can scrape metrics from Fusion services. When you run the script with this option, it creates an additional custom value YAML files for Prometheus and Grafana:
-
-* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`, such as `gke_search_f5_monitoring_values.yaml`
-
-. Commit this file to version control, if you haven't already.
-. Review its contents to ensure that the settings suit your needs.
-+
-For example, decide how long you want to keep metrics; the default is 48h.
-+
-See the link:https://github.com/helm/charts/tree/master/stable/prometheus[Prometheus documentation^]
-+
-See the link:link:https://github.com/helm/charts/tree/master/stable/grafana[Grafana documentation^].
-
-To install Prometheus & Grafana in your namespace, run the `install_prom.sh` script.
-
-We'll cover how to install the default Grafana dashboards from the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] in
-ifdef::env-github[]
-// github link:
-link:3_operations.adoc#grafana-dashboards[Day Two Operations].
-endif::[]
-ifndef::env-github[]
-// docs site link:
-link:tbd[TBD].
-endif::[]
 
 [[solr-sizing]]
 === Configure Solr sizing
@@ -213,7 +187,8 @@ solr:
     tag: 8.4.1
   updateStrategy:
     type: "RollingUpdate"
-  javaMem: "-Xms11g -Xmx11g -Xmn4g -XX:ParallelGCThreads=8" # Configure memory settings for Solr
+  javaMem: "-Xmx3g -Dfusion_node_type=system" # Configure memory settings for Solr
+  solrGcTune: "-XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
   volumeClaimTemplates:
     storageSize: "100Gi"        # Size of the Solr disk
   replicaCount: 6               # Number of Solr pods to run in this StatefulSet
@@ -271,9 +246,9 @@ NOTE: We're not advocating that you must use regional disks for Solr storage, as
 [[node-pools]]
 === Configure multiple node pools
 
-As discussed in the Workload Isolation with Multiple Node Pools section above, Lucidworks recommends isolating search workloads from analytics workloads using multiple node pools. You'll need to define multiple node pools for your cluster as our scripts do not do this for you; we do provide an example script for GKE, see `create_gke_cluster_node_pools.sh`.
+As discussed in the Workload Isolation with Multiple Node Pools section above, Lucidworks recommends isolating search workloads from analytics workloads using multiple node pools. You'll need to define multiple node pools for your cluster as our scripts do not do this for you; we do provide an example script for GKE, see link:https://github.com/lucidworks/fusion-cloud-native/blob/master/additional_environments/create_gke_cluster_node_pools.sh[create_gke_cluster_node_pools.sh^].
 
-In the custom values YAML file, you can add additional Solr StatefulSets by adding their names to the list under the nodePools property. If any property for that statefulset needs to be changed from the default set of values, then it can be set directly on the object representing the node pool, any properties that are omitted are defaulted to the base value. See the following example (additional whitespace added for display purposes only):
+In the custom values YAML file, you can add additional Solr StatefulSets by adding their names to the list under the `nodePools` property. If any property for that statefulset needs to be changed from the default set of values, then it can be set directly on the object representing the node pool, any properties that are omitted are defaulted to the base value. See the following example (additional whitespace added for display purposes only):
 
 [source,yaml]
 ----
@@ -312,7 +287,7 @@ solr:
 ...
 ----
 
-In the above example the analytics partition will have 6 replicas (Solr pods), but the search nodepool would have 12 replicas. Each nodepool would automatically be assigned the property of `-Dfusion_node_type=<search/system/analytics>` which matches the name of the nodePool. The empty nodePool name `""` just maps to the default settings / node pool if not specifically overridden.
+In the above example the analytics partition will have 6 replicas (Solr pods), but the search nodepool would have 12 replicas. Each nodepool would automatically be assigned the property of `-Dfusion_node_type=<search/system/analytics>` which matches the name of the nodePool. The empty nodePool name `""` just maps to the default settings / node pool if not specifically overridden; please leave the `""` node pool as-is.
 
 The Solr pods will have a `fusion_node_type` system property set on them as shown below:
 
@@ -343,46 +318,50 @@ If your cluster defines the search, analytics, and system node pools, then we re
 [[network-policy]]
 === Pod network policy
 
-A Kubernetes network policy governs how groups of pods are allowed to communicate with each other and other network endpoints. With Fusion, it's expected that all incoming traffic flows through the API Gateway service. Moreover, all Fusion services in the same namespace expect an internal JWT to be included in the request, which is supplied by the Gateway. Consequently, Fusion services enforce a basic level of API security and do not need an additional network policy to protect them from other pods in the cluster. However, some organizations will still want to configure a network policy. Lucidworks will provide a starting policy YAML file with Fusion 5.1.
+A Kubernetes network policy governs how groups of pods are allowed to communicate with each other and other network endpoints. With Fusion, it's expected that all incoming traffic flows through the API Gateway service. Moreover, all Fusion services in the same namespace expect an internal JWT to be included in the request, which is supplied by the Gateway. Consequently, Fusion services enforce a basic level of API security and do not need an additional network policy to protect them from other pods in the cluster.
+
+To install the network policy for Fusion services, pass `--set global.networkPolicyEnabled=true` when installing the Fusion Helm chart.
 
 [[install]]
 === Install Fusion 5 on Kubernetes
 
-At this point, you're ready to install Fusion 5 using your custom values YAML file. If you used the `customize_fusion_values.sh` script
+At this point, you're ready to install Fusion 5 using your custom values YAML file(s) and upgrade script.
 
-
-Use the appropriate setup script for your platform, such as `setup_f5_aks.sh` for AKS. If you're not running on AKS, EKS, or GKE, then simply use the `setup_f5_k8s.sh` script. Pass the `--help` option to see script usage details. For instance, the following command will install Fusion along with Prometheus and Grafana into the default namespace in a cluster named search running in the us-west1 region with the f5 release label:
+If you used the `customize_fusion_values.sh` script, then simply run it using BASH on the command-line, For instance:
 
 [source,bash]
 ----
-./setup_f5_gke.sh -c search -p gcp-project -z us-west1 \
-  -r f5 -n default --prometheus install \
-  -t -h <ingress-hostname>
+./gke_search_f5_upgrade_fusion.sh
 ----
 
 Once the install completes, refer to the Verifying the Fusion Installation steps to verify your Fusion installation is running correctly.
 
-IMPORTANT: If you used our script to configure an Ingress for the API gateway service, (`-t -h` options), then you should move the contents of the `tls-values.yaml` file under the `api-gateway` section of your main custom values YAML file. This alleviates having to keep track of both configuration files when upgrading. For instance, if you passed `-t -h test1.lucidworkssales.com` to the setup script, then you would copy the contents of `tls-values.yaml` to your main custom values YAML file under the `api-gateway` section as shown below:
+[[monitoring-alerting]]
+=== Install Prometheus and Grafana
 
-[source,yaml]
+Lucidworks recommends using Prometheus and Grafana for monitoring the performance and health of your Fusion cluster. Your ops team may already have these services installed. If not, you can install them into the Fusion namespace.
+
+The `--prometheus true` option shown link:#custom-values[above] activates the Solr metrics exporter service and adds pod annotations so that Prometheus can scrape metrics from Fusion services. When you run the script with this option, it creates an additional custom value YAML file for installing Prometheus and Grafana:
+
+* `<provider>_<cluster>_<namespace>_monitoring_values.yaml`, such as `gke_search_f5_monitoring_values.yaml`
+
+. Commit this file to version control, if you haven't already.
+. Review its contents to ensure that the settings suit your needs.
++
+For example, decide how long you want to keep metrics; the default is 36h.
++
+See the link:https://github.com/helm/charts/tree/master/stable/prometheus[Prometheus documentation^]
++
+See the link:link:https://github.com/helm/charts/tree/master/stable/grafana[Grafana documentation^].
+
+To install Prometheus & Grafana in your namespace, run the `install_prom.sh` script, passing the provider, cluster name and namespace, such as:
+
+[source,bash]
 ----
-api-gateway:
-  service:
-    type: "NodePort"
-  ingress:
-    enabled: true
-    host: "test1.lucidworkssales.com"
-    tls:
-      enabled: true
-    annotations:
-      "networking.gke.io/managed-certificates": "f502rc6-managed-certificate"
-      "kubernetes.io/ingress.class": "gce"
-  nodeSelector:
-    cloud.google.com/gke-nodepool: default-pool
-  pod:
-    annotations:
-      prometheus.io/port: "6764"
-      prometheus.io/scrape: "true"
+./install_prom.sh --provider gke -c search -n f5
 ----
+TIP: Pass the `--help` parameter to see script usage details
+
+The Grafana dashboards from link:https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana[monitoring/grafana^] are installed automatically by the `install_prom.sh` script.
 
 // end::body[]
