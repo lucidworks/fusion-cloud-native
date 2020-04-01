@@ -724,18 +724,18 @@ kubectl get cm -n [NAMESPACE] sparkhistory-job-launcher -o yaml > sparkhistory-j
 kubectl edit cm -n [NAMESPACE] sparkhistory-job-launcher
 ----
 
-Update the `spark` key with these settings and then delete the `job-launcher` pod. The new `job-launcher` pod will apply the new configuration to subsequent jobs.
-
+Update the `spark` key with the new YAML settings below and then delete the `job-launcher` pod. The new `job-launcher` pod will apply the new configuration to subsequent jobs. In addition to the location of the secret and the settings that specify the location of the Spark eventLog, we also have to tell Spark how to access GCS with the `spark.hadoop.fs.gs.impl``spark.hadoop.fs.AbstractFileSystem.gs.impl` keys.
 
 [source,yaml]
 ----
 spark:
-  …
-  eventLog:
-    enabled: true
-    compress: true
-    dir: gs://[BUCKET_NAME]
   hadoop:
+    fs:
+      AbstractFileSystem:
+        gs:
+          impl: com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS
+      gs:
+        impl: com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem
     google:
       cloud:
         auth:
@@ -743,14 +743,24 @@ spark:
             account:
               json:
                 keyfile: /etc/history-secrets/[ACCOUNT_NAME].json
+  eventLog:
+    enabled: true
+    compress: true
+    dir: gs://[BUCKET_NAME]
+  …
   kubernetes:
     driver:
       secrets:
         history-secrets: /etc/history-secrets
+      container:
+        …
     executor:
       secrets:
         history-secrets: /etc/history-secrets
-  …
+      container:
+        …
+    …
+
 ----
 
 //end::history-config[]
