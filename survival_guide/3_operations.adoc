@@ -598,7 +598,10 @@ service:
   type: ClusterIP
   port: 18080
 
-nfs.enableExampleNFS: false
+pvc:
+  enablePVC: false
+nfs:
+  enableExampleNFS: false
 ----
 Note that, by default, the Spark History Server Helm chart creates an external LoadBalancer, exposing it to outside access. This is usually undesirable. In the above, we prevent this via the `service` key - the Spark History Server will only be set up on an internal IP within your cluster and will not be exposed externally. Later, we will show how to properly access the Spark History Server.
 
