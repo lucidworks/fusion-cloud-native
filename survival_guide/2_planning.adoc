@@ -28,7 +28,7 @@ See these topics for platform-specific instructions:
 * link:/how-to/how-to-deploy-aks.html[Azure Kubernetes Service (AKS)]
 endif::[]
 
-While the `setup_f5_*.sh` scripts are handy for getting started / proof-of-concept purposes, this section walks you through the planning process for building a production ready environment.
+While the `setup_f5_*.sh` scripts are handy for getting started / proof-of-concept purposes, this section walks you through the planning process for building a production-ready environment.
 
 [[prerequisites]]
 === Meet the prerequisites
@@ -83,7 +83,7 @@ Work with your K8s / Docker admin team to determine how to get the Fusion images
 Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion.  Our setup scripts (`setup_f5_*.sh`) use this file to create a custom values YAML for your cluster if it does not already exist.
 We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you get started.
 
-TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation. You will also need it to perform upgrades; if you try to upgrade your Fusion installation and neglect to provide the custom values yaml, your deployment will revert to chart defaults.
+TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation. You will also need it to perform upgrades; if you try to upgrade your Fusion installation and neglect to provide the custom values YAML, your deployment will revert to chart defaults.
 
 . In your local copy of the fusion-cloud-native repo, run the `customize_fusion_values.sh` utility script to create a working copy of the custom values YAML file:
 +
@@ -106,11 +106,11 @@ The script will create a custom values YAML using the naming convention: `<provi
 
 The script creates the following files using the naming convention: `<provider>_<cluster>_<namespace>_`:
 --
-* `<provider>_<cluster>_<namespace>_fusion_values.yaml`: Main custom values yaml used to override Helm chart defaults for Fusion microservices.
+* `<provider>_<cluster>_<namespace>_fusion_values.yaml`: Main custom values YAML used to override Helm chart defaults for Fusion microservices.
 * `<provider>_<cluster>_<namespace>_monitoring_values.yaml`: Custom values yaml used to configure Prometheus and Grafana.
 * `<provider>_<cluster>_<namespace>_fusion_resources.yaml`: Resource requests and limits for all Microservices.
 * `<provider>_<cluster>_<namespace>_fusion_affinity.yaml`: Pod affinity rules to ensure mulitple replicas for a single service are evenly distributed across zones and nodes.
-* `<provider>_<cluster>_<namespace>_upgrade_fusion.sh`: Script used to install and/or upgrade Fusion using the aforementioned custom values yaml files.
+* `<provider>_<cluster>_<namespace>_upgrade_fusion.sh`: Script used to install and/or upgrade Fusion using the aforementioned custom values YAML files.
 --
 
 TIP: Pass the `--help` parameter to see script usage details
@@ -350,7 +350,7 @@ The `--prometheus true` option shown link:#custom-values[above] activates the So
 +
 For example, decide how long you want to keep metrics; the default is 36h.
 +
-See the link:https://github.com/helm/charts/tree/master/stable/prometheus[Prometheus documentation^]
+See the link:https://github.com/helm/charts/tree/master/stable/prometheus[Prometheus documentation^].
 +
 See the link:link:https://github.com/helm/charts/tree/master/stable/grafana[Grafana documentation^].
 
@@ -360,7 +360,7 @@ To install Prometheus & Grafana in your namespace, run the `install_prom.sh` scr
 ----
 ./install_prom.sh --provider gke -c search -n f5
 ----
-TIP: Pass the `--help` parameter to see script usage details
+TIP: Pass the `--help` parameter to see script usage details.
 
 The Grafana dashboards from link:https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana[monitoring/grafana^] are installed automatically by the `install_prom.sh` script.
 
