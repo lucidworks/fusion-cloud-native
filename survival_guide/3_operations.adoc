@@ -761,8 +761,8 @@ spark:
 
 As we have set up the Spark History Server to only set up a ClusterIP, we will need to port forward the server using `kubectl`:
 ----
-kubectl get pods # to find the Spark History Server pod
-kubectl port-forward [POD_NAME] 18080:18080
+kubectl get pods -n [NAMESPACE] # to find the Spark History Server pod
+kubectl port-forward [POD_NAME] -n [NAMESPACE] 18080:18080
 ----
 
 You can now access the Spark History Server at `\http://localhost:18080`. Run a Spark job and confirm that you can see the logs appear in the UI.
