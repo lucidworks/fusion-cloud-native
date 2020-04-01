@@ -715,14 +715,16 @@ s3:
 
 After starting the Spark History Server, we must update the config map for Fusion's job-launcher so it can write logs to the same location that Spark History Server is reading from.
 
-In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to the same Google Cloud Storage bucket we configured the Spark History Server to read from.
+In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to the same Google Cloud Storage bucket we configured the Spark History Server to read from. Before editing the config map, make a copy of the existing settings in case you need to revert the changes.
 
 [source,bash]
 ----
-kubectl edit cm sparkhistory-job-launcher
+kubectl get cm -n [NAMESPACE] sparkhistory-job-launcher -o yaml > sparkhistory-job-launcher.yaml
+
+kubectl edit cm -n [NAMESPACE] sparkhistory-job-launcher
 ----
 
-Update the `spark` key with these settings and then restart the `job-launcher` pod.
+Update the `spark` key with these settings and then delete the `job-launcher` pod. The new `job-launcher` pod will apply the new configuration to subsequent jobs.
 
 
 [source,yaml]
@@ -740,14 +742,14 @@ spark:
           service:
             account:
               json:
-                keyfile: /etc/secrets/[ACCOUNT_NAME].json
+                keyfile: /etc/history-secrets/[ACCOUNT_NAME].json
   kubernetes:
     driver:
       secrets:
-        history-secrets: /etc/secrets
+        history-secrets: /etc/history-secrets
     executor:
       secrets:
-        history-secrets: /etc/secrets
+        history-secrets: /etc/history-secrets
   …
 ----
 
