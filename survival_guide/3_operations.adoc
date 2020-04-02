@@ -330,7 +330,8 @@ If you're using a separate `search` pool for search oriented collections, then y
 
 If you're using PULL replicas for search collections, then you should also pass `shards.preference=replica.type:PULL,replica.location:local` to Solr.
 
-This ensures that queries get routed to PULL replicas only and favors the local replica if it exists.
+This ensures that queries get routed to PULL replicas only and favors the local replica if it exists. For more information about `shards.preference`, see:
+https://lucene.apache.org/solr/guide/8_4/distributed-requests.html#shards-preference-parameter
 
 You should also provide these parameters for sidecar queries, such as in the tagger, rules, and signals boost stages.
 
