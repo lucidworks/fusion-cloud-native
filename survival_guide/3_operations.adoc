@@ -568,7 +568,7 @@ This cron job is created automatically when the `job-launcher` microservice is i
 ==== Spark History Server
 
 //tag::history-intro[]
-While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the https://spark.apache.org/docs/latest/monitoring.html[Spark History Server] into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
+While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the https://spark.apache.org/docs/latest/monitoring.html[Spark History Server^] into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
 //end::history-intro[]
 
 ===== Installing Spark History Server
