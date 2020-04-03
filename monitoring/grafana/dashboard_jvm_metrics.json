@@ -59,7 +59,7 @@
       "targets": [
         {
           "expr": "system_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod}}",
+          "legendFormat": "{{kubernetes_pod_name}}",
           "refId": "A"
         }
       ],
@@ -144,7 +144,7 @@
       "targets": [
         {
           "expr": "process_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod}}",
+          "legendFormat": "{{kubernetes_pod_name}}",
           "refId": "A"
         }
       ],
@@ -229,7 +229,7 @@
       "targets": [
         {
           "expr": "jvm_gc_pause_seconds_count{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod}} {{action}}",
+          "legendFormat": "{{kubernetes_pod_name}} {{action}}",
           "refId": "A"
         }
       ],
@@ -315,7 +315,7 @@
       "targets": [
         {
           "expr": "rate(jvm_classes_loaded_classes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}[5m])",
-          "legendFormat": "{{kubernetes_pod}}",
+          "legendFormat": "{{kubernetes_pod_name}}",
           "refId": "A"
         }
       ],
@@ -399,8 +399,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(kubernetes_pod,id)(rate(jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}[5m]))",
-          "legendFormat": "{{kubernetes_pod}} {{id}}",
+          "expr": "sum by(kubernetes_pod_name,id)(rate(jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}[5m]))",
+          "legendFormat": "{{kubernetes_pod_name}} {{id}}",
           "refId": "A"
         }
       ],
@@ -485,7 +485,7 @@
       "targets": [
         {
           "expr": "jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}",
-          "legendFormat": "{{kubernetes_pod}} {{id}} Memory",
+          "legendFormat": "{{kubernetes_pod_name}} {{id}} Memory",
           "refId": "A"
         }
       ],
@@ -570,12 +570,12 @@
       "targets": [
         {
           "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"runnable\"}",
-          "legendFormat": "{{kubernetes_pod}} {{state}} Threads",
+          "legendFormat": "{{kubernetes_pod_name}} {{state}} Threads",
           "refId": "A"
         },
         {
           "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"blocked\"}",
-          "legendFormat": "{{kubernetes_pod}} {{state}} Threads",
+          "legendFormat": "{{kubernetes_pod_name}} {{state}} Threads",
           "refId": "B"
         }
       ],
