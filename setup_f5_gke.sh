@@ -33,31 +33,32 @@ function print_usage() {
 
   echo -e "\nUse this script to install Fusion 5 on GKE; optionally create a GKE cluster in the process"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c            Name of the GKE cluster (required)\n"
-  echo -e "  -p            GCP Project ID (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
-  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z            GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
-  echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
-  echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
-  echo -e "                then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
-  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
-  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
-  echo -e "  --gke         GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
-  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values      Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
-  echo -e "                (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
-  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1\n"
-  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
-  echo -e "                defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
-  echo -e "  --create      Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
-  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --dry-run     Perform a dry-run of the upgrade to see what would change\n"
-  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster."
-  echo -e "                Be careful! This operation cannot be undone.\n"
-  echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
+  echo -e "  -c                Name of the GKE cluster (required)\n"
+  echo -e "  -p                GCP Project ID (required)\n"
+  echo -e "  -r                Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -z                GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
+  echo -e "  -i                Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -t                Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
+  echo -e "                    then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                    'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --gke             GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
+  echo -e "  --version         Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values          Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
+  echo -e "                    (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
+  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
+  echo -e "                    defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  --create          Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n"
+  echo -e "  --upgrade         Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run         Perform a dry-run of the upgrade to see what would change\n"
+  echo -e "  --purge           Uninstall and purge all Fusion objects from the specified namespace and cluster."
+  echo -e "                    Be careful! This operation cannot be undone.\n"
+  echo -e "  --force           Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 }
 
 SCRIPT_CMD="$0"
@@ -168,6 +169,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --solr-disk-gb)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --solr-disk-gb parameter!"
+              exit 1
+            fi
+            SOLR_DISK_GB=$2
             shift 2
         ;;
         --node-pool)
@@ -467,6 +476,6 @@ fi
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
 ( ${SCRIPT_DIR}/setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result

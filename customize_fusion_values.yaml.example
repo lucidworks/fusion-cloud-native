@@ -74,7 +74,7 @@ fusion-indexing:
 query-pipeline:
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xmx2g -Dserver.jetty.max-threads=1000 -Dcom.lucidworks.httpclient.defaultMaxPerRoute=1000 -Dcom.lucidworks.httpclient.maxTotalConnections=1000 -Dhttp.maxConnections=1000"
+  javaToolOptions: "-Xms2g -Xmx2g -DZoneAwareNIWSDiscoveryLoadBalancer.enabled=false -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=1000 -Dcom.lucidworks.httpclient.defaultMaxPerRoute=1000 -Dcom.lucidworks.httpclient.maxTotalConnections=1000 -Dhttp.maxConnections=1000"
   pod:
     annotations:
       prometheus.io/port: "8787"
@@ -89,7 +89,7 @@ api-gateway:
   externalTrafficPolicy: "Local"
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xmx2g"
+  javaToolOptions: "-Xms2g -Xmx2g"
   pod:
     annotations:
       prometheus.io/port: "6764"
@@ -141,6 +141,9 @@ rules-ui:
     {NODE_POOL}
 
 webapps:
+  livenessProbe:
+    initialDelaySeconds: 60
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false"
   nodeSelector:
     {NODE_POOL}
 
