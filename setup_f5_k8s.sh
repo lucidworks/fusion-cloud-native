@@ -21,6 +21,7 @@ DRY_RUN=""
 SOLR_DISK_GB=50
 SOLR_REPLICAS=1
 NODE_POOL="{}"
+KUBECTL="kubectl"
 
 function print_usage() {
   CMD="$1"
@@ -35,6 +36,7 @@ function print_usage() {
   echo -e "  -c                Name of the K8s cluster (required)\n"
   echo -e "  -r                Helm release name for installing Fusion 5, defaults to 'f5'\n"
   echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -b                The Kubernetes command line tool executable to use, defaults to 'kubectl'\n"
   echo -e "  --provider        Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'k8s'\n"
   echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
   echo -e "                    where you defined a custom node pool, wrap the arg in double-quotes\n"
@@ -80,6 +82,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             RELEASE="$2"
+            shift 2
+        ;;
+        -b)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -b parameter!"
+              exit 1
+            fi
+            KUBECTL="$2"
             shift 2
         ;;
         --provider)
@@ -220,10 +230,10 @@ DEFAULT_MY_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
 UPGRADE_SCRIPT="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
 
 # Check our prerequisites are in place
-hash kubectl
+hash ${KUBECTL}
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
-  echo -e "\nERROR: Must install kubectl before proceeding with this script!"
+  echo -e "\nERROR: Must install ${KUBECTL} before proceeding with this script!"
   exit 1
 fi
 
@@ -235,7 +245,7 @@ if [ $has_prereq == 1 ]; then
 fi
 
 # Log our current kube context for the user
-current=$(kubectl config current-context)
+current=$(${KUBECTL} config current-context)
 echo -e "Using kubeconfig: $current"
 
 # Setup our owner label so we can check ownership of namespaces
@@ -254,12 +264,12 @@ is_helm_v3=$(helm version --short | grep v3)
 
 if [ "${is_helm_v3}" == "" ]; then
   # see if Tiller is deployed ...
-  kubectl rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  ${KUBECTL} rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
   rollout_status=$?
   if [ $rollout_status != 0 ]; then
     echo -e "\nSetting up Helm Tiller ..."
-    kubectl create serviceaccount --namespace kube-system tiller
-    kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
+    ${KUBECTL} create serviceaccount --namespace kube-system tiller
+    ${KUBECTL} create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
     helm init --service-account tiller --wait
     helm version
   fi
@@ -270,20 +280,20 @@ fi
 # If we are upgrading
 if [ "${UPGRADE}" == "1" ]; then
   # Make sure the namespace exists
-  if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  if ! ${KUBECTL} get namespace "${NAMESPACE}" > /dev/null 2>&1; then
     echo -e "\nNamespace ${NAMESPACE} not found, if this is a new cluster please run an install first"
     exit 1
   fi
 
   # Check if the owner label on the namespace is the same as we are, so we cannot
   # accidentally upgrade a release from someone elses namespace
-  namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+  namespace_owner=$(${KUBECTL} get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
   if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
     echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to upgrade this namespace"
     exit 1
   fi
 elif [ "$PURGE" == "1" ]; then
-  kubectl get namespace "${NAMESPACE}"
+  ${KUBECTL} get namespace "${NAMESPACE}"
   namespace_exists=$?
   if [ "$namespace_exists" != "0" ]; then
     echo -e "\nNamespace ${NAMESPACE} not found so assuming ${RELEASE_NAME} has already been purged"
@@ -292,7 +302,7 @@ elif [ "$PURGE" == "1" ]; then
 
   # Check if the owner label on the namespace is the same as we are, so we cannot
   # accidentally purge someone elses release
-  namespace_owner=$(kubectl get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
+  namespace_owner=$(${KUBECTL} get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
   if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
     echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to purge this namespace"
     exit 1
@@ -310,16 +320,16 @@ elif [ "$PURGE" == "1" ]; then
     else
       helm del --purge "${RELEASE}"
     fi
-    kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
-    kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
-    kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete serviceaccount --namespace "${NAMESPACE}" "${RELEASE}-api-gateway-jks-create"
+    ${KUBECTL} delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
+    ${KUBECTL} delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
+    ${KUBECTL} delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete serviceaccount --namespace "${NAMESPACE}" "${RELEASE}-api-gateway-jks-create"
     if [ "${NAMESPACE}" != "default" ] && [ "${NAMESPACE}" != "kube-public" ] && [ "${NAMESPACE}" != "kube-system" ]; then
-      kubectl delete namespace "${NAMESPACE}" --grace-period=0 --force --timeout=10s
+      ${KUBECTL} delete namespace "${NAMESPACE}" --grace-period=0 --force --timeout=10s
     fi
   fi
   exit 0
@@ -338,10 +348,10 @@ else
   fi
 
   # There isn't let's check if there is a fusion deployment in the namespace already
-  if ! kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" 2>&1 | grep -q "No resources"; then
+  if ! ${KUBECTL} get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" 2>&1 | grep -q "No resources"; then
     # There is a fusion deployed into this namespace, try and protect against two releases being installed into
     # The same namespace
-    instance=$(kubectl get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
+    instance=$(${KUBECTL} get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
     echo -e "\nERROR: There is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace\n"
     exit 1
   fi
@@ -351,19 +361,19 @@ fi
 # report_ns logs a message to the user informing them how to change the default namespace
 function report_ns() {
   if [ "${NAMESPACE}" != "default" ]; then
-    echo -e "\nNote: Change the default namespace for kubectl to ${NAMESPACE} by doing:\n    kubectl config set-context --current --namespace=${NAMESPACE}\n"
+    echo -e "\nNote: Change the default namespace for ${KUBECTL} to ${NAMESPACE} by doing:\n    ${KUBECTL} config set-context --current --namespace=${NAMESPACE}\n"
   fi
 }
 
 # proxy_url prints how to access the proxy via a LoadBalancer service
 function proxy_url() {
   if [ "${PROVIDER}" == "eks" ]; then
-    export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+    export PROXY_HOST=$(${KUBECTL} --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
   else
-    export PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    export PROXY_HOST=$(${KUBECTL} --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
   fi
 
-  export PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
+  export PROXY_PORT=$(${KUBECTL} --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
   export PROXY_URL="$PROXY_HOST:$PROXY_PORT"
 
   if [ "$PROXY_URL" != ":" ]; then
@@ -381,7 +391,7 @@ function ingress_setup() {
   echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
   loops=24
   while (( loops > 0 )); do
-    ingressIp=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    ingressIp=$(${KUBECTL} --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     if [[ ! -z ${ingressIp} ]]; then
       export INGRESS_IP="${ingressIp}"
       break
@@ -393,7 +403,7 @@ function ingress_setup() {
   echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
   echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
   if [ "$TLS_ENABLED" == "1" ]; then
-  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
+  echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use ${KUBECTL} get managedcertificates -o yaml to check the status of the certificate issue process."
   fi
   report_ns
 }
@@ -425,7 +435,7 @@ if [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
-     ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
+     ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -b "${KUBECTL}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
       --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --with-resource-limits --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
@@ -436,7 +446,7 @@ fi
 # just let the user do that manually with Helm as needed
 if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
   if [ "${PROMETHEUS}" == "install" ]; then
-    ( "${SCRIPT_DIR}/install_prom.sh" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --node-pool "${NODE_POOL}" )
+    ( "${SCRIPT_DIR}/install_prom.sh" -b "${KUBECTL}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --node-pool "${NODE_POOL}" )
   fi
 fi
 
