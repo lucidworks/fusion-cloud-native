@@ -70,6 +70,14 @@ if [ $# -gt 1 ]; then
             CLUSTER_NAME="$2"
             shift 2
         ;;
+        -b)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -b parameter!"
+              exit 1
+            fi
+            KUBECTL="$2"
+            shift 2
+        ;;
         -n)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -n parameter!"
