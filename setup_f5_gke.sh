@@ -1,5 +1,4 @@
 #!/bin/bash
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE=""
@@ -62,6 +61,7 @@ function print_usage() {
   echo -e "                Be careful! This operation cannot be undone.\n"
   echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 
+}
 
 if [ $# -gt 0 ]; then
   while true; do
