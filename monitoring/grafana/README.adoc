@@ -32,13 +32,37 @@ The Solr Node dashboard contains per-node metrics including information about re
 ==== System Dashboard
 The Solr System Dashboard shows high-level system stats, including requests/response statistics, JVM metrics, and common operating system metrics, such as memory usage, file descriptor usage, and cpu utilization.
 
-==== Kube Metrics Dashboard
-There are Kubernetes metrics that can be queried through Grafana. However, these require installing a daemonset when setting up Prometheus, which displays information about running pods, memory allocation, and CRON jobs.
+== Kubernetes Dashboards
+
+The set of Kubernetes performance dashboards requires the installation of additional daemonsets to collect performance metrics from Kube. 
 
 Ensure that at least one namespace in your cluster uses the following configuration in the Prometheus `values.yaml` file for the `stable/prometheus` Helm chart.
 ```
 kubeStateMetrics:
     enabled: true
+nodeExporter:
+    enabled: true
 ```
+
+Additionally you will want to install cadvisor (likely into an infrastructure/system namespace):
+```
+helm repo add code-chris https://code-chris.github.io/helm-charts
+helm repo update
+helm install cadvisor code-chris/cadvisor
+```
+
+=== Kube Metrics Dashboard (replaced by Kube Node Dashboard)
+There are Kubernetes metrics that can be queried through Grafana. However, these require installing a daemonset when setting up Prometheus, which displays information about running pods, memory allocation, and CRON jobs.
+
+=== Kube Node Dashboard
+There are Kubernetes metrics that can be queried through Grafana. However, these require installing a daemonset when setting up Prometheus, which displays information about running pods, load, network traffic, memory allocation and more. Some dashboards may not be rendered until you drill down into one or more specific nodes/instances at the top of the dashboard. 
+
+
+=== Kubernetes Persistence Volumes Dashboard
+This dashboard shows you all of your Kubernetes PVCs, filterable by namespace and/or node. It provides you with information about disk utilization so you can monitor for PVCs that are nearing capacity.
+
+=== Docker Host and Container Overview Dashboard
+This dashboard provides you a great view of your running containers, filterable by namespace, node, and/or container name. It provides information about number of running containers, network traffic, memory utilization, disk IO, and load metrics.
+
 
 // end::body[]
