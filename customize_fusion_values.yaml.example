@@ -150,6 +150,9 @@ webapps:
   nodeSelector:
     {NODE_POOL}
 
+fusion-jupyter:
+  enabled: false
+
 pulsar:
   broker:
     annotations:
