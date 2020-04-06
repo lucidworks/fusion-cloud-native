@@ -104,10 +104,10 @@ insights:
 job-launcher:
   resources:
     requests:
-      memory: 1Gi
+      memory: 2Gi
       cpu: 200m
     limits:
-      memory: 2Gi
+      memory: 3Gi
       cpu: 800m
 
 job-rest-server:
@@ -116,7 +116,7 @@ job-rest-server:
       memory: 1Gi
       cpu: 200m
     limits:
-      memory: 2Gi
+      memory: 1Gi
       cpu: 800m
 
 ml-model-service:
@@ -132,10 +132,10 @@ ml-model-service:
     resources:
       requests:
         memory: 1Gi
-        cpu: 300m
+        cpu: 800m
       limits:
         memory: 3Gi
-        cpu: 800m
+        cpu: 1500m
 
 query-pipeline:
   resources:
@@ -194,8 +194,8 @@ sql-service:
 webapps:
   resources:
     requests:
-      cpu: "100m"
-      memory: "500Mi"
+      cpu: "300m"
+      memory: "800Mi"
     limits:
-      cpu: "200m"
-      memory: "1250Mi"
+      cpu: "400m"
+      memory: "1300Mi"

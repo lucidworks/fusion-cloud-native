@@ -51,10 +51,6 @@ ml-model-service:
   modelRepoImpl: fusion
   fs:
     enabled: true
-  livenessProbe:
-    initialDelaySeconds: 90
-  readinessProbe:
-    initialDelaySeconds: 90
 
 fusion-admin:
   nodeSelector:
@@ -103,10 +99,6 @@ auth-ui:
     {NODE_POOL}
 
 classic-rest-service:
-  livenessProbe:
-    initialDelaySeconds: 190
-  readinessProbe:
-    initialDelaySeconds: 190
   nodeSelector:
     {NODE_POOL}
 
