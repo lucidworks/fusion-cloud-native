@@ -1,7 +1,8 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.0.3-3"
+CHART_VERSION="5.1.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
@@ -15,9 +16,7 @@ CREATE_MODE=
 PURGE=0
 FORCE=0
 AMI="auto"
-CUSTOM_MY_VALUES=()
 MY_VALUES=()
-ML_MODEL_STORE="fusion"
 DRY_RUN=""
 SOLR_DISK_GB=50
 
@@ -31,26 +30,27 @@ function print_usage() {
 
   echo -e "\nUse this script to install Fusion 5 on EKS; optionally create a EKS cluster in the process. We are using 1 vpc and 2 subnets from different AZs\n"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c          Name of the EKS cluster (required)\n"
-  echo -e "  -p          AWS_ACCOUNT - profile (required)\n"
-  echo -e "  -r          Helm release name for installing Fusion 5, defaults to 'f5'\n"
-  echo -e "  -n          Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -z          AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
-  echo -e "  -i          Instance type, defaults to 'm5.2xlarge'\n"
-  echo -e "  -a          AMI to use for the nodes, defaults to 'auto'\n"
-  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
-  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
-  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
-  echo -e "  --version   Fusion Helm Chart version, defaults to ${CHART_VERSION}\n"
-  echo -e "  --values    Custom values file containing config overrides; defaults to eks_<cluster>_<release>_fusion_values.yaml  (can be specified multiple times)\n"
-  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1\n"
-  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
-  echo -e "                defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
-  echo -e "  --create    Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
-  echo -e "  --upgrade   Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --dry-run     Perform a dry-run of the upgrade to see what would change\n"
-  echo -e "  --purge     Uninstall and purge all Fusion objects from the specified namespace and cluster\n"
-  echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
+  echo -e "  -c                Name of the EKS cluster (required)\n"
+  echo -e "  -p                AWS_ACCOUNT - profile (required)\n"
+  echo -e "  -r                Helm release name for installing Fusion 5, defaults to 'f5'\n"
+  echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -z                AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
+  echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
+  echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
+  echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                    'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --version         Fusion Helm Chart version, defaults to ${CHART_VERSION}\n"
+  echo -e "  --values          Custom values file containing config overrides; defaults to eks_<cluster>_<release>_fusion_values.yaml  (can be specified multiple times)\n"
+  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
+  echo -e "                    defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  --create          Create a cluster in EKS; provide the mode of the cluster to create, one of: demo\n"
+  echo -e "  --upgrade         Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run         Perform a dry-run of the upgrade to see what would change\n"
+  echo -e "  --purge           Uninstall and purge all Fusion objects from the specified namespace and cluster\n"
+  echo -e "  --force           Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 }
 
 if [ $# -gt 0 ]; then
@@ -128,6 +128,14 @@ if [ $# -gt 0 ]; then
             SOLR_REPLICAS=$2
             shift 2
         ;;
+        --solr-disk-gb)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --solr-disk-gb parameter!"
+              exit 1
+            fi
+            SOLR_DISK_GB=$2
+            shift 2
+        ;;
         --node-pool)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --node-pool parameter!"
@@ -149,7 +157,7 @@ if [ $# -gt 0 ]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --values parameter!"
               exit 1
             fi
-            CUSTOM_MY_VALUES+=("$2")
+            MY_VALUES+=("$2")
             shift 2
         ;;
         --create)
@@ -231,8 +239,6 @@ if [[ $RELEASE =~ [^$valid] ]]; then
   exit 1
 fi
 
-DEFAULT_MY_VALUES="eks_${CLUSTER_NAME}_${RELEASE}_fusion_values.yaml"
-
 hash aws
 has_prereq=$?
 if [ $has_prereq == 1 ]; then
@@ -276,6 +282,7 @@ if [ $has_prereq == 1 ]; then
   echo -e "\nERROR: Must install helm before proceeding with this script! See: https://helm.sh/docs/using_helm/#quickstart"
   exit 1
 fi
+
 
 aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" list-clusters --query "clusters" |  grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
@@ -330,17 +337,6 @@ fi
 aws eks --profile "${AWS_ACCOUNT}" --region "${REGION}" update-kubeconfig --name "${CLUSTER_NAME}"
 current_cluster=$(kubectl config current-context)
 
-if [ "$PURGE" == "1" ]; then
-
-  FORCE_ARG=""
-  if [ "${FORCE}" == "1" ]; then
-    FORCE_ARG=" --force"
-  fi
-
-  source ./setup_f5_k8s.sh -c ${CLUSTER_NAME} -r ${RELEASE} -n ${NAMESPACE} --purge ${FORCE_ARG}
-  exit 0
-fi
-
 echo -e "\nConfigured to use EKS cluster: ${current_cluster}"
 
 if [ "$UPGRADE" == "0" ]; then
@@ -348,44 +344,15 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
-lw_helm_repo=lucidworks
 
-echo -e "\nAdding the Lucidworks chart repo to helm repo list"
-helm repo list | grep "https://charts.lucidworks.com"
-if [ $? ]; then
-  helm repo add "${lw_helm_repo}" https://charts.lucidworks.com
-fi
+echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 
-helm repo update
 
-echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE} using custom values from ${MY_VALUES[*]}"
-
-if [ ! -z "${CUSTOM_MY_VALUES[*]}" ]; then
-  MY_VALUES=(${CUSTOM_MY_VALUES[@]})
-fi
-
+# Pass in custom values
 VALUES_STRING=""
-if [ "${UPGRADE}" == "1" ] && [ -z "$MY_VALUES" ] && [ -f "${DEFAULT_MY_VALUES}" ]; then
-  MY_VALUES=( ${DEFAULT_MY_VALUES} )
-fi
-
 for v in "${MY_VALUES[@]}"; do
-  if [ ! -f "${v}" ]; then
-    echo -e "\nWARNING: Custom values file ${v} not found!\nYou need to provide the same custom values you provided when creating the cluster in order to upgrade.\n"
-    exit 1
-  fi
   VALUES_STRING="${VALUES_STRING} --values ${v}"
 done
-
-if [ -z "${ADDITIONAL_VALUES}" ]; then
-  VALUES_STRING="${VALUES_STRING} ${ADDITIONAL_VALUES}"
-fi
-
-# Invoke the generic K8s setup script to complete the install/upgrade
-INGRESS_ARG=""
-if [ ! -z "${INGRESS_HOSTNAME}" ]; then
-  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME}"
-fi
 
 UPGRADE_ARGS=""
 if [ "${UPGRADE}" == "1" ]; then
@@ -412,8 +379,8 @@ if [ "${NODE_POOL}" == "" ]; then
 fi
 
 # for debug only
-#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
-source ./setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}
+#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${UPGRADE_ARGS}"
+( "${SCRIPT_DIR}/setup_f5_k8s.sh" -c "$CLUSTER_NAME" -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
+  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result

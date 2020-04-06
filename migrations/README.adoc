@@ -1,0 +1,360 @@
+= Fusion 5 Migration Guide
+:toc:
+:toclevels: 5
+:toc-title:
+
+The latest version of Fusion 5 is 5.1.0. The migration process varies depending on your current version of Fusion.
+
+// tag::body[]
+
+== Migrating from Fusion 5.0.x to 5.1.x
+
+If you're currently running Fusion 5.0.2+, then you need to perform three steps before upgrading to 5.1.0. If you are installing Fusion 5.1.0 into a new namespace, then you can safely skip these steps.
+
+If you're currently running Fusion 5.0.0 - 5.0.1, then please follow the <<upgrade-to-502,Upgrade from 5.0.1>> steps before proceeding with this section.
+
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+
+=== Prepare for Upgrade to Solr 8.4.1
+
+Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
+For additional background on the Solr text tagger and the `FST50` postings format, see: https://lucene.apache.org/solr/guide/8_3/the-tagger-handler.html
+
+Consequently, before you upgrade to Solr 8.4.1, you need to re-index the query_rewrite documents to remove the use of the `postingsFormat`.
+Otherwise, when Solr 8.4.1 initializes, it will not be able to load the query_rewrite collections.
+After upgrading, you'll re-index once again to restore the `postingsFormat` using the new implementation; the custom `postingsFormat` is essential for achieving optimal text tagging performance.
+
+==== Prerequisites
+
+Before proceeding, please https://github.com/lucidworks/fusion-cloud-native[follow the upgrade instructions
+ corresponding to your cloud platform here] to upgrade your Fusion 5 installation to the latest Helm chart: `5.0.3-4`.
+
+Make sure you're running on Zookeeper 3.5.6 and Solr 8.3.1 and that all collections are healthy.
+
+You *should not* be actively making changes to the `query_rewrite` collections (via Rules UI) during the upgrade process.
+
+For production systems, this upgrade process should be performed during a maintenance window.
+
+===== Backup the query_rewrite and query_rewrite_staging collections
+
+Lucidworks recommends taking a backup of your query rewrite collections just in case something goes wrong with the upgrade, especially for production environments.
+
+Depending on your Ingress config, the export may take too long and timeout. Consequently, we recommend opening a kubectl port-forward to the Fusion Gateway pod:
+```
+kubectl port-forward <POD> 6764
+```
+
+Then export the collection(s) to a local JSON file using the `/query/query-rewrite/export/<COLL>` endpoint. For instance:
+```
+PROXY="http://localhost:6764"
+APP="YOUR_FUSION_APP_ID"
+curl -u $CREDS "$PROXY/query/query-rewrite/export/${APP}_query_rewrite_staging" > ${APP}_query_rewrite_staging.json
+curl -u $CREDS "$PROXY/query/query-rewrite/export/${APP}_query_rewrite" > ${APP}_query_rewrite.json
+```
+__Replace `$CREDS` with your Fusion admin username and password__, for example `-u admin:somepassword`
+
+Repeat this command for *every Fusion application* that has data indexed in the `query_rewrite_staging` and `query_rewrite` collections.
+
+==== Upgrade Steps
+
+In order to upgrade from Solr 8.3.1 to 8.4.1, you need to re-index all query_rewrite and query_rewrite_staging collections that have indexed data.
+
+Lucidworks provides a utility Docker image to drive the re-index process.
+
+If your installation does not have indexed documents in any of the `query_rewrite` collections, then you can safely upgrade to Solr 8.4.1 using a Helm upgrade.
+
+1) Run the *prepare* step
+
+The *prepare* step re-indexes the query_rewrite collections into a temp collection after removing the `postingsFormat` from the `tagger` field type in the Solr schema.
+This ensures the temp collections can be restored when Solr 8.4.1 initializes.
+
+```
+kubectl run --generator=run-pod/v1 \
+  --image="lucidworks/fm-upgrade-query-rewrite:1.x" \
+  --restart=Never \
+  --env="HELM_RELEASE=<CHANGEME>" \
+  --env="ACTION=prepare" prepare-upgrade-solr841
+```
+*Be sure to change the HELM_RELEASE value to the release name (NOT the version) of your Fusion 5 installation.* You can find this using `helm list`
+against your Fusion 5 namespace (find the release that's using the "fusion" chart and look at the name column). Typically, the
+release name is the same as your namespace name.
+
+Wait until the `prepare-upgrade-solr841` pod shows status `Completed`
+
+2) Upgrade to Solr 8.4.1 using the standard Fusion 5 Helm upgrade process (set the Solr tag version to `8.4.1` in custom values yaml)
+
+3) Verify all `*_temp_fix` collections are online and healthy
+
+4) Run the *restore* step
+
+The *restore* step re-indexes the temp collections back into the original query_rewrite collections after restoring the `postingsFormat` on the tagger field with the new implementation added in Lucene 8.4.1.
+
+```
+kubectl run --generator=run-pod/v1 \
+  --image="lucidworks/fm-upgrade-query-rewrite:1.x" \
+  --restart=Never \
+  --env="HELM_RELEASE=<CHANGEME>" \
+  --env="ACTION=restore" restore-upgrade-solr841
+```
+*Be sure to change the HELM_RELEASE value to the release name of your Fusion 5 installation.*
+
+Wait until the `restore-upgrade-solr841` pod shows status `Completed`
+
+5) Verify all query rewrite collections are online and healthy
+
+6) Delete the prepare and restore pods
+
+```
+kubectl delete po prepare-upgrade-solr841
+kubectl delete po restore-upgrade-solr841
+```
+
+=== Install Seldon Core CRD
+
+Fusion 5.1.0 introduces https://www.seldon.io/tech/products/core/[Seldon Core] for ML model serving. Seldon Core installs Kuberentes Custom Resource Definitions (CRD). Due to a limitation in how Helm handles CRDs during upgrades to an existing cluster, you may need to install the CRDs into a temp namespace before attempting an upgrade to your existing namespace.
+
+Check if the Seldon Core CRDs are present in your cluster already
+```
+kubectl api-versions | grep machinelearning.seldon.io/v1
+```
+If this returns no results then run the following commands to create a temporary namespace and install the Seldon Core CRDs into the K8s cluster:
+```
+kubectl create namespace tmp-crd-install
+helm install --namespace tmp-crd-install tmp-crd lucidworks/fusion --version 5.1.0 --debug \
+  --set "solr.enabled=false" --set "fusion-admin.enabled=false" \
+  --set "fusion-indexing.enabled=false" --set "query-pipeline.enabled=false" \
+  --set "api-gateway.enabled=false" --set "classic-rest-service.enabled=false" \
+  --set "sql-service.enabled=false" --set "zookeeper.enabled=false" \
+  --set "job-launcher.enabled=false" --set "job-rest-service.enabled=false" \
+  --set "rest-service.enabled=false" --set "rpc-service.enabled=false" \
+  --set "logstash.enabled=false" --set "webapps.enabled=false"
+helm delete --namespace tmp-crd-install tmp-crd
+kubectl delete namespace tmp-crd-install
+```
+
+To verify the Seldon Core CRDs were installed successfully, run:
+```
+k api-versions | grep machinelearning.seldon.io/v1;
+```
+You should see output like:
+```
+machinelearning.seldon.io/v1
+machinelearning.seldon.io/v1alpha2
+machinelearning.seldon.io/v1alpha3
+```
+
+=== Delete Logstash StatefulSet
+
+If you're running Fusion `5.0.3-2` or earlier, then you need to delete the Logstash StatefulSet. The data will remain intact and Logstash will be restored correctly during the Fusion upgrade.
+```
+kubectl delete sts <RELEASE>-logstash
+```
+
+You may now proceed to upgrade to Fusion 5.1.0. Be sure to update the `CHART_VERSION` to `5.1.0` in your upgrade script.
+
+=== Update Prometheus Scrape Path
+
+Please add the `prometheus.io/path: "/actuator/prometheus"` annotation to the `api-gateway`, `query-pipeline`, and `fusion-indexing` sections of your custom values yaml:
+```
+query-pipeline:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+api-gateway:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+fusion-indexing:
+  ... existing settings
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+```
+Also, we've added a new Grafana dashboard for monitoring Pulsar topic metrics, see: https://github.com/lucidworks/fusion-cloud-native/blob/master/monitoring/grafana/pulsar_grafana_dashboard.json
+
+We've also updated several of the existing Grafana dashboards. As of 5.1.0, the dashboards are imported automatically during installation, but pre-5.1.0 you needed to import the dashboards manually. Please re-import the latest updates from: https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/grafana
+
+[[upgrade-to-502]]
+== Upgrade from 5.0.1 to 5.0.2 to Zookeeper 3.5.6 and Solr 8.3.1
+
+Fusion 5.0.1 (and subsequent 5.0.2 pre-release versions, such as 5.0.2-7) runs Solr 8.2.0 and Zookeeper 3.4.14.
+Prior to upgrading to Fusion 5.0.2, you need to upgrade Solr to 8.3.1 in your existing cluster and perform some minor changes to the custom values yaml.
+
+When you upgrade to 5.0.2, Zookeeper will migrate from 3.4.14 to 3.5.6. Behind the scenes, we also had update the ZK Helm chart to work around an issue with purging logs (https://github.com/kubernetes-retired/contrib/issues/2942),
+so we'll have to delete the existing StatefulSet in order to switch charts during the upgrade.
+
+Prior to upgrading, list our your releases for Helm v2:
+
+```
+helm ls --all-namespaces
+```
+
+Once you're ready to upgrade, on a Mac, do:
+```
+brew upgrade kubernetes-helm
+```
+For other OS, download from https://github.com/helm/helm/releases
+
+Verify: helm version --short
+```
+v3.0.0+ge29ce2a
+```
+
+=== Migrate your release to Helm v3 using the helm-2to3 plugin (if needed)
+
+If you installed your F5 cluster using Helm v2, you need to migrate it to v3 using the process described here:
+https://helm.sh/blog/migrate-from-helm-v2-to-helm-v3/. Basically, you need to migrate the release metadata that lives in Tiller over to your local system.
+
+If you installed your cluster with Helm v3 originally, then you don't need to do this step. Just verify your release is shown by: `helm ls`
+
+During testing, we found upgrading Solr to 8.3.1 before moving to ZK 3.5.6 was more stable.
+
+Edit your custom values yaml file and change the Solr version to 8.3.1.
+```
+solr:
+  image:
+    tag: 8.3.1
+  updateStrategy:
+    type: "RollingUpdate"
+```
+
+Determine the version of the Fusion chart you are currently running (shown by `helm ls -n <namespace>`) as you'll need to pass that to the setup script when upgrading Solr to 8.3.1.
+
+For instance, your chart version may be: `fusion-5.0.2-7` in which case you would pass `--version 5.0.2-7`. The `-7` part of the version is considered a "pre-release" of 5.0.2 in the semantic versioning scheme, see: https://semver.org/
+
+```
+./setup_f5_gke.sh -c <existing_cluster> -p <gcp_project_id> -r <release> -n <namespace> \
+  --version <CHART_VERSION> \
+  --values gke_<cluster>_<release>_fusion_values.yaml --upgrade
+```
+
+__Wait until solr is back up and heatlhy__
+
+*IMPORTANT: You need to edit your custom values file and move the Zookeeper settings out from under the `solr:` section to the main level, e.g. instead of:*
+
+```
+solr:
+  ...
+  zookeeper:
+    ...
+```
+
+You need:
+```
+solr:
+  ...
+
+zookeeper:
+  ...
+```
+
+At this point you're ready to switch over to ZK 3.5.6. However, we cannot do this with zero downtime, meaning your cluster will lose quorum momentarily.
+So plan to have a minute or so of downtime in this cluster. Also, to avoid as much downtime as possible, be ready to upgrade to 5.0.2 immediately after deleting the existing statefulset.
+
+When ready, do:
+
+```
+kubectl delete statefulset ${RELEASE}-solr
+kubectl delete statefulset ${RELEASE}-zookeeper
+```
+
+Deleting the StatefulSet does not remove the persistent volumes backing Zookeeper and Solr, so no data will be lost.
+
+After editing your custom values yaml file, run:
+
+```
+cd fusion-cloud-native
+
+./setup_f5_gke.sh -c <CLUSTER> -p <PROJECT> -z <ZONE> \
+  -n <NAMESPACE> -r <RELEASE> \
+    --values <MY_VALUES> --version 5.0.2 --upgrade --force
+```
+
+Wait a few minutes and then verify the new ZK establishes quorum:
+
+```
+kubectl get pods
+```
+
+It will take some time for the upgrade to rollout across all the services as K8s needs to pull new Docker images and then perform a rolling upgrade for each Fusion service.
+
+After upgrading, verify the versions of each pod:
+```
+kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
+```
+
+=== Install Prometheus / Grafana to Existing Cluster
+
+As of 5.0.2, the Fusion setup scripts provide the option to install Prometheus and Grafana using the `--prometheus` option.
+However, if you installed a previous version of Fusion 5.0.x, then the upgrade does not install Prometheus / Grafana for you.
+
+Once you complete the upgrade to Fusion 5.0.2, you can run the https://github.com/lucidworks/fusion-cloud-native/blob/master/install_prom.sh[install_prom.sh^] script to install these additional services into your namespace. Pass the `--help` option to see script usage details.
+
+For instance, to install into a GKE cluster and schedule the new pods in the default Node Pool, you would do:
+```
+./install_prom.sh -c <cluster> -r <release> -n <namespace> \
+  --node-pool "cloud.google.com/gke-nodepool: default-pool" --provider gke
+```
+
+Once Prometheus and Grafana are deployed, edit your custom values yaml file for Fusion to enable the Solr exporter:
+```
+solr:
+  ...
+  exporter:
+    enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+```
+
+Add pod annotations to the `query-pipeline`, `fusion-indexing`, `api-gateway` services as needed to allow Prometheus to scrape metrics:
+
+```
+fusion-indexing:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+```
+
+```
+query-pipeline:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+```
+
+```
+api-gateway:
+  ...
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+```
+
+After making changes to the custom values yaml file, run an upgrade on the Fusion Helm chart.
+
+// end::body[]
