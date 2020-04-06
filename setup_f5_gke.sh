@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-INSTANCE_TYPE="n1-standard-4"
+INSTANCE_TYPE=""
 CHART_VERSION="5.1.0"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
@@ -20,7 +20,6 @@ FORCE=0
 MY_VALUES=()
 ML_MODEL_STORE="fusion"
 DRY_RUN=""
-SOLR_REPLICAS=1
 SOLR_DISK_GB=50
 
 function print_usage() {
@@ -38,7 +37,7 @@ function print_usage() {
   echo -e "  -r                Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z                GCP Zone to launch the cluster in, defaults to 'us-west1'\n"
-  echo -e "  -i                Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -i                Instance type, defaults to 'n1-standard-4' for multi-node cluster or 'n1-standard-8' for single-node demo cluster\n"
   echo -e "  -t                Enable TLS for the ingress, requires a hostname to be specified with -h\n"
   echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
   echo -e "                    then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
@@ -49,7 +48,7 @@ function print_usage() {
   echo -e "  --version         Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
   echo -e "  --values          Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
   echo -e "                    (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
-  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 3 for multi-node cluster or 1 for single-node demo cluster\n"
   echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
   echo -e "                    defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
@@ -252,9 +251,9 @@ if [ "${TLS_ENABLED}" == "1" ] && [ -z "${INGRESS_HOSTNAME}" ]; then
   exit 1
 fi
 
-valid="0-9a-zA-Z_\-"
+valid="0-9a-zA-Z\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 if [ -z ${RELEASE+x} ]; then
@@ -266,7 +265,7 @@ if [ -z ${RELEASE+x} ]; then
   fi
 fi
 if [[ $RELEASE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -324,6 +323,18 @@ if [ "$cluster_status" != "0" ]; then
     if [ "$GCLOUD_ZONE" == "us-west1" ]; then
       echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
       GCLOUD_ZONE="us-west1-a"
+      current_value=$(gcloud config get-value compute/zone)
+      if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
+        gcloud config set compute/zone "${GCLOUD_ZONE}"
+      fi
+    fi
+
+    if [ "${INSTANCE_TYPE}" == "" ]; then
+      INSTANCE_TYPE="n1-standard-8"
+    fi
+
+    if [ -z ${SOLR_REPLICAS+x} ]; then
+      SOLR_REPLICAS=1
     fi
 
     # have to cut off the zone part for the --subnetwork arg
@@ -347,6 +358,15 @@ if [ "$cluster_status" != "0" ]; then
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
   elif [ "$CREATE_MODE" == "multi_az" ]; then
+
+    if [ "${INSTANCE_TYPE}" == "" ]; then
+      INSTANCE_TYPE="n1-standard-4"
+    fi
+
+    if [ -z ${SOLR_REPLICAS+x} ]; then
+      SOLR_REPLICAS=3
+    fi
+
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
@@ -379,7 +399,13 @@ if [ "$cluster_status" != "0" ]; then
   fi
 
 else
-  echo -e "\nCluster '${CLUSTER_NAME}' exists, starting to install Lucidworks Fusion"
+  ACTION="install"
+  if [ "${PURGE}" == "1" ]; then
+    ACTION="purge"
+  elif [ "${UPGRADE}" == "1" ]; then
+    ACTION="upgrade"
+  fi
+  echo -e "\nCluster '${CLUSTER_NAME}' exists, starting to ${ACTION} Lucidworks Fusion"
 fi
 
 gcloud container clusters get-credentials $CLUSTER_NAME
@@ -458,9 +484,24 @@ else
   fi
 fi
 
-# for debug only
-#echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS}"
+if [ -z ${SOLR_REPLICAS+x} ]; then
+  SOLR_REPLICAS=1
+fi
+
 ( ${SCRIPT_DIR}/setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
   --version ${CHART_VERSION} --prometheus ${PROMETHEUS} --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
+
+# Open the proxy URL in the browser on a mac
+if [ "${setup_result}" == "0" ] && [ "${PURGE}" != "1" ]; then
+  hash open
+  has_open=$?
+  if [ "${has_open}" == "0" ] && [ "${TLS_ENABLED}" == "" ] && [ "${UPGRADE}" == "0" ]; then
+    PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+    PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
+    PROXY_URL="$PROXY_HOST:$PROXY_PORT"
+    open "http://${PROXY_URL}"
+  fi
+fi
+
 exit $setup_result

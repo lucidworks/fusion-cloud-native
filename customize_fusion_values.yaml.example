@@ -51,7 +51,9 @@ ml-model-service:
   modelRepoImpl: fusion
   fs:
     enabled: true
-  javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
+  javaToolOptions: "-Xmx2g -Dlogging.level.com.lucidworks.fusion.ml=INFO"
+  livenessProbe:
+    initialDelaySeconds: 90
 
 fusion-admin:
   nodeSelector:
@@ -70,11 +72,10 @@ fusion-indexing:
       prometheus.io/scrape: "true"
       prometheus.io/path: "/actuator/prometheus"
 
-
 query-pipeline:
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xms2g -Xmx2g -DZoneAwareNIWSDiscoveryLoadBalancer.enabled=false -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=1000 -Dcom.lucidworks.httpclient.defaultMaxPerRoute=1000 -Dcom.lucidworks.httpclient.maxTotalConnections=1000 -Dhttp.maxConnections=1000"
+  javaToolOptions: "-Xms2g -Xmx2g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000"
   pod:
     annotations:
       prometheus.io/port: "8787"

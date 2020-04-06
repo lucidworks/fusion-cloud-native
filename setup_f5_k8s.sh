@@ -193,9 +193,9 @@ if [ "$CLUSTER_NAME" == "" ]; then
   exit 1
 fi
 
-valid="0-9a-zA-Z_\-"
+valid="0-9a-zA-Z\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -209,7 +209,7 @@ if [ -z ${RELEASE+x} ]; then
 fi
 
 if [[ $RELEASE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -245,8 +245,6 @@ else
   who_am_i=""
 fi
 OWNER_LABEL="${who_am_i//@/-}"
-
-echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
 
 # Determine if we have helm v3
 # TODO drop support for helm v2
@@ -299,6 +297,7 @@ elif [ "$PURGE" == "1" ]; then
   fi
 
   confirm="Y"
+  echo ""
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
   if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
 

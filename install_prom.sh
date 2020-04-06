@@ -94,9 +94,9 @@ if [ "$NAMESPACE" == "" ]; then
   exit 1
 fi
 
-valid="0-9a-zA-Z_\-"
+valid="0-9a-zA-Z\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -110,7 +110,7 @@ if [ -z ${RELEASE+x} ]; then
 fi
 
 if [[ $RELEASE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
