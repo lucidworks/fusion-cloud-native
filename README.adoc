@@ -152,18 +152,18 @@ gcloud components update
 [[cluster-create]]
 === Create a Fusion cluster in GKE
 
-Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new *demo* cluster and install Fusion, simply do:
 ```
-./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace>
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace> -z <zone> --create demo
 ```
 
 Use the `--help` option to see script usage. If you want the script to create a cluster for you, then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
-If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
+If you pass `--create demo` to the script, then we create a single node GKE cluster (defaults to using `n1-standard-8` node type). The minimum node type you'll need for a 1 node cluster is an `n1-standard-8` (on GKE) which has 8 CPU and 30 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
 
 You can change the instance type using the `-i` parameter; see: https://cloud.google.com/compute/docs/regions-zones/#available for an list of which machine types are available in your desired region.
 
-__Note: If not provided the script generates a custom values file named `gke_<cluster>_<release>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+__Note: If not provided the script generates a custom values file named `gke_<cluster>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
 
 #WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
@@ -186,7 +186,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 . Run the setup script:
 +
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> -n <namespace> --create demo
+./setup_f5_gke.sh -c <cluster> -p <project> -z <zone> -n <namespace> --create demo
 ```
 +
 --
@@ -195,7 +195,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 
 +
 Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
-* `<zone-name>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`
+* `<zone>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`
 +
 Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --

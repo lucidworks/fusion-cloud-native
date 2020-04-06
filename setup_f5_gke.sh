@@ -345,7 +345,8 @@ if [ "$cluster_status" != "0" ]; then
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
       --image-type "COS" \
-      --disk-type "pd-standard" --disk-size "100" \
+      --disk-type "pd-standard" \
+      --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" \
       --no-enable-cloud-logging \
@@ -353,10 +354,10 @@ if [ "$cluster_status" != "0" ]; then
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
-      --default-max-pods-per-node "110" \
-      --enable-autoscaling --min-nodes "0" --max-nodes "3" \
+      --default-max-pods-per-node "50" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
+
   elif [ "$CREATE_MODE" == "multi_az" ]; then
 
     if [ "${INSTANCE_TYPE}" == "" ]; then
@@ -500,7 +501,9 @@ if [ "${setup_result}" == "0" ] && [ "${PURGE}" != "1" ]; then
     PROXY_HOST=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     PROXY_PORT=$(kubectl --namespace "${NAMESPACE}" get service proxy -o jsonpath='{.spec.ports[?(@.protocol=="TCP")].port}')
     PROXY_URL="$PROXY_HOST:$PROXY_PORT"
-    open "http://${PROXY_URL}"
+    if [ "${PROXY_URL}" != ":" ]; then
+      open "http://${PROXY_URL}"
+    fi
   fi
 fi
 

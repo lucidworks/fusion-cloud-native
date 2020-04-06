@@ -424,8 +424,30 @@ if [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
+    num_nodes=1
+    if [ "${NODE_POOL}" != "" ] && [ "${NODE_POOL}" != "{}" ]; then
+      node_selector=$(tr ': ' '=' <<<"${NODE_POOL}")
+      find_nodes=$(kubectl get nodes -l "${node_selector}" | grep -i ready)
+      has_nodes=$?
+      if [ "${has_nodes}" == "0" ]; then
+        echo -e "Found at least one healthy node matching nodeSelector: ${NODE_POOL}"
+        num_nodes=$(kubectl get nodes -l "${node_selector}" | grep -i ready | wc -l)
+      else
+        echo -e "\nERROR: No 'Ready' nodes found matching nodeSelector: ${node_selector}! Check the '--node-pool' parameter and retry running this script!\n"
+        kubectl get nodes -l "${node_selector}"
+        exit 1
+      fi
+    else
+      num_nodes=$(kubectl get nodes | grep -i ready | wc -l)
+    fi
+
+    WITH_RESOURCE_LIMITS=" "
+    if [ $num_nodes -gt 1 ]; then
+      WITH_RESOURCE_LIMITS=" --with-resource-limits "
+    fi
+
      ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --with-resource-limits --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" ${WITH_RESOURCE_LIMITS} --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi
@@ -445,7 +467,7 @@ if [ "$UPGRADE" == "1" ]; then
     exit 1
   fi
 else
-  echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}}"
+  echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 fi
 
 # let's exit immediately if the helm install command fails
