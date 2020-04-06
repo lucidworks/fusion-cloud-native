@@ -195,7 +195,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 
 +
 Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
-* `<zone>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`
+* `<zone>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`. Defaults to `us-west1-a` if not provided.
 +
 Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --

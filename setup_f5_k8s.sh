@@ -441,13 +441,8 @@ if [ "$UPGRADE" != "1" ]; then
       num_nodes=$(kubectl get nodes | grep -i ready | wc -l)
     fi
 
-    WITH_RESOURCE_LIMITS=" "
-    if [ $num_nodes -gt 1 ]; then
-      WITH_RESOURCE_LIMITS=" --with-resource-limits "
-    fi
-
      ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" ${WITH_RESOURCE_LIMITS} --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi

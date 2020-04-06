@@ -77,20 +77,20 @@ devops-ui:
 fusion-admin:
   resources:
     requests:
-      cpu: "300m"
+      cpu: "400m"
       memory: "2300Mi"
     limits:
-      cpu: "700m"
+      cpu: "800m"
       memory: "2300Mi"
 
 fusion-indexing:
   resources:
     requests:
-      cpu: "300m"
+      cpu: "500m"
       memory: "800Mi"
     limits:
-      cpu: "600m"
-      memory: "1400Mi"
+      cpu: "900m"
+      memory: "1600Mi"
 
 insights:
   resources:
@@ -104,20 +104,20 @@ insights:
 job-launcher:
   resources:
     requests:
-      memory: 2300Mi
+      memory: 1Gi
       cpu: 200m
     limits:
-      memory: 2300Mi
-      cpu: 400m
+      memory: 2Gi
+      cpu: 800m
 
 job-rest-server:
   resources:
     requests:
-      memory: 2300Mi
+      memory: 1Gi
       cpu: 200m
     limits:
-      memory: 2300Mi
-      cpu: 400m
+      memory: 2Gi
+      cpu: 800m
 
 ml-model-service:
   pythonService:
@@ -126,7 +126,7 @@ ml-model-service:
         memory: 1Gi
         cpu: 300m
       limits:
-        memory: 1Gi
+        memory: 3Gi
         cpu: 800m
   javaService:
     resources:
@@ -134,7 +134,7 @@ ml-model-service:
         memory: 1Gi
         cpu: 300m
       limits:
-        memory: 2Gi
+        memory: 3Gi
         cpu: 800m
 
 query-pipeline:
