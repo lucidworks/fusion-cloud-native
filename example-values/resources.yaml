@@ -15,18 +15,18 @@ pulsar:
   broker:
     resources:
       requests:
-        cpu: 200m
+        cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 500m
+        cpu: 600m
         memory: 2300Mi
   bookkeeper:
     resources:
       requests:
-        cpu: 200m
+        cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 500m
+        cpu: 600m
         memory: 2300Mi
 
 admin-ui:
