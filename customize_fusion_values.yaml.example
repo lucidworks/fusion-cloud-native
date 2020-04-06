@@ -54,6 +54,8 @@ ml-model-service:
   javaToolOptions: "-Xmx2g -Dlogging.level.com.lucidworks.fusion.ml=INFO"
   livenessProbe:
     initialDelaySeconds: 90
+  readinessProbe:
+    initialDelaySeconds: 90
 
 fusion-admin:
   nodeSelector:
