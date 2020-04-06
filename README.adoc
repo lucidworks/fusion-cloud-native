@@ -152,9 +152,9 @@ gcloud components update
 [[cluster-create]]
 === Create a Fusion cluster in GKE
 
-Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new *demo* cluster and install Fusion, simply do:
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new, single-node *demo* cluster and install Fusion, simply do:
 ```
-./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace> --region <region> --create demo
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace> --create demo
 ```
 
 Use the `--help` option to see script usage. If you want the script to create a cluster for you, then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
@@ -186,7 +186,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 . Run the setup script:
 +
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> --region <region> -n <namespace> --create demo
+./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create demo
 ```
 +
 --
@@ -195,7 +195,7 @@ This type of deployment can take at least 12 minutes, plus 3–5 minutes for clu
 
 +
 Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
-* `<zone>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`. Defaults to `us-west1-a` if not provided.
+* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`
 +
 Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --
@@ -212,7 +212,7 @@ Fusion 5 Gateway service exposed at: <some-external-ip>:6764
 With a three-node regional cluster, nodes are deployed across three separate availability zones.
 
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> --region <region-name> -n <namespace> --create multi_az
+./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create multi_az
 ```
 --
 * `<region-name>` value should be the name of a GKE region, defaults to `us-west1`
