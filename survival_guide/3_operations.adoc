@@ -714,6 +714,14 @@ Spark deletes failed and successful executor pods. Fusion provides a cleanup Kub
 
 // end::spark-logs[]
 
+==== Spark Pod Naming Restrictions
+
+//tag::spark-pod-naming[]
+
+Spark will generate a pod name for the running job based on the job's name and the `runId` Fusion creates to keep track of that particular instance of the job. This pod name must conform to the Kubernetes spec for pod names, which is based on the RFC-1123 for DNS. Your job name must begin and end with an alphanumeric character, only contain `-` (no underscores), and must be fewer than 63 characters in length. We recommend you stay under 30 characters, as Spark will add additional strings such as `-driver` or `-exec-1` when spinning up driver or executor pods.
+
+//tag::spark-pod-naming[]
+
 ==== Pod cleanup
 
 //tag::pod-cleanup[]
