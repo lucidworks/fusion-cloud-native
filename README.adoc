@@ -150,7 +150,7 @@ gcloud components update
 ```
 
 [[cluster-create]]
-=== Create a Fusion cluster in GKE
+=== Create a single-node demo cluster
 
 Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new, single-node *demo* cluster and install Fusion, simply do:
 ```
@@ -174,21 +174,15 @@ Error: could not get apiVersions from Kubernetes: unable to retrieve the complet
 
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
-The steps below show you how to create several kinds of Fusion clusters.
+When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
 
-==== How to create a single-node Fusion demo cluster
+=== Create a three-node regional cluster to withstand a zone outage
 
-A single-node configuration is useful for exploring Fusion in a demo or development environment.
+With a three-node regional cluster, nodes are deployed across three separate availability zones.
 
-This type of deployment can take at least 12 minutes, plus 3–5 minutes for cluster startup.
-
-.How to create a single-node Fusion demo cluster
-. Run the setup script:
-+
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create demo
+./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create multi_az
 ```
-+
 --
 * `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
 * `<project>` must match the name of an existing project in GKE.
@@ -199,27 +193,13 @@ Run `gcloud config get-value project` to get this value, or see the link:#sdk-se
 +
 Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --
-+
-Upon success, the script shows you where to find the Fusion UI. For example:
-+
-```
-Fusion 5 Gateway service exposed at: <some-external-ip>:6764
-```
-. Access the link:/fusion-server/{version}/getting-started/fusion-server-ui/index.html[Fusion UI] by pointing your browser to the IP address and port specified in the setup script's output.
-
-==== Create a three-node regional cluster to withstand a zone outage
-
-With a three-node regional cluster, nodes are deployed across three separate availability zones.
-
-```
-./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create multi_az
-```
---
-* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`
---
 In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
 
 When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
+
+After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
 
 ==== GKE Ingress and TLS
 
@@ -272,7 +252,7 @@ to configure the `externalTrafficPolicy` of the `proxy` service to `Local`. This
 source IP and avoids a second hop for LoadBalancer and NodePort type services, but risks potentially
 imbalanced traffic spreading. Although when running in a cluster with a dedicated pool for spark jobs
 that can scale up and down freely it can prevent unwanted request failures. This behaviour can be
-altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Local` if the example values
+altered with the `api-gateway.service.externalTrafficPolicy` value, which is set to `Local` if the example values
 file is used.
 
 __You must use `externalTrafficPolicy`=`Local` for the Trusted HTTP Realm to work correctly.__
@@ -282,7 +262,8 @@ If you are already using a custom 'values.yaml' file, create an entry for `exter
 
 ```
 api-gateway:
-  externalTrafficPolicy: Local
+  service:
+    externalTrafficPolicy: Local
 ```
 
 ==== Considerations when using the nginx ingress controller

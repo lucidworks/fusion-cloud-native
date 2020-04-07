@@ -84,7 +84,8 @@ admin-ui:
     {NODE_POOL}
 
 api-gateway:
-  externalTrafficPolicy: "Local"
+  service:
+    externalTrafficPolicy: "Local"
   nodeSelector:
     {NODE_POOL}
   javaToolOptions: "-Xms2g -Xmx2g -Djwt.token.user-cache-size=100"

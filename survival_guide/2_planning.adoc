@@ -7,29 +7,9 @@
 
 This topic explains how to plan and execute a Fusion deployment at the scale you need for staging or production.
 
-:sectnums:
-[[basic-install]]
-=== Install a basic Fusion cluster
-
-. Clone or download the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^].
-
-. Install a basic cluster using one of the `setup_f5_*.sh` scripts from the repo.
-+
-ifdef::env-github[]
-// github links:
-See link:/README.adoc[README.adoc] for platform-specific instructions.
-endif::[]
-ifndef::env-github[]
-// docs site links:
-See these topics for platform-specific instructions:
-+
-* link:/how-to/how-to-deploy-gke.html[Google Kubernetes Engine (GKE)]
-* link:/how-to/how-to-deploy-eks.html[Amazon Elastic Kubernetes Service (EKS)]
-* link:/how-to/how-to-deploy-aks.html[Azure Kubernetes Service (AKS)]
-endif::[]
-
 While the `setup_f5_*.sh` scripts are handy for getting started / proof-of-concept purposes, this section walks you through the planning process for building a production-ready environment.
 
+:sectnums:
 [[prerequisites]]
 === Meet the prerequisites
 
