@@ -80,17 +80,17 @@ Work with your K8s / Docker admin team to determine how to get the Fusion images
 [[custom-values]]
 === Create a custom values YAML file
 
-Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion.  Our setup scripts (`setup_f5_*.sh`) use this file to create a custom values YAML for your cluster if it does not already exist.
-We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you get started.
+Throughout this topic, you will make changes to a custom values YAML file to refine your configuration of Fusion. We provide a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.yaml.example[`customize_fusion_values.yaml.example` template^] and a link:https://github.com/lucidworks/fusion-cloud-native/blob/master/customize_fusion_values.sh[customization script^] to help you create a custom values YAML file for your deployment. Our setup scripts (`setup_f5_*.sh`) also use the `customize_fusion_values.sh` script.
 
 TIP: Keep the custom values YAML file in version control.  You will need to make changes to it over time as you fine-tune your Fusion installation. You will also need it to perform upgrades; if you try to upgrade your Fusion installation and neglect to provide the custom values YAML, your deployment will revert to chart defaults.
 
 . In your local copy of the fusion-cloud-native repo, run the `customize_fusion_values.sh` utility script to create a working copy of the custom values YAML file:
 +
 ```
-./customize_fusion_values.sh  -c <CLUSTER> -n <NAMESPACE> --provider <PROVIDER> \
+./customize_fusion_values.sh  --provider <provider> -c <cluster> -n <namespace> \
   --num-solr 3 \
   --solr-disk-gb 100 \
+  --node-pool <node_selector> \
   --prometheus true \
   --with-resource-limits \
   --with-affinity-rules
@@ -102,7 +102,23 @@ The script will create a custom values YAML using the naming convention: `<provi
 * `<provider>` is the K8s platform you’re running on, such as `gke`.
 * `<cluster>` is the name of your cluster.
 * `<namespace>` is the K8s namespace where you want to install Fusion
+* `<node_selector>` specifies a `nodeSelector` label to find nodes to schedule Fusion pods on
 --
+
+Providing the correct `--node-pool <node_selector>` label *is very important*! Using the wrong value will cause your pods to be stuck in the `pending` state. If you're not sure about the correct value for your cluster, then you can pass `'{}'` to let Kubernetes decide which nodes to schedule Fusion pods on.
+Default node selector labels are provider specific; our scripts use the following defaults for GKE and EKS:
+[width="60%",cols="2,6",options="header"]
+|=========================================================
+|Provider|Default Node Selector
+|GKE|cloud.google.com/gke-nodepool: default-pool
+|EKS|alpha.eksctl.io/nodegroup-name: standard-workers
+|=========================================================
+
+You can also add a Fusion specific label to your nodes by doing:
+----
+kubectl label <NODE_ID> fusion_node_type=<NODE_LABEL>
+----
+Then you can pass `--node-pool 'fusion_node_type: <NODE_LABEL>'`
 
 The script creates the following files using the naming convention: `<provider>_<cluster>_<namespace>_`:
 --
