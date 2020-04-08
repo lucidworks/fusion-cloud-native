@@ -143,8 +143,8 @@ query-pipeline:
       cpu: "600m"
       memory: "2300Mi"
     limits:
-      cpu: 1
-      memory: "2300Mi"
+      cpu: 1500m
+      memory: "3300Mi"
 
 rest-service:
   resources:

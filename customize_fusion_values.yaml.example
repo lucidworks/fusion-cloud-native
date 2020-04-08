@@ -72,7 +72,27 @@ fusion-indexing:
 query-pipeline:
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xms2g -Xmx2g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000"
+  javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000"
+  livenessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  readinessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
   pod:
     annotations:
       prometheus.io/port: "8787"
