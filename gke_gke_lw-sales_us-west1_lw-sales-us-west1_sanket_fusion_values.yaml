@@ -1,0 +1,161 @@
+global:
+  zkReplicaCount: 3
+
+sql-service:
+  enabled: false
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 0
+  service:
+    thrift:
+      type: "ClusterIP"
+
+solr:
+  nodeSelector:
+    fusion_node_type: solr_only
+  image:
+    tag: 8.4.1
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx3g -Dfusion_node_type=system"
+  solrGcTune: "-XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
+  volumeClaimTemplates:
+    storageSize: "50Gi"
+  replicaCount: 3
+  resources: {}
+  exporter:
+    enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+
+zookeeper:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 3
+  persistence:
+    size: 15Gi
+  resources: {}
+  env:
+    ZK_HEAP_SIZE: 1G
+    ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  modelRepoImpl: fusion
+  fs:
+    enabled: true
+  javaToolOptions: "-Dlogging.level.com.lucidworks.fusion.ml=INFO"
+
+fusion-admin:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 120
+
+fusion-indexing:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 120
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+
+query-pipeline:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  javaToolOptions: "-Xms2g -Xmx2g -DZoneAwareNIWSDiscoveryLoadBalancer.enabled=false -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=1000 -Dcom.lucidworks.httpclient.defaultMaxPerRoute=1000 -Dcom.lucidworks.httpclient.maxTotalConnections=1000 -Dhttp.maxConnections=1000"
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+admin-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+api-gateway:
+  externalTrafficPolicy: "Local"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  javaToolOptions: "-Xms2g -Xmx2g"
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+auth-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+classic-rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+devops-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+fusion-resources:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+insights:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+job-launcher:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+job-rest-server:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+logstash:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rpc-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rules-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+webapps:
+  livenessProbe:
+    initialDelaySeconds: 60
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+pulsar:
+  broker:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+  bookkeeper:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8000"
+
+fusion-jupyter:
+  enabled: true

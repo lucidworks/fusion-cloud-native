@@ -1,0 +1,215 @@
+# This file contains the configuration for resources limits/requests for fusion
+# components. In general these resources allow for overprovisioning of a node
+# If this is not desired then change the requested values to match the limits.
+
+solr:
+  resources:
+    requests:
+      cpu: 4
+      memory: "16Gi"
+    limits:
+      cpu: 6
+      memory: "24Gi"
+
+pulsar:
+  broker:
+    resources:
+      requests:
+        cpu: 800m
+        memory: 3Gi
+      limits:
+        cpu: 1400m
+        memory: 4Gi
+  bookkeeper:
+    resources:
+      requests:
+        cpu: 800m
+        memory: 3Gi
+      limits:
+        cpu: 1400m
+        memory: 4Gi
+
+admin-ui:
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+api-gateway:
+  # javaToolOptions: ""
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "2500Mi"
+
+auth-ui:
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+classic-rest-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
+  resources:
+    limits:
+      cpu: "2"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+
+devops-ui:
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+fusion-admin:
+  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
+  resources:
+    limits:
+      cpu: "1"
+      memory: "3Gi"
+    requests:
+      cpu: "500m"
+      memory: "2Gi"
+
+fusion-indexing:
+  #jvmOptions: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000 -XX:PermSize=256m -XX:MaxPermSize=512m"
+  resources:
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+
+insights:
+  resources:
+    limits:
+      cpu: "300m"
+      memory: "1.5Gi"
+    requests:
+      cpu: "100m"
+      memory: "1Gi"
+
+job-launcher:
+  #javaToolOptions: ""
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 1
+    limits:
+      memory: 3Gi
+      cpu: 2
+
+job-rest-server:
+  #javaToolOptions: "-Xmx1024m -Xms256m"
+  resources:
+      requests:
+        memory: 1Gi
+        cpu: 250m
+      limits:
+        memory: 1.5Gi
+        cpu: 750m
+
+ml-model-service:
+  #javaToolOptions: ""
+  pythonService:
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 3
+      limits:
+        memory: 8Gi
+        cpu: 3
+  javaService:
+    resources:
+      requests:
+        memory: 4Gi
+        cpu: 3
+      limits:
+        memory: 4Gi
+        cpu: 3
+
+query-pipeline:
+  #javaToolOptions: ""
+  resources:
+    limits:
+      cpu: "2500m"
+      memory: "4Gi"
+    requests:
+      cpu: "500m"
+      memory: "2500Mi"
+
+rest-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
+  resources:
+    limits:
+      cpu: "400m"
+      memory: 2Gi
+    requests:
+      cpu: "200m"
+      memory: 1Gi
+
+rpc-service:
+  #javaOpts: "-Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000"
+  resources:
+    limits:
+      cpu: "1500m"
+      memory: "3Gi"
+    requests:
+      cpu: "200m"
+      memory: "2Gi"
+
+rules-ui:
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "32Mi"
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+
+# NOTE: Apply the Solr resource requests / limits in the solr: section of your main custom values yaml
+
+zookeeper:
+  resources:
+    requests:
+      memory: 1Gi
+      cpu: 250m
+    limits:
+      memory: 2Gi
+      cpu: 1
+
+sql-service:
+  #jvmOptions: "-XX:+UseG1GC -XX:+PrintGC -Xloggc:/work/sql-gc-%t.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -Xms4g -Xmx4g"
+  resources:
+    limits:
+      cpu: "2"
+      memory: 6Gi
+    requests:
+      cpu: "200m"
+      memory: 2Gi
+
+webapps:
+  #javaToolOptions: ""
+  resources:
+    limits:
+      cpu: "2"
+      memory: 2Gi
+    requests:
+      cpu: "500m"
+      memory: "400Mi"
