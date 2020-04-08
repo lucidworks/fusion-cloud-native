@@ -14,6 +14,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.1.1|2020-04-08|Fusion 5.1.1 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.1-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.1.0|2020-03-12|Fusion 5.1.0 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.0-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
 |5.0.3-3|2020-02-19|Updated `apiVersion` to `apps/v1` for the logstash statefulset to support Kubernetes v1.17+. If you're running previous versions of the Fusion 5 Helm chart, you will need to delete the logstash statefulset before upgrading to `5.0.3-3` (or beyond); `kubectl delete sts <RELEASE>-logstash`. The logstash statefulset will get re-created during the upgrade; this operation does not delete the PVC, so the data will remain intact.
@@ -33,18 +34,13 @@ This section covers prerequisites and background knowledge needed to help you un
 
 === Release Name and Namespace
 
-Before installing Fusion, you need to choose a unique release name for Fusion, such as `f5`; Helm uses the release name to track a specific installation of an application in the cluster.
-Use a short name for your release containing only letters, digits, or dashes (no dots or underscores).
-
-As of Helm v3, releases are managed at the namespace level, so you can have multiple releases with the same name across different namespaces in the same cluster.
-However, we recommend *NOT* doing this and use a unique release for every namespace; if you do use the same release label across multiple namespaces in the same cluster,
-then you need to take care to include the namespace in your custom values yaml file(s).
-
-You also need to choose the https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
+Before installing Fusion, you need to choose a https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/[Kubernetes namespace] to install Fusion into.
 Think of a K8s namespace as a virtual cluster within a physical cluster. You can install multiple instances of Fusion in the same cluster *in separate namespaces*.
 However, please [.underline]#do not# install more than one Fusion release in the same namespace.
 
 __NOTE: All Fusion services must run in the same namespace, i.e. you should not try to split a Fusion cluster across multiple namespaces.__
+
+Use a short name for the namespace, containing only letters, digits, or dashes (no dots or underscores). The setup scripts in this repo use the namespace for the Helm release name by default.
 
 === Install Helm
 
@@ -60,18 +56,13 @@ brew upgrade kubernetes-helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
-The Fusion helm chart requires that helm is greater than version `3.0.0`
-Check your Helm version by running `helm version`.
+The Fusion helm chart requires that helm is greater than version `3.0.0`; check your Helm version by running `helm version --short`.
 
 ==== Helm User Permissions
 
-If you require that fusion is installed by a user with minimal permissions, instead of
-an admin user, then the role and cluster role that will have to be assigned to the user
-within the namespace that you wish to install fusion in are documented in the `install-roles`
-directory.
+If you require that fusion is installed by a user with minimal permissions, instead of an admin user, then the role and cluster role that will have to be assigned to the user within the namespace that you wish to install fusion in are documented in the `install-roles` directory.
 
-To use these role in a cluster, as an admin user first create the namespace that you wish to
-install fusion into:
+To use these role in a cluster, as an admin user first create the namespace that you wish to install fusion into:
 ```
 k create namespace fusion-namespace
 ```
@@ -150,20 +141,20 @@ gcloud components update
 ```
 
 [[cluster-create]]
-=== Create a Fusion cluster in GKE
+=== Create a single-node demo cluster
 
-Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new cluster and install Fusion, simply do:
+Run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.sh[`setup_f5_gke.sh` script^] to install Fusion 5.x in a GKE cluster. To create a new, single-node *demo* cluster and install Fusion, simply do:
 ```
-./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> -n <namespace>
+./setup_f5_gke.sh -c <cluster_name> -p <gcp_project_id> --create demo
 ```
 
 Use the `--help` option to see script usage. If you want the script to create a cluster for you, then you need to pass the `--create` option with either `demo` or `multi_az`. If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
 
-If you pass `--create demo` to the script, then we create a single node GKE cluster. The minimum node type you'll need for a 1 node cluster is an `n1-standard-4` (on GKE) which has 4 CPU and 15 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
+If you pass `--create demo` to the script, then we create a single node GKE cluster (defaults to using `n1-standard-8` node type). The minimum node type you'll need for a 1 node cluster is an `n1-standard-8` (on GKE) which has 8 CPU and 30 GB of memory. This is cutting it very close in terms of resources as you also need to host all of the Kubernetes system pods on this same node. Obviously, this works for kicking the tires on Fusion 5.1 but is not sufficient for production workloads.
 
 You can change the instance type using the `-i` parameter; see: https://cloud.google.com/compute/docs/regions-zones/#available for an list of which machine types are available in your desired region.
 
-__Note: If not provided the script generates a custom values file named `gke_<cluster>_<release>_fusion_values.yaml` which you can use to customize the Fusion chart.__
+__Note: If not provided the script generates a custom values file named `gke_<cluster>_<namespace>_fusion_values.yaml` which you can use to customize the Fusion chart.__
 
 #WARNING# If using Helm V2, the `setup_f5_gke.sh` script installs Helm's `tiller` component into your GKE cluster with the cluster admin role. If you don't want this, then please upgrade to Helm v3.
 
@@ -174,52 +165,28 @@ Error: could not get apiVersions from Kubernetes: unable to retrieve the complet
 
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
-The steps below show you how to create several kinds of Fusion clusters.
+When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
 
-==== How to create a single-node Fusion demo cluster
-
-A single-node configuration is useful for exploring Fusion in a demo or development environment.
-
-This type of deployment can take at least 12 minutes, plus 3–5 minutes for cluster startup.
-
-.How to create a single-node Fusion demo cluster
-. Run the setup script:
-+
-```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <zone-name> -n <namespace> --create demo
-```
-+
---
-* `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
-* `<project>` must match the name of an existing project in GKE.
-
-+
-Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
-* `<zone-name>` must match the name of the zone you set in GKE. For a demo cluster, the zone must be a specific Availability Zone and not a Region, such as `us-west1-a` instead of `us-west1`
-+
-Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
---
-+
-Upon success, the script shows you where to find the Fusion UI. For example:
-+
-```
-Fusion 5 Gateway service exposed at: <some-external-ip>:6764
-```
-. Access the link:/fusion-server/{version}/getting-started/fusion-server-ui/index.html[Fusion UI] by pointing your browser to the IP address and port specified in the setup script's output.
-
-==== Create a three-node regional cluster to withstand a zone outage
+=== Create a three-node regional cluster to withstand a zone outage
 
 With a three-node regional cluster, nodes are deployed across three separate availability zones.
 
 ```
-./setup_f5_gke.sh -c <cluster> -p <project> -z <region-name> -n <namespace> --create multi_az
+./setup_f5_gke.sh -c <cluster> -p <project> -n <namespace> --region <region-name> --create multi_az
 ```
 --
-* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`
+* `<cluster>` value should be the name of a non-existent cluster; the script will create the new cluster.
+* `<project>` must match the name of an existing project in GKE. Run `gcloud config get-value project` to get this value, or see the link:#sdk-setup[GKE setup instructions].
+* `<namespace>` Kubernetes namespace to install Fusion into, defaults to `default` with release `f5`
+* `<region-name>` value should be the name of a GKE region, defaults to `us-west1`. Run `gcloud config get-value compute/zone` to get this value, or see the link:#sdk-setup[GKE setup instructions] to set the value.
 --
-In this configuration, we want a ZooKeeper and Solr instance on each node, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
+In this configuration, Kubernetes deploys a ZooKeeper and Solr pod on each of the three nodes, which allows the cluster to retain ZK quorum and remain operational after losing one node, such as during an outage in one availability zone.
 
 When running in a multi-zone cluster, each Solr node has the `solr_zone` system property set to the zone it is running in, such as `-Dsolr_zone=us-west1-a`.
+
+After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
+
+When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
 
 ==== GKE Ingress and TLS
 
@@ -272,7 +239,7 @@ to configure the `externalTrafficPolicy` of the `proxy` service to `Local`. This
 source IP and avoids a second hop for LoadBalancer and NodePort type services, but risks potentially
 imbalanced traffic spreading. Although when running in a cluster with a dedicated pool for spark jobs
 that can scale up and down freely it can prevent unwanted request failures. This behaviour can be
-altered with the `api-gateway.externalTrafficPolicy` value, which is set to `Local` if the example values
+altered with the `api-gateway.service.externalTrafficPolicy` value, which is set to `Local` if the example values
 file is used.
 
 __You must use `externalTrafficPolicy`=`Local` for the Trusted HTTP Realm to work correctly.__
@@ -282,7 +249,8 @@ If you are already using a custom 'values.yaml' file, create an entry for `exter
 
 ```
 api-gateway:
-  externalTrafficPolicy: Local
+  service:
+    externalTrafficPolicy: Local
 ```
 
 ==== Considerations when using the nginx ingress controller

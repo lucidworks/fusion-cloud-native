@@ -385,6 +385,12 @@ warmingQueryJson:
 
 NOTE: The indentation for the opening / closing braces is important for embedding JSON in YAML
 
+==== Tune Java Heap Settings and Resource Limits
+
+As you run query load tests, you may need to increase the Java heap settings `-Xms -Xmx` for the query pipeline service using `javaToolOptions` in the custom values YAML for your cluster.
+
+Please ensure the memory and cpu resource limits applied to the query pipeline service align with the Java heap settings.
+
 // end::auto-scaling[]
 
 
