@@ -66,8 +66,8 @@ helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespac
 
 echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
-echo -e "\nWaiting up to 4 minutes to see the Fusion Admin deployment come online ...\n"
-kubectl rollout status deployment/${RELEASE}-fusion-admin --timeout=240s --namespace "${NAMESPACE}"
+echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
+kubectl rollout status deployment/${RELEASE}-fusion-indexing --timeout=300s --namespace "${NAMESPACE}"
 
 current_ns=$(kubectl config view --minify --output 'jsonpath={..namespace}')
 if [ "$NAMESPACE" != "$current_ns" ]; then

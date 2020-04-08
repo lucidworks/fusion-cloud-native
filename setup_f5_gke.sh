@@ -361,6 +361,12 @@ if [ "$cluster_status" != "0" ]; then
     if [ -z ${GCLOUD_ZONE+x} ]; then
       GCLOUD_ZONE=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
       echo -e "Using zone '${GCLOUD_ZONE}' for your demo cluster."
+
+      # update the compute/zone based on the updated zone
+      current_value=$(gcloud config get-value compute/zone)
+      if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
+        gcloud config set compute/zone "${GCLOUD_ZONE}"
+      fi
     fi
 
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
@@ -391,6 +397,12 @@ if [ "$cluster_status" != "0" ]; then
       SOLR_REPLICAS=3
     fi
 
+    # make sure the compute/zone is updated
+    current_value=$(gcloud config get-value compute/zone)
+    if [ "${current_value}" != "${GCLOUD_REGION}" ]; then
+      gcloud config set compute/zone "${GCLOUD_REGION}"
+    fi
+
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
@@ -404,13 +416,12 @@ if [ "$cluster_status" != "0" ]; then
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
-      --default-max-pods-per-node "110" \
+      --default-max-pods-per-node "50" \
       --enable-autoscaling --min-nodes "0" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
   else
-    echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
-    echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
+    echo -e "\nERROR: No '--create <MODE>' arg provided and ${CLUSTER_NAME} not found! Please create the ${CLUSTER_NAME} cluster before running this script.\n"
     exit 1
   fi
 
