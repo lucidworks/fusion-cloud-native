@@ -54,10 +54,12 @@ fi
 
 helm repo update
 
-# Make sure that the metric server is running
-metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
-echo ""
+if [ "$PROVIDER" == "gke" ]; then
+  # Make sure that the metric server is running
+  metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+  kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+  echo ""
+fi
 
 echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
 echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:\n${MY_VALUES//--values}\n"
