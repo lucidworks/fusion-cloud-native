@@ -330,7 +330,7 @@ fi
 
 gcloud beta container clusters list --filter="${CLUSTER_NAME}" | grep "${CLUSTER_NAME}" > /dev/null 2>&1
 cluster_status=$?
-if [ "$cluster_status" != "0" ]; then
+if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0" ]; then
   if [ "$CREATE_MODE" == "" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
