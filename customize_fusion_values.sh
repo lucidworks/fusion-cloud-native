@@ -215,10 +215,7 @@ if [ "${NODE_POOL}" == "" ]; then
   fi
 fi
 
-ZK_REPLICAS=1
-if (( SOLR_REPLICAS > 2 )); then
-  ZK_REPLICAS=3
-fi
+ZK_REPLICAS=3
 
 cp customize_fusion_values.yaml.example $MY_VALUES
 if [[ "$OSTYPE" == "linux-gnu" ]]; then

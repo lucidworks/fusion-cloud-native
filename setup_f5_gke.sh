@@ -8,7 +8,6 @@ NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
-GCLOUD_REGION=us-west1
 CLUSTER_NAME=
 NAMESPACE=default
 UPGRADE=0
@@ -29,37 +28,33 @@ function print_usage() {
     echo -e "\nERROR: $ERROR_MSG"
   fi
 
-  echo -e "  -c            Name of the GKE cluster (required)\n"
-  echo -e "  -p            GCP Project ID (required)\n"
-  echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
-  echo -e "  -n            Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  -i            Instance type, defaults to '${INSTANCE_TYPE}'\n"
-  echo -e "  -t            Enable TLS for the ingress, requires a hostname to be specified with -h\n"
-  echo -e "  -h            Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
-  echo -e "                then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
-  echo -e "  --prometheus  Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
-  echo -e "                defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
-  echo -e "                'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
-  echo -e "  --gke         GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
-  echo -e "  --version     Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
-  echo -e "  --values      Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
-  echo -e "                (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
-  echo -e "  --num-solr    Number of Solr pods to deploy, defaults to 1. If a multiaz deployment is created the default value will be 3\n"
-  echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
-  echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
-  echo -e "                defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
-  echo -e "  --create      Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n "
-  echo -e "  --region      GCP Region to launch the cluster in, defaults to 'us-west1'  (required) \n"
-  echo -e "  --z1          GCP Zone to launch the cluster in, if not specified a random zone in the region will be used \n"
-  echo -e "  --z2          GCP Zone to launch the cluster in when a multi_az deployment is created, specifies the second GCP zone to use;"
-  echo -e "                If not specified a random zone in the region will be used \n"
-  echo -e "  --z3          GCP Zone to launch the cluster in when a multi_az deployment is created, specifies the third GCP zone to use;"
-  echo -e "                If not specified a random zone in the region will be used \n"
-  echo -e "  --upgrade     Perform a Helm upgrade on an existing Fusion installation\n"
-  echo -e "  --dry-run     Perform a dry-run of the upgrade to see what would change\n"
-  echo -e "  --purge       Uninstall and purge all Fusion objects from the specified namespace and cluster."
-  echo -e "                Be careful! This operation cannot be undone.\n"
-  echo -e "  --force       Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
+  echo -e "  -c              Name of the GKE cluster (required)\n"
+  echo -e "  -p              GCP Project ID (required)\n"
+  echo -e "  -r              Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  -n              Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
+  echo -e "  -i              Instance type, defaults to '${INSTANCE_TYPE}'\n"
+  echo -e "  -t              Enable TLS for the ingress, requires a hostname to be specified with -h\n"
+  echo -e "  -z              GCP Zone (deprecated), see usage for --region\n"
+  echo -e "  -h              Hostname for the ingress to route requests to this Fusion cluster. If used with the -t parameter,"
+  echo -e "                  then the hostname must be a public DNS record that can be updated to point to the IP of the LoadBalancer\n"
+  echo -e "  --prometheus    Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
+  echo -e "                  defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
+  echo -e "                  'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
+  echo -e "  --gke           GKE Master version; defaults to '-' which uses the default version for the selected region / zone (differs between zones)\n"
+  echo -e "  --version       Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --values        Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
+  echo -e "                  (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
+  echo -e "  --num-solr      Number of Solr pods to deploy, defaults to 1. If a multiaz deployment is created the default value will be 3\n"
+  echo -e "  --solr-disk-gb  Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --node-pool     Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
+  echo -e "                  defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
+  echo -e "  --create        Create a cluster in GKE; provide the mode of the cluster to create, one of: demo, multi_az\n "
+  echo -e "  --region        GCP Region to launch the cluster in, defaults to 'us-west1'; for single node demo clusters a random zone from the region will be selected\n"
+  echo -e "  --upgrade       Perform a Helm upgrade on an existing Fusion installation\n"
+  echo -e "  --dry-run       Perform a dry-run of the upgrade to see what would change\n"
+  echo -e "  --purge         Uninstall and purge all Fusion objects from the specified namespace and cluster."
+  echo -e "                  Be careful! This operation cannot be undone.\n"
+  echo -e "  --force         Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
 
 }
 
@@ -199,28 +194,12 @@ if [ $# -gt 0 ]; then
             GCLOUD_REGION="$2"
             shift 2
         ;;
-        --z1)
+        -z)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
-              print_usage "$SCRIPT_CMD" "Missing value for the --z1 parameter!"
+              print_usage "$SCRIPT_CMD" "Missing value for the -z parameter!"
               exit 1
             fi
-            GCLOUD_ZONE1="$2"
-            shift 2
-        ;;
-        --z2)
-            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
-              print_usage "$SCRIPT_CMD" "Missing value for the --z2 parameter!"
-              exit 1
-            fi
-            GCLOUD_ZONE2="$2"
-            shift 2
-        ;;
-        --z3)
-            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
-              print_usage "$SCRIPT_CMD" "Missing value for the --z3 parameter!"
-              exit 1
-            fi
-            GCLOUD_ZONE3="$2"
+            GCLOUD_ZONE="$2"
             shift 2
         ;;
         --upgrade)
@@ -328,10 +307,22 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
+# try to set the compute/zone based on args
 current_value=$(gcloud config get-value compute/zone)
-if [ "${current_value}" != "${GCLOUD_REGION}" ]; then
-  gcloud config set compute/zone "${GCLOUD_REGION}"
+if [ -n "${GCLOUD_REGION}" ]; then
+  if [ "${current_value}" != "${GCLOUD_REGION}" ]; then
+    gcloud config set compute/zone "${GCLOUD_REGION}"
+    echo -e "Set compute/zone to '${GCLOUD_REGION}'"
+  fi
+else
+  if [ -n "${GCLOUD_ZONE}" ]; then
+    if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
+      gcloud config set compute/zone "${GCLOUD_ZONE}"
+      echo -e "Set compute/zone to '${GCLOUD_ZONE}'"
+    fi
+  fi
 fi
+
 current_value=$(gcloud config get-value project)
 if [ "${current_value}" != "${GCLOUD_PROJECT}" ]; then
   gcloud config set project "${GCLOUD_PROJECT}"
@@ -344,18 +335,19 @@ if [ "$cluster_status" != "0" ]; then
     CREATE_MODE="multi_az" # the default ...
   fi
 
-  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (K8s Master: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} zone ${GCLOUD_REGION} for deploying Lucidworks Fusion 5 ...\n"
+  if [ -z ${GCLOUD_REGION+x} ]; then
+    # region is not set ... but if they passed -z or --z1, then we'll try to guess the region from the zone, else go with us-west1
+    if [ -n "${GCLOUD_ZONE}" ]; then
+      GCLOUD_REGION=$(cut -d'-' -f1 -f2 <<<"$GCLOUD_ZONE")
+    else
+      GCLOUD_REGION="us-west1"
+    fi
+    echo -e "Using '${GCLOUD_REGION}' for the GCloud region setting; pass '--region <REGION>' to this script to control the region."
+  fi
+
+  echo -e "\nLaunching $CREATE_MODE GKE cluster ${CLUSTER_NAME} (K8s Master: ${GKE_MASTER_VERSION}) in project ${GCLOUD_PROJECT} in region ${GCLOUD_REGION} for deploying Lucidworks Fusion 5 ...\n"
 
   if [ "$CREATE_MODE" == "demo" ]; then
-
-    if [ "$GCLOUD_ZONE" == "us-west1" ]; then
-      echo -e "\nWARNING: Must provide a specific zone for demo clusters instead of a region, such as us-west1-a!\n"
-      GCLOUD_ZONE="us-west1-a"
-      current_value=$(gcloud config get-value compute/zone)
-      if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
-        gcloud config set compute/zone "${GCLOUD_ZONE}"
-      fi
-    fi
 
     if [ "${INSTANCE_TYPE}" == "" ]; then
       INSTANCE_TYPE="n1-standard-8"
@@ -366,11 +358,12 @@ if [ "$cluster_status" != "0" ]; then
     fi
 
      #Get zone in case it is not defined
-    if [ "$GCLOUD_ZONE1" == "" ]; then
-      GCLOUD_ZONE1=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
+    if [ -z ${GCLOUD_ZONE+x} ]; then
+      GCLOUD_ZONE=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
+      echo -e "Using zone '${GCLOUD_ZONE}' for your demo cluster."
     fi
 
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE1}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --zone "${GCLOUD_ZONE}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -398,16 +391,7 @@ if [ "$cluster_status" != "0" ]; then
       SOLR_REPLICAS=3
     fi
 
-    #Get zones if they are not defined
-    if [ "$GCLOUD_ZONE2" == "" ]; then
-      GCLOUD_ZONE2=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m2 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
-    fi
-
-    if [ "$GCLOUD_ZONE3" == "" ]; then
-      GCLOUD_ZONE3=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m3 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
-    fi
-
-    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_ZONE}" \
+    gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" \
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
@@ -423,8 +407,7 @@ if [ "$cluster_status" != "0" ]; then
       --default-max-pods-per-node "110" \
       --enable-autoscaling --min-nodes "0" --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
-      --no-enable-autoupgrade --enable-autorepair \
-      --node-locations  "${GCLOUD_ZONE1}","${GCLOUD_ZONE2}","${GCLOUD_ZONE3}"
+      --no-enable-autoupgrade --enable-autorepair
   else
     echo -e "\nNo --create arg provided, assuming you want a multi-AZ, multi-NodePool cluster ..."
     echo -e "Clusters with multiple NodePools not supported by this script yet! Please create the cluster and define the NodePools manually.\n"
