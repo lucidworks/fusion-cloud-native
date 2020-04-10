@@ -5,6 +5,204 @@
 
 The latest version of Fusion 5 is 5.1.0. The migration process varies depending on your current version of Fusion.
 
+.Migration matrix
+[cols="1a,1a,1a,1a,1a,1a,1a"]
+|==================
+
+|
+|To 5.0.1
+|To 5.0.2
+|To 5.0.3
+|To 5.1.0
+|To 5.1.1
+|To 5.1.2
+
+|From 5.0.0
+|
+//to 5.0.1
+Run the `_upgrade_fusion.sh` script.
+|
+//to 5.0.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.0.3
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.0
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.1
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+
+|From 5.0.1
+| -
+|
+//to 5.0.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.0.3
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.0
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.1
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+
+|From 5.0.2
+| -
+| -
+|
+//to 5.0.3
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.0
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.1
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+
+|From 5.0.3
+| -
+| -
+| -
+|
+//to 5.1.0
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.1
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.2
+. Migrate to Helmv3
+. Install Prometheus/Grafana
+. Prepare Upgrade Solr 8.4.1
+. Install Kubernetes Custom Resource Definition (CRDs) for Seldon Core
+. Delete the Logstash StatefulSet (only needed for clusters running 5.0.3-2 or earlier)
+. Update the Prometheus Scrape Path for query, index, and gateway services
+. Run the `_upgrade_fusion.sh` script.
+
+|From 5.1.0
+| -
+| -
+| -
+| -
+|
+//to 5.1.1
+. Run the `_upgrade_fusion.sh` script.
+|
+//to 5.1.2
+. Run the `_upgrade_fusion.sh` script.
+
+|From 5.1.1
+| -
+| -
+| -
+| -
+| -
+|
+//to 5.1.2
+. Run the `_upgrade_fusion.sh` script.
+
+|==================
+
 // tag::body[]
 
 == Migrating from Fusion 5.0.x to 5.1.x
