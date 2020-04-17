@@ -4,7 +4,7 @@
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-CHART_VERSION="5.1.0"
+CHART_VERSION="5.1.1"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
 TLS_ENABLED="0"
@@ -203,9 +203,9 @@ if [ "$CLUSTER_NAME" == "" ]; then
   exit 1
 fi
 
-valid="0-9a-zA-Z_\-"
+valid="0-9a-zA-Z\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -219,7 +219,7 @@ if [ -z ${RELEASE+x} ]; then
 fi
 
 if [[ $RELEASE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -255,8 +255,6 @@ else
   who_am_i=""
 fi
 OWNER_LABEL="${who_am_i//@/-}"
-
-echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
 
 # Determine if we have helm v3
 # TODO drop support for helm v2
@@ -309,6 +307,7 @@ elif [ "$PURGE" == "1" ]; then
   fi
 
   confirm="Y"
+  echo ""
   read -p "Are you sure you want to purge the ${RELEASE} release from the ${NAMESPACE} namespace in: $current? This operation cannot be undone! Y/n " confirm
   if [ "$confirm" == "" ] || [ "$confirm" == "Y" ] || [ "$confirm" == "y" ]; then
 
@@ -435,8 +434,35 @@ if [ "$UPGRADE" != "1" ]; then
       PROMETHEUS_ON=false
     fi
 
-     ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -b "${KUBECTL}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --with-resource-limits --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+    num_nodes=1
+    if [ "${NODE_POOL}" != "" ] && [ "${NODE_POOL}" != "{}" ]; then
+      node_selector=$(tr ': ' '=' <<<"${NODE_POOL}")
+      #Adding a retry loop because EKS takes more time to create nodes.
+      retries=2
+      while (( retries > 0 )); do
+        find_nodes=$(${KUBECTL} get nodes -l "${node_selector}" | grep -i ready)
+        has_nodes=$?
+        if [ "${has_nodes}" == "0" ]; then
+          echo -e "Found at least one healthy node matching nodeSelector: ${NODE_POOL}"
+          num_nodes=$(${KUBECTL} get nodes -l "${node_selector}" | grep -i ready | wc -l)
+          retries=-1
+        else
+          echo -e "\nERROR: No 'Ready' nodes found matching nodeSelector: ${node_selector}! Retrying in 30 seconds"
+          echo -ne "."
+          sleep 30
+          retries=$(( retries - 1 ))
+        fi
+      done
+      if [ "${retries}" == "0" ]; then
+        echo -e "\nERROR: No 'Ready' nodes found matching nodeSelector: ${node_selector}! Check the '--node-pool' parameter and retry running this script!\n"
+        exit 1
+      fi
+    else
+      num_nodes=$(${KUBECTL} get nodes | grep -i ready | wc -l)
+    fi
+
+     ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi
@@ -456,7 +482,7 @@ if [ "$UPGRADE" == "1" ]; then
     exit 1
   fi
 else
-  echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}}"
+  echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 fi
 
 # let's exit immediately if the helm install command fails

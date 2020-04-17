@@ -55,10 +55,12 @@ fi
 
 helm repo update
 
-# Make sure that the metric server is running
-metrics_deployment=$(${KUBECTL} get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-${KUBECTL} rollout status deployment/${metrics_deployment} --request-timeout=60s --namespace "kube-system"
-echo ""
+if [ "$PROVIDER" == "gke" ]; then
+  # Make sure that the metric server is running
+  metrics_deployment=$(${KUBECTL} get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+  ${KUBECTL} rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+  echo ""
+fi
 
 echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
 echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:\n${MY_VALUES//--values}\n"
@@ -66,9 +68,9 @@ echo -e "\nNOTE: If this will be a long-running cluster for production purposes,
 helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
 
 echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
-${KUBECTL} rollout status deployment/${RELEASE}-api-gateway --request-timeout=600s --namespace "${NAMESPACE}"
-echo -e "\nWaiting up to 2 minutes to see the Fusion Admin deployment come online ...\n"
-${KUBECTL} rollout status deployment/${RELEASE}-fusion-admin --request-timeout=120s --namespace "${NAMESPACE}"
+${KUBECTL} rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
+echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
+${KUBECTL} rollout status deployment/${RELEASE}-fusion-indexing --timeout=300s --namespace "${NAMESPACE}"
 
 current_ns=$(${KUBECTL} config view --minify --output 'jsonpath={..namespace}')
 if [ "$NAMESPACE" != "$current_ns" ]; then

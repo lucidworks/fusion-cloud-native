@@ -9,7 +9,7 @@ PROVIDER=gke
 RESOURCES=false
 AFFINITY=false
 REPLICAS=false
-CHART_VERSION="5.1.0"
+CHART_VERSION="5.1.1"
 NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
@@ -182,9 +182,9 @@ if [ $# -gt 1 ]; then
   done
 fi
 
-valid="0-9a-zA-Z_\-"
+valid="0-9a-zA-Z\-"
 if [[ $NAMESPACE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -198,7 +198,7 @@ if [ -z ${RELEASE+x} ]; then
 fi
 
 if [[ $RELEASE =~ [^$valid] ]]; then
-  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, underscore or dash!\n"
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -225,10 +225,7 @@ if [ "${NODE_POOL}" == "" ]; then
   fi
 fi
 
-ZK_REPLICAS=1
-if (( SOLR_REPLICAS > 2 )); then
-  ZK_REPLICAS=3
-fi
+ZK_REPLICAS=3
 
 cp customize_fusion_values.yaml.example $MY_VALUES
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
