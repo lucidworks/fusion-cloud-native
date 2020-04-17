@@ -264,7 +264,7 @@ is_helm_v3=$(helm version --short | grep v3)
 
 if [ "${is_helm_v3}" == "" ]; then
   # see if Tiller is deployed ...
-  ${KUBECTL} rollout status deployment/tiller-deploy --timeout=10s -n kube-system > /dev/null 2>&1
+  ${KUBECTL} rollout status deployment/tiller-deploy --request-timeout=10s -n kube-system > /dev/null 2>&1
   rollout_status=$?
   if [ $rollout_status != 0 ]; then
     echo -e "\nSetting up Helm Tiller ..."
@@ -320,16 +320,16 @@ elif [ "$PURGE" == "1" ]; then
     else
       helm del --purge "${RELEASE}"
     fi
-    ${KUBECTL} delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    ${KUBECTL} delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
-    ${KUBECTL} delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
-    ${KUBECTL} delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    ${KUBECTL} delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    ${KUBECTL} delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    ${KUBECTL} delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+    ${KUBECTL} delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=5s
+    ${KUBECTL} delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=1s
+    ${KUBECTL} delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=2s
+    ${KUBECTL} delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=5s
+    ${KUBECTL} delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=5s
+    ${KUBECTL} delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=5s
+    ${KUBECTL} delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=5s
     ${KUBECTL} delete serviceaccount --namespace "${NAMESPACE}" "${RELEASE}-api-gateway-jks-create"
     if [ "${NAMESPACE}" != "default" ] && [ "${NAMESPACE}" != "kube-public" ] && [ "${NAMESPACE}" != "kube-system" ]; then
-      ${KUBECTL} delete namespace "${NAMESPACE}" --grace-period=0 --force --timeout=10s
+      ${KUBECTL} delete namespace "${NAMESPACE}" --grace-period=0 --force --request-timeout=10s
     fi
   fi
   exit 0
