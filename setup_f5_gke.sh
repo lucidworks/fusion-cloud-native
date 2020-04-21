@@ -25,7 +25,7 @@ function print_usage() {
   ERROR_MSG="$2"
 
   if [ "$ERROR_MSG" != "" ]; then
-    echo -e "\nERROR: $ERROR_MSG"
+    echo -e "\nERROR: $ERROR_MSG\n"
   fi
 
   echo -e "  -c              Name of the GKE cluster (required)\n"
@@ -440,6 +440,12 @@ else
   elif [ "${UPGRADE}" == "1" ]; then
     ACTION="upgrade"
   fi
+
+  if [ "${CREATE_MODE}" != "" ]; then
+    print_usage "$SCRIPT_CMD" "Cluster '${CLUSTER_NAME}' exists! Refusing to try to create new cluster in mode: ${CREATE_MODE}"
+    exit 1
+  fi
+
   echo -e "\nCluster '${CLUSTER_NAME}' exists, starting to ${ACTION} Lucidworks Fusion"
 fi
 
