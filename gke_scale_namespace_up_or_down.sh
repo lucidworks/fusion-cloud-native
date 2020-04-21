@@ -1,4 +1,5 @@
 #!/bin/bash
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 function print_usage() {
   CMD="$1"
@@ -8,14 +9,13 @@ function print_usage() {
     echo -e "\nERROR: $ERROR_MSG"
   fi
 
-  echo -e "\nUse this script to scale a Fusion cluster in the specified namespace down when not in use"
-  echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
+  echo -e "\nUse this script to scale a Fusion cluster in the specified namespace down when not in use, or back up when needed"
+  echo -e "\nUsage: $CMD up|down [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c   Name of the cluster (required)\n"
   echo -e "  -p   GCP Project ID (required)\n"
   echo -e "  -n   Kubernetes namespace where Fusion 5 is running (required)\n"
   echo -e "  -r   Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  -z   GCP Zone the cluster is running in, defaults to 'us-west1'\n"
-  echo -e "\nTip: Run your Fusion upgrade script to restore the namespace.\n"
 }
 
 SCRIPT_CMD="$0"
@@ -27,6 +27,14 @@ ACTION="down"
 if [ $# -gt 0 ]; then
   while true; do
     case "$1" in
+        up)
+            ACTION="up"
+            shift 1
+        ;;
+        down)
+            ACTION="down"
+            shift 1
+        ;;
         -c)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -c parameter!"
@@ -189,4 +197,18 @@ if [ "$ACTION" == "down" ]; then
   echo -e "\nAll done! To bring the cluster back, run your Fusion upgrade script.\n"
   exit 0
 fi
+
+UPGRADE_SCRIPT="${SCRIPT_DIR}/gke_${CLUSTER_NAME}_${RELEASE}_upgrade_fusion.sh"
+if [ -f "${UPGRADE_SCRIPT}" ]; then
+  if [ -f "${SCRIPT_DIR}/gke_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml" ]; then
+    echo -e "Restoring Prometheus / Grafana using ${SCRIPT_DIR}/gke_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
+    ( "${SCRIPT_DIR}/install_prom.sh" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "gke" )
+  fi
+  echo -e "Restoring Fusion using ${UPGRADE_SCRIPT}"
+  ( ${UPGRADE_SCRIPT} )
+else
+  echo -e "\nERROR: Fusion upgrade script ${UPGRADE_SCRIPT} not found! This script is needed to restore your cluster."
+fi
+
+
 
