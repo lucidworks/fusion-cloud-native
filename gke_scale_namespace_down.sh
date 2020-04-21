@@ -8,37 +8,25 @@ function print_usage() {
     echo -e "\nERROR: $ERROR_MSG"
   fi
 
-  echo -e "\nUse this script to scale a Fusion cluster in the specified namespace down when not in use or back up when needed again"
-  echo -e "\nUsage: $CMD up|down [OPTIONS] ... where OPTIONS include:\n"
-  echo -e "  -c          Name of the cluster (required)\n"
-  echo -e "  -p          GCP Project ID (required)\n"
-  echo -e "  -r          Helm release name for installing Fusion 5 (required)\n"
-  echo -e "  -n          Kubernetes namespace to install Fusion 5 into (required)\n"
-  echo -e "  -z          GCP Zone the cluster is running in, defaults to 'us-west1'\n"
-  echo -e "  --replicas  Number of Solr and ZK replicas; defaults to 1\n"
+  echo -e "\nUse this script to scale a Fusion cluster in the specified namespace down when not in use"
+  echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
+  echo -e "  -c   Name of the cluster (required)\n"
+  echo -e "  -p   GCP Project ID (required)\n"
+  echo -e "  -n   Kubernetes namespace where Fusion 5 is running (required)\n"
+  echo -e "  -r   Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  -z   GCP Zone the cluster is running in, defaults to 'us-west1'\n"
+  echo -e "\nTip: Run your Fusion upgrade script to restore the namespace.\n"
 }
 
 SCRIPT_CMD="$0"
 GCLOUD_PROJECT=
-GCLOUD_ZONE=us-west1
+GCLOUD_ZONE="us-west1"
 CLUSTER_NAME=
-RELEASE=
-NAMESPACE=
-ACTION=
-NUM_REPLICAS=1
+ACTION="down"
 
 if [ $# -gt 0 ]; then
   while true; do
     case "$1" in
-        up)
-            ACTION="up"
-            NUM_REPLICAS=1
-            shift 1
-        ;;
-        down)
-            ACTION="down"
-            shift 1
-        ;;
         -c)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the -c parameter!"
@@ -79,10 +67,6 @@ if [ $# -gt 0 ]; then
             GCLOUD_ZONE="$2"
             shift 2
         ;;
-        --replicas)
-            NUM_REPLICAS="$2"
-            shift 2
-        ;;
         -help|-usage)
             print_usage "$SCRIPT_CMD"
             exit 0
@@ -113,18 +97,28 @@ if [ "$GCLOUD_PROJECT" == "" ]; then
   exit 1
 fi
 
-if [ "$RELEASE" == "" ]; then
-  print_usage "$SCRIPT_CMD" "Please provide the Helm release name using: -r <release>"
-  exit 1
-fi
-
 if [ "$NAMESPACE" == "" ]; then
   print_usage "$SCRIPT_CMD" "Please provide the Kubernetes namespace using: -n <namespace>"
   exit 1
 fi
 
-if [ "$ACTION" != "up" ] && [ "$ACTION" != "down" ]; then
-  print_usage "$SCRIPT_CMD" "Please specify an action! Either up or down!"
+valid="0-9a-zA-Z\-"
+if [[ $NAMESPACE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Namespace $NAMESPACE must only contain 0-9, a-z, A-Z, or dash!\n"
+  exit 1
+fi
+
+if [ -z ${RELEASE+x} ]; then
+  # keep "f5" as the default for legacy purposes when using the default namespace
+  if [ "${NAMESPACE}" == "default" ]; then
+    RELEASE="f5"
+  else
+    RELEASE="$NAMESPACE"
+  fi
+fi
+
+if [[ $RELEASE =~ [^$valid] ]]; then
+  echo -e "\nERROR: Release $RELEASE must only contain 0-9, a-z, A-Z, or dash!\n"
   exit 1
 fi
 
@@ -151,14 +145,22 @@ if [ $has_prereq == 1 ]; then
   exit 1
 fi
 
-gcloud config set compute/zone $GCLOUD_ZONE
-gcloud config set project $GCLOUD_PROJECT
+current_value=$(gcloud config get-value compute/zone)
+if [ "${current_value}" != "${GCLOUD_ZONE}" ]; then
+  gcloud config set compute/zone "${GCLOUD_ZONE}"
+  echo -e "Set compute/zone to '${GCLOUD_ZONE}'"
+fi
+
+current_value=$(gcloud config get-value project)
+if [ "${current_value}" != "${GCLOUD_PROJECT}" ]; then
+  gcloud config set project "${GCLOUD_PROJECT}"
+fi
+
 gcloud container clusters get-credentials $CLUSTER_NAME
 kubectl config current-context
-
 kubectl config set-context --current --namespace=${NAMESPACE}
 
-declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "graf-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "prom-prometheus-kube-state-metrics" "prom-prometheus-pushgateway" "prom-prometheus-server" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "solr-exporter" "webapps")
+declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "solr-exporter" "webapps" "ambassador" "pulsar-broker" "workflow-controller" "ui" "sql-service-cm" "sql-service-cr")
 
 if [ "$ACTION" == "down" ]; then
 
@@ -172,7 +174,9 @@ if [ "$ACTION" == "down" ]; then
      kubectl scale deployments/${next} --replicas=0 -n ${NAMESPACE}
   done
 
-  declare -a stateful=("classic-rest-service" "logstash" "solr")
+  kubectl scale deployments/seldon-controller-manager --replicas=0 -n ${NAMESPACE}
+
+  declare -a stateful=("classic-rest-service" "logstash" "solr" "pulsar-bookkeeper" "monitoring-prometheus-server")
   for i in "${stateful[@]}"
   do
      next="${RELEASE}-$i"
@@ -182,35 +186,7 @@ if [ "$ACTION" == "down" ]; then
   # do ZK last ... and wait
   kubectl scale statefulsets/${RELEASE}-zookeeper --replicas=0 -n ${NAMESPACE} --timeout=180s
 
-  echo -e "\nAll done! To bring the cluster back, do:\n     ${SCRIPT_CMD} up -c ${CLUSTER_NAME} -p ${GCLOUD_PROJECT} -n ${NAMESPACE} -r ${RELEASE}\n"
+  echo -e "\nAll done! To bring the cluster back, run your Fusion upgrade script.\n"
   exit 0
 fi
-
-# bring back the statefulsets and then the deployments
-echo -e "\nBringing ${NUM_REPLICAS} Zookeeper pods back up ..."
-kubectl scale statefulsets/${RELEASE}-zookeeper --replicas=${NUM_REPLICAS} -n ${NAMESPACE}
-sleep 20
-
-echo -e "\nBringing ${NUM_REPLICAS} Solr pods back up ... will wait up to 3 minutes to see Solr come back online"
-kubectl scale statefulsets/${RELEASE}-solr --replicas=${NUM_REPLICAS} -n ${NAMESPACE}
-kubectl rollout status statefulset/${RELEASE}-solr -n ${NAMESPACE} --timeout=180s
-
-declare -a stateful=("logstash" "classic-rest-service")
-for i in "${stateful[@]}"
-do
-   next="${RELEASE}-$i"
-   echo -e "\nScaling StatefulSet $next UP ..."
-   kubectl scale statefulsets/${next} --replicas=1 -n ${NAMESPACE}
-done
-
-for i in "${deployments[@]}"
-do
-   next="${RELEASE}-$i"
-   echo -e "\nScaling deployment $next UP ..."
-   kubectl scale deployments/${next} --replicas=1 -n ${NAMESPACE}
-done
-
-kubectl get pods -n ${NAMESPACE}
-kubectl config set-context --current --namespace=${NAMESPACE}
-
 
