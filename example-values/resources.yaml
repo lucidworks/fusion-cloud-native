@@ -136,6 +136,123 @@ ml-model-service:
       limits:
         memory: 3Gi
         cpu: 1500m
+  argo:
+    ui:
+      resources:
+        requests:
+          memory: "128Mi"
+          cpu: "50m"
+        limits:
+          memory: "256Mi"
+          cpu: "100m"
+    controller:
+      resources:
+        requests:
+          memory: "128Mi"
+          cpu: "50m"
+        limits:
+          memory: "256Mi"
+          cpu: "100m"
+
+
+  ambassador:
+    resources:
+      requests:
+        memory: "128Mi"
+        cpu: "100m"
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+
+fusion-question-answering:
+  resources:
+    default:
+      requests:
+        memory: "64Mi"
+        cpu: "10m"
+      limits:
+        memory: "100Mi"
+        cpu: "30m"
+    coldstart:      
+      dataPuller: 
+        requests:
+          memory: "2Gi" 
+          cpu: "100m"
+        limits:
+          memory: "4Gi"
+          cpu: "500m"
+      train: 
+        requests:
+          memory: "4Gi"
+          cpu: "8000m"
+        limits:
+          memory: "4Gi"
+          cpu: "10000m"
+      seldon:
+        requests:
+          memory: "2Gi"
+          cpu: "200m"
+        limits:
+          memory: "3Gi"
+          cpu: "1000m"
+
+
+    supervised:
+      dataPuller: 
+        requests:
+          memory: "2Gi" 
+          cpu: "100m"
+        limits:
+          memory: "4Gi"
+          cpu: "500m"
+      train: 
+        requests:
+          memory: "4Gi"
+          cpu: "8000m"
+        limits:
+          memory: "4Gi"
+          cpu: "10000m"
+      seldon:
+        requests:
+          memory: "2Gi"
+          cpu: "200m"
+        limits:
+          memory: "3Gi"
+          cpu: "1000m"
+
+    evaluation:
+      dataPuller: 
+        requests:
+          memory: "2Gi" 
+          cpu: "100m"
+        limits:
+          memory: "4Gi"
+          cpu: "500m"
+      train: 
+        requests:
+          memory: "4Gi"
+          cpu: "8000m"
+        limits:
+          memory: "4Gi"
+          cpu: "10000m"
+      seldon:
+        requests:
+          memory: "2Gi"
+          cpu: "200m"
+        limits:
+          memory: "3Gi"
+          cpu: "1000m"
+
+    deploy:
+      seldon:
+        requests:
+          memory: "2Gi"
+          cpu: "200m"
+        limits:
+          memory: "3Gi"
+          cpu: "1000m"
+
+
 
 query-pipeline:
   resources:
