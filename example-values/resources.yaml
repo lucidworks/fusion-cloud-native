@@ -154,7 +154,6 @@ ml-model-service:
           memory: "256Mi"
           cpu: "100m"
 
-
   ambassador:
     resources:
       requests:
@@ -196,7 +195,7 @@ fusion-question-answering:
         limits:
           memory: "3Gi"
           cpu: "1000m"
-          
+
     supervised:
       dataPuller: 
         requests:
@@ -251,8 +250,6 @@ fusion-question-answering:
         limits:
           memory: "3Gi"
           cpu: "1000m"
-
-
 
 query-pipeline:
   resources:
