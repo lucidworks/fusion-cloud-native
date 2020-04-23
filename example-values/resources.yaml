@@ -173,6 +173,7 @@ fusion-question-answering:
       limits:
         memory: "100Mi"
         cpu: "30m"
+
     coldstart:      
       dataPuller: 
         requests:
@@ -183,11 +184,11 @@ fusion-question-answering:
           cpu: "500m"
       train: 
         requests:
-          memory: "4Gi"
-          cpu: "8000m"
-        limits:
-          memory: "4Gi"
+          memory: "6Gi"
           cpu: "10000m"
+        limits:
+          memory: "8Gi"
+          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -195,8 +196,7 @@ fusion-question-answering:
         limits:
           memory: "3Gi"
           cpu: "1000m"
-
-
+          
     supervised:
       dataPuller: 
         requests:
@@ -207,11 +207,11 @@ fusion-question-answering:
           cpu: "500m"
       train: 
         requests:
-          memory: "4Gi"
-          cpu: "8000m"
-        limits:
-          memory: "4Gi"
+          memory: "8Gi"
           cpu: "10000m"
+        limits:
+          memory: "10Gi"
+          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -230,11 +230,11 @@ fusion-question-answering:
           cpu: "500m"
       train: 
         requests:
-          memory: "4Gi"
-          cpu: "8000m"
-        limits:
-          memory: "4Gi"
+          memory: "6Gi"
           cpu: "10000m"
+        limits:
+          memory: "8Gi"
+          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
