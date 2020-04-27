@@ -670,8 +670,17 @@ solr:
 
 We can deploy Fusion in an existing OpenShift cluster. This cluster should be created using https://cloud.redhat.com/openshift/install[OpenShift Infrastructure Provider^]. A Red Hat Customer Portal account is required. OpenShift Online services are not supported.
 
-In case Tiller is required, the cluster security needs to be relaxed to allow images to run with different UIDs:
+The easiest way to install on OpenShift is to run the `setup_f5_k8s.sh` script for your *existing* cluster; use the `--help` option to see script usage. For instance, the following command will install Fusion 5 into the specified namespace (`-n`) and OpenShift cluster (`-c`):
 
+```
+./setup_f5_k8s.sh -c <CLUSTER> -n <NAMESPACE> --provider oc
+```
+
+Tip: `kubectl` should work with your OpenShift cluster (see: https://docs.openshift.com/container-platform/4.1/cli_reference/usage-oc-kubectl.html) and Lucidworks recommends installing the latest `kubectl` for your workstation instead of using `oc` for installing Fusion 5. However, if you do not have `kubectl` installed, then you'll need to update the upgrade script created by `setup_f5_k8s.sh` to use `oc` instead of `kubectl` (search and replace on the BASH script using a text editor).
+
+When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
+
+Lucidworks recommends using Helm v3, but in case Tiller is required for Helm v2, the cluster security needs to be relaxed to allow images to run with different UIDs:
 ```
 oc adm policy add-scc-to-group anyuid system:authenticated
 ```
