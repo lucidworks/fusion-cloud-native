@@ -530,7 +530,7 @@ if [ ! -z "${INGRESS_VALUES}" ]; then
       PROMETHEUS_ON=false
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --provider "aks" --prometheus $PROMETHEUS_ON \
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --version "${CHART_VERSION}" --provider "aks" --prometheus $PROMETHEUS_ON \
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
     VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
   fi

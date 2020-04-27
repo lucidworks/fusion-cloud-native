@@ -452,7 +452,7 @@ if [ "$UPGRADE" != "1" ]; then
     fi
 
      ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --version "${CHART_VERSION}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi

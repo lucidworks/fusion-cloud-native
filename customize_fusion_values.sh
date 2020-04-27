@@ -27,6 +27,7 @@ function print_usage() {
   echo -e "  -c                      Cluster name (required)\n"
   echo -e "  -n                      Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -r                      Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
   echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke; defaults to 'gke'\n"
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
   echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
@@ -82,6 +83,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             RELEASE="$2"
+            shift 2
+        ;;
+        --version)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --version parameter!"
+              exit 1
+            fi
+            CHART_VERSION="$2"
             shift 2
         ;;
         --provider)
