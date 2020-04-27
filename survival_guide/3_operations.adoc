@@ -743,16 +743,16 @@ This cron job is created automatically when the `job-launcher` microservice is i
 ==== Spark History Server
 
 //tag::history-intro[]
-While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the Spark History Server into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
+While logs from the Spark driver and executor pods can be viewed using `kubectl logs [POD_NAME]`, executor pods are deleted at their end of their execution, and driver pods are deleted by Fusion on a default schedule of every hour. In order to store and view Spark logs in a more long-term fashion, you can install the https://spark.apache.org/docs/latest/monitoring.html[Spark History Server^] into your Kubernetes cluster and configure Spark to write logs in a manner that will persist.
 //end::history-intro[]
 
 ===== Installing Spark History Server
 
 //tag::history-install[]
 
-Spark History Server can be installed via its default Helm chart:
+Spark History Server can be installed via its publicly-available Helm chart. To accomplish this, we must create a `values.yaml` file to configure it.
 ----
-helm install stable/spark-history-server --values values.yaml
+helm install [namespace]-spark-history-server stable/spark-history-server --values values.yaml
 ----
 
 //end::history-install[]
@@ -765,31 +765,58 @@ Our recommended configuration for using the Spark History Server with Fusion is 
 [source,yaml]
 ----
 gcs:
-    enableGCS: false
-    secret: history-secrets
-    key: [SECRET_KEY_NAME].json
-    logDirectory: gs://[BUCKET_NAME]
+  enableGCS: true
+  secret: history-secrets
+  key: sparkhistory.json
+  logDirectory: gs://[BUCKET_NAME]
 service:
-    type: ClusterIP
-    port: 18080
-----
-We override the default `service.type` of `LoadBalancer` with `ClusterIP` to keep the History Server from being accessible to outside connections without port-forwarding.
+  type: ClusterIP
+  port: 18080
 
-You may need to set up your secret for full access to the cloud bucket:
+pvc:
+  enablePVC: false
+nfs:
+  enableExampleNFS: false
+----
+Note that, by default, the Spark History Server Helm chart creates an external LoadBalancer, exposing it to outside access. This is usually undesirable. In the above, we prevent this via the `service` key - the Spark History Server will only be set up on an internal IP within your cluster and will not be exposed externally. Later, we will show how to properly access the Spark History Server.
+
+The `key` and `secret` fields provide the Spark History Server with the details of where it will find an account with access to the Google Cloud Storage bucket given in `logDirectory`. In the following example, we're going to set up a new service account that will be shared between the Spark History Server and the Spark driver/executors for both viewing and writing logs.
+
+The `nfs.enableExampleNFS` option turns off the NFS server that the Spark History Server sets up by default, as we won't be needing it in our installation.
+
+In order to give the Spark History Server access to the Google Cloud Storage bucket where the logs will be kept, we use `gcloud` to create a new service account, and then `keys create` to create a JSON keypair which we will shortly upload into our cluster as a Kubernetes secret.
+
 [source,bash]
 ----
-$ export ACCOUNT_NAME=[SECRET_KEY_NAME]
+$ export ACCOUNT_NAME=sparkhistory
 $ export GCP_PROJECT_ID=[PROJECT_ID]
 $ gcloud iam service-accounts create ${ACCOUNT_NAME} --display-name "${ACCOUNT_NAME}"
-$ gcloud iam service-accounts keys create "${ACCOUNT_NAME}.json" --iam-account "${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+$ gcloud iam service-accounts keys create "${ACCOUNT_NAME}.json" --iam-account "${
+ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com"
+----
+
+We then give our service account the `storage/admin` role, allowing it to perform create and view operations, and the final `gsutil` command applies our service account to our chosen bucket. If you have an existing service account you wish to use instead, you can skip the `create` command, though you will still need to create the JSON keypair and ensure that the existing account can read and write to the log bucket.
+
+[source,bash]
+----
 $ gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} --member "serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com" --role roles/storage.admin
 $ gsutil iam ch serviceAccount:${ACCOUNT_NAME}@${GCP_PROJECT_ID}.iam.gserviceaccount.com:objectAdmin gs://[BUCKET_NAME]
 ----
-The service key sets up the history server on an internal IP within your cluster but does not create a LoadBalancer (which is the default setting in the Spark History Server Helm chart). This prevents the server from being exposed to outside access by default. We’ll look at how to access the history server shortly.
+
+We now need to upload the JSON keypair into the cluster as a secret:
+
+[source,bash]
+----
+kubectl -n [NAMESPACE] create secret generic history-secrets --from-file=sparkhistory.json
+----
+
+With all this in place, the Spark History Server can now be installed with `helm install [namespace]-spark-history-server stable/spark-history-server --values values.yaml`.
 
 ===== Other Configurations
 
 ====== Azure
+
+Azure is a similar process to Google Kubernetes Engine, except our logs will be stored in Azure Blob Storage, and we can either use SAS token or key access.
 
 [source,bash]
 ----
@@ -806,24 +833,24 @@ For SAS token access, `values.yaml` should look like:
 [source,yaml]
 ----
 wasbs:
-    enableWASBS: true
-    secret: azure-secrets
-    sasKeyName: azure-blob-sas-key
-    storageAccountNameKeyName: azure-storage-account-name
-    containerKeyName: azure-blob-container-name
-    logDirectory: [BUCKET-NAME]
+  enableWASBS: true
+  secret: azure-secrets
+  sasKeyName: azure-blob-sas-key
+  storageAccountNameKeyName: azure-storage-account-name
+  containerKeyName: azure-blob-container-name
+  logDirectory: [BUCKET_NAME]
 ----
 For non-SAS access:
 [source,yaml]
 ----
 wasbs:
-    enableWASBS: true
-    secret: azure-secrets
-    sasKeyMode: false
-    storageAccountKeyName: azure-storage-account-key
-    storageAccountNameKeyName: azure-storage-account-name
-    containerKeyName:  azure-blob-container-name
-    logDirectory: [BUCKET-NAME]
+  enableWASBS: true
+  secret: azure-secrets
+  sasKeyMode: false
+  storageAccountKeyName: azure-storage-account-key
+  storageAccountNameKeyName: azure-storage-account-name
+  containerKeyName:  azure-blob-container-name
+  logDirectory: [BUCKET_NAME]
 ----
 
 ====== AWS
@@ -842,8 +869,8 @@ For IAM, your `values.yaml` will be:
 [source,yaml]
 ----
 s3:
-    enableS3: true
-    logDirectory: s3a://[BUCKET-NAME]
+  enableS3: true
+  logDirectory: s3a://[BUCKET_NAME]
 ----
 (Note the Hadoop `s3a://` link instead of `s3://`.)
 
@@ -852,39 +879,63 @@ With a access/secret pair, you’ll need to add the secret:
 [source,yaml]
 ----
 s3:
-    enableS3: true
-    enableIAM: false
-    accessKeyName: aws-access-key
-    secretKeyName: aws-secret-key
-    logDirectory: s3a://[BUCKET-NAME]
+  enableS3: true
+  enableIAM: false
+  accessKeyName: aws-access-key
+  secretKeyName: aws-secret-key
+  logDirectory: s3a://[BUCKET_NAME]
 ----
 
 ===== Configuring Spark
 
-After the History Server has been set up, then the Fusion job-launcher deployment ConfigMap’s `application.yaml` key will need to be updated with these Spark settings so the driver and executors know where to write out their logs. In this example, we’re redirecting to a GCS bucket:
+After starting the Spark History Server, we must update the config map for Fusion's job-launcher so it can write logs to the same location that Spark History Server is reading from.
+
+In this example, having installed Fusion into a namespace of `sparkhistory`, we will edit the config map to write the logs to the same Google Cloud Storage bucket we configured the Spark History Server to read from. Before editing the config map, make a copy of the existing settings in case you need to revert the changes.
+
+[source,bash]
+----
+kubectl get cm -n [NAMESPACE] sparkhistory-job-launcher -o yaml > sparkhistory-job-launcher.yaml
+
+kubectl edit cm -n [NAMESPACE] sparkhistory-job-launcher
+----
+
+Update the `spark` key with the new YAML settings below and then delete the `job-launcher` pod. The new `job-launcher` pod will apply the new configuration to subsequent jobs. In addition to the location of the secret and the settings that specify the location of the Spark eventLog, we also have to tell Spark how to access GCS with the `spark.hadoop.fs.gs.impl``spark.hadoop.fs.AbstractFileSystem.gs.impl` keys.
 
 [source,yaml]
 ----
 spark:
-    eventLog:
-        enabled: true
-        compress: true
-        dir: gs://[BUCKET-NAME]
-    hadoop:
-        google:
-            cloud:
-                auth:
-                    service:
-                        account:
-                            json:
-                                keyfile: /etc/secrets/[SECRET_KEY_NAME].json]
-    kubernetes:
-        driver:
-            secrets:
-                history-secrets: /etc/secrets
-        executor:
-            secrets:
-                history-secrets: /etc/secrets
+  hadoop:
+    fs:
+      AbstractFileSystem:
+        gs:
+          impl: com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS
+      gs:
+        impl: com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem
+    google:
+      cloud:
+        auth:
+          service:
+            account:
+              json:
+                keyfile: /etc/history-secrets/[ACCOUNT_NAME].json
+  eventLog:
+    enabled: true
+    compress: true
+    dir: gs://[BUCKET_NAME]
+  …
+  kubernetes:
+    driver:
+      secrets:
+        history-secrets: /etc/history-secrets
+      container:
+        …
+    executor:
+      secrets:
+        history-secrets: /etc/history-secrets
+      container:
+        …
+    …
+
 ----
 
 //end::history-config[]
@@ -893,13 +944,13 @@ spark:
 
 //tag::history-access[]
 
-As we have set up the History Server to only set up a ClusterIP, we will need to port forward the server using `kubectl`:
+As we have set up the Spark History Server to only set up a ClusterIP, we will need to port forward the server using `kubectl`:
 ----
-kubectl get pods # to find the Spark History Server pod
-kubectl port-forward [POD_NAME] 18080:18080
+kubectl get pods -n [NAMESPACE] # to find the Spark History Server pod
+kubectl port-forward [POD_NAME] -n [NAMESPACE] 18080:18080
 ----
 
-You can now access the Spark History Server at `\http://localhost:18080`.
+You can now access the Spark History Server at `\http://localhost:18080`. Run a Spark job and confirm that you can see the logs appear in the UI.
 
 //end::history-access[]
 
