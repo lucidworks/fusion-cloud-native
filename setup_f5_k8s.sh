@@ -35,7 +35,7 @@ function print_usage() {
   echo -e "  -c                Name of the K8s cluster (required)\n"
   echo -e "  -r                Helm release name for installing Fusion 5, defaults to 'f5'\n"
   echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
-  echo -e "  --provider        Lowercase label for your K8s platform provider, e.g. eks, aks, gke; defaults to 'k8s'\n"
+  echo -e "  --provider        Lowercase label for your K8s platform provider, e.g. eks, aks, gke, oc; defaults to 'k8s'\n"
   echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
   echo -e "                    where you defined a custom node pool, wrap the arg in double-quotes\n"
   echo -e "  --ingress         Ingress hostname\n"
@@ -456,6 +456,12 @@ if [ "$UPGRADE" != "1" ]; then
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi
+fi
+
+
+#Added policy for openshift
+if [ "$PROVIDER" == "oc" ]; then
+  oc adm policy add-scc-to-group anyuid system:authenticated
 fi
 
 # Don't mess with upgrading the Prom / Grafana charts during upgrade
