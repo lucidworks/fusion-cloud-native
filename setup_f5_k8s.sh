@@ -458,6 +458,12 @@ if [ "$UPGRADE" != "1" ]; then
   fi
 fi
 
+
+#Added policy for openshift
+if [ "$PROVIDER" == "oc" ]; then
+  oc adm policy add-scc-to-group anyuid system:authenticated
+fi
+
 # Don't mess with upgrading the Prom / Grafana charts during upgrade
 # just let the user do that manually with Helm as needed
 if [ "$UPGRADE" != "1" ] && [ "${PROMETHEUS}" != "none" ]; then
