@@ -7,6 +7,7 @@ CLUSTER_NAME=<CLUSTER>
 RELEASE=<RELEASE>
 NAMESPACE=<NAMESPACE>
 CHART_VERSION=<CHART_VERSION>
+KUBECTL=<KUBECTL>
 
 MY_VALUES=""
 <BASE_CUSTOM_VALUES>
@@ -24,14 +25,14 @@ if [ ! -z "${DRY_RUN_REQUESTED}" ]; then
   DRY_RUN="--dry-run"
 fi
 
-current_context=$(kubectl config current-context | grep "$CLUSTER_NAME")
+current_context=$(${KUBECTL} config current-context | grep "$CLUSTER_NAME")
 if [ "${current_context}" == "" ]; then
   echo -e "\nERROR: Current kubeconfig not pointing to the $CLUSTER_NAME cluster!\nPlease update your current config to the correct cluster for upgrading Fusion.\n"
   exit 1
 fi
 
-if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
-  kubectl create namespace "${NAMESPACE}"
+if ! ${KUBECTL} get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  ${KUBECTL} create namespace "${NAMESPACE}"
   if [ "$PROVIDER" == "gke" ]; then
     who_am_i=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
   else
@@ -39,7 +40,7 @@ if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
   fi
   OWNER_LABEL="${who_am_i//@/-}"
   if [ "${OWNER_LABEL}" != "" ]; then
-    kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+    ${KUBECTL} label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
   fi
   echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
 fi
@@ -56,8 +57,8 @@ helm repo update
 
 if [ "$PROVIDER" == "gke" ]; then
   # Make sure that the metric server is running
-  metrics_deployment=$(kubectl get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
-  kubectl rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
+  metrics_deployment=$(${KUBECTL} get deployment -n kube-system | grep metrics-server | cut -d ' ' -f1 -)
+  ${KUBECTL} rollout status deployment/${metrics_deployment} --timeout=60s --namespace "kube-system"
   echo ""
 fi
 
@@ -67,13 +68,13 @@ echo -e "\nNOTE: If this will be a long-running cluster for production purposes,
 helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
 
 echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
-kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
+${KUBECTL} rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"
 echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
-kubectl rollout status deployment/${RELEASE}-fusion-indexing --timeout=300s --namespace "${NAMESPACE}"
+${KUBECTL} rollout status deployment/${RELEASE}-fusion-indexing --timeout=300s --namespace "${NAMESPACE}"
 
-current_ns=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+current_ns=$(${KUBECTL} config view --minify --output 'jsonpath={..namespace}')
 if [ "$NAMESPACE" != "$current_ns" ]; then
-  kubectl config set-context --current --namespace=${NAMESPACE}
+  ${KUBECTL} config set-context --current --namespace=${NAMESPACE}
 fi
 echo ""
 helm ls

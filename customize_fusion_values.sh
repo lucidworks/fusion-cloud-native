@@ -13,6 +13,7 @@ CHART_VERSION="5.1.1"
 NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
+KUBECTL="kubectl"
 
 function print_usage() {
   CMD="$1"
@@ -25,6 +26,7 @@ function print_usage() {
   echo -e "\nUse this script to create a custom Fusion values yaml from a template"
   echo -e "\nUsage: $CMD <yaml-file-to-create> [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c                      Cluster name (required)\n"
+  echo -e "  -b                      The Kubernetes command line tool executable to use, defaults to 'kubectl'\n"
   echo -e "  -n                      Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -r                      Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
@@ -67,6 +69,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             CLUSTER_NAME="$2"
+            shift 2
+        ;;
+        -b)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -b parameter!"
+              exit 1
+            fi
+            KUBECTL="$2"
             shift 2
         ;;
         -n)
@@ -346,5 +356,6 @@ else
   sed -i '' -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
 fi
 
+sed -i -e "s|<KUBECTL>|${KUBECTL}|g" "$OUTPUT_SCRIPT"
 
 echo -e "\nCreate $OUTPUT_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
