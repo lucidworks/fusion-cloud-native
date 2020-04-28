@@ -429,6 +429,14 @@ See https://eksctl.io/usage/vpc-networking/ for more information on the networki
 The `setup_f5_eks.sh` script exposes the Fusion proxy service on an external IP over HTTP. This is done for demo or getting started purposes. However, you're strongly encouraged to configure a K8s Ingress with TLS termination in front of the proxy service.
 See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traffic-eks-acm/
 
+Our EKS script creates a classic ELB for exposing fusion proxy service. In case you need to change this behavior or create another type of ELB, you can follow these steps:
+
+. Check which port is kubernetes using to allow communication, you can check this listing the fusion services: `kubectl get svc -n <namespace>`.
+. Create an https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html[Application Load Balancer^] that allows communication from port 80/443. You must include your nodes as the target group and the health checker should point to the port kubernetes is using.
+. From here we have 2 options:
+.. Change the proxy service type from LoadBalancer to Nodeport using the kubernetes port.
+.. Another option is deploying a nginx ingress and change the proxy service type to ClusterIP.
+
 // end::eks[]
 
 === Upgrade Fusion on EKS
