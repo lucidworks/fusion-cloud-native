@@ -136,6 +136,7 @@ ml-model-service:
       limits:
         memory: 3Gi
         cpu: 1500m
+  # Requires Fusion 5.1.2 or above
   argo:
     ui:
       resources:
@@ -163,6 +164,7 @@ ml-model-service:
         memory: "256Mi"
         cpu: "200m"
 
+# Requires Fusion 5.1.2 or above
 fusion-question-answering:
   resources:
     default:
@@ -184,10 +186,10 @@ fusion-question-answering:
       train: 
         requests:
           memory: "6Gi"
-          cpu: "10000m"
-        limits:
-          memory: "8Gi"
-          cpu: "20000m"
+          cpu: "4000m"
+#        limits:
+#          memory: "8Gi"
+#          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -207,10 +209,10 @@ fusion-question-answering:
       train: 
         requests:
           memory: "8Gi"
-          cpu: "10000m"
-        limits:
-          memory: "10Gi"
-          cpu: "20000m"
+          cpu: "4000m"
+#        limits:
+#          memory: "10Gi"
+#          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -230,10 +232,10 @@ fusion-question-answering:
       train: 
         requests:
           memory: "6Gi"
-          cpu: "10000m"
-        limits:
-          memory: "8Gi"
-          cpu: "20000m"
+          cpu: "4000m"
+#        limits:
+#          memory: "8Gi"
+#          cpu: "20000m"
       seldon:
         requests:
           memory: "2Gi"
