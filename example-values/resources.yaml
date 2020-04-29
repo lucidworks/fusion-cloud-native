@@ -189,7 +189,7 @@ fusion-question-answering:
           cpu: "4000m"
 #        limits:
 #          memory: "8Gi"
-#          cpu: "20000m"
+#          cpu: "10000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -212,7 +212,7 @@ fusion-question-answering:
           cpu: "4000m"
 #        limits:
 #          memory: "10Gi"
-#          cpu: "20000m"
+#          cpu: "10000m"
       seldon:
         requests:
           memory: "2Gi"
@@ -235,7 +235,7 @@ fusion-question-answering:
           cpu: "4000m"
 #        limits:
 #          memory: "8Gi"
-#          cpu: "20000m"
+#          cpu: "10000m"
       seldon:
         requests:
           memory: "2Gi"
