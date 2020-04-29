@@ -326,12 +326,13 @@ If this is the case, then you need to transfer the public images from DockerHub 
 
 Here's a rough outline of the process we recommend, but you may need to adapt the process to work within your organization's security policies:
 
-a - You'll need a workstation that has access to DockerHub (hub.docker.com) and can connect to your internal Docker registry, most likely via VPN connection. We'll refer to this computer as `envoy`.
+[loweralpha]
+. You'll need a workstation that has access to DockerHub (hub.docker.com) and can connect to your internal Docker registry, most likely via VPN connection. We'll refer to this computer as `envoy`.
 
-b - Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
+. Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
 
-c - Pull all images from DockerHub to `envoy`’s local registry (will take a long time). Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
-
+. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
++
 ```
 apachepulsar/pulsar-all:2.5.0
 argoproj/argoui:v2.4.3
@@ -370,36 +371,39 @@ seldonio/seldon-core-operator:1.0.1
 solr:8.4.1
 zookeeper:3.5.6
 ```
-
++
 For example, to pull the query pipeline image, you would do:
++
 ```
 docker pull lucidworks/query-pipeline:5.1.1
 ```
-
++
 See `docker pull --help` for more information about pulling Docker images.
 
-d - Establish connection from `envoy` to the private Docker registry, most likely this requires you to open a VPN connection. Consult with your internal IT support for help as needed.
-
+. Establish connection from `envoy` to the private Docker registry, most likely this requires you to open a VPN connection. Consult with your internal IT support for help as needed.
++
 We'll refer to the private Docker registry as `<internal-private-registry>` in the steps below.
 
-e - Push images from envoy’s Docker registry into their private registry (will take a long time).
-
+. Push images from envoy’s Docker registry into their private registry (will take a long time).
++
 You'll need to re-tag all images for the internal registry. For example, to tag the query-pipeline image, you would do:
-
++
 ```
 docker tag lucidworks/query-pipeline:5.1.1 <internal-private-registry>/query-pipeline:5.1.1
 ```
-
++
 After tagging, push each image to the internal repo, e.g.:
++
 ```
 docker push <internal-private-registry>/query-pipeline:5.1.1
 ```
 
-f - Install the Docker registry secret into Kubernetes
-
+. Install the Docker registry secret into Kubernetes.
++
 For background on pulling images from private registries, see: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-
++
 You'll need to create docker-registry secret in the Kubernetes namespace where you want to install Fusion using a command similar to:
++
 ```
 SECRET_NAME=<internal-private-registry>
 REPO=<internal-private-registry>
@@ -412,9 +416,11 @@ kubectl create secret docker-registry "${SECRET_NAME}" \
   --docker-email=${REPO_USER}
 ```
 
-g - Update the custom values yaml for your cluster to point to your private registry and secret for Kubernetes to pull images.
-
+. Update the custom values yaml for your cluster to point to your private registry and secret for Kubernetes to pull images.
++
 For instance:
++
+[source,yaml]
 ```
 query-pipeline:
   image:
@@ -422,18 +428,20 @@ query-pipeline:
       - name: <internal-private-registry>
     repository: <internal-private-registry>
 ```
-
++
 Do this for all Fusion services.
 
-h - Customize Helm Chart
-
+. Customize Helm Chart
++
 All the Fusion services allow you to override the `imagePullSecrets` setting using custom values yaml, but other 3rd party services such as Zookeeper, Pulsar, Prometheus,
 and Grafana do not allow you to supply the pull secret using custom values yaml. Consequently, we recommend patching the default service account for your namespace to add the pull secret:
++
 ```
 kubectl patch sa default -n $NAMESPACE \
   -p '"imagePullSecrets": [{"name": "<internal-private-registry>" }]'
 ```
-__Be sure to replace `<internal-private-registry>` with the name of the secret you created in step g above.__
++
+IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step g above.
 
 This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
 
