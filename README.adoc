@@ -431,21 +431,7 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 
 Our EKS script creates a classic ELB for exposing fusion proxy service. In case you need to change this behavior or create another type of ELB, you can follow these steps:
 
-. Using the AWS console for creating an https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html[Application Load Balancer^]:
-
-.. Check which port is kubernetes using to allow communication, you can check this listing the fusion services: `kubectl get svc -n <namespace>`.
-.. Create an Application Load Balancer that allows communication from port 80/443. You must include your nodes as the target group and the health checker should point to the port kubernetes is using.
-.. From here we have 2 options:
-... Change the proxy service type from LoadBalancer to Nodeport using the kubernetes port.
-... Another option is deploying a nginx ingress and change the proxy service type to ClusterIP.
-
-. Using https://github.com/kubernetes-sigs/aws-alb-ingress-controller[AWS ALB Ingress Controller^]:
-.. Attach the following this https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.5/docs/examples/iam-policy.json[policy^] to the role which is associated to your eks nodes.
-.. Add the helm incubator repository:
-```
-helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
-```
-.. Install the alb ingress controller:
+. Install an alb ingress controller:
 ```
 helm install incubator/aws-alb-ingress-controller --set autoDiscoverAwsRegion=true --set autoDiscoverAwsVpcID=true --set clusterName=<cluster_name>
 ```
