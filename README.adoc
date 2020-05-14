@@ -14,6 +14,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.1.2|2020-05-14|Fusion 5.1.2 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.2-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.1.1|2020-04-08|Fusion 5.1.1 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.1-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.1.0|2020-03-12|Fusion 5.1.0 release, see official release notes: https://doc.lucidworks.com/fusion-server/5.0/release-notes/5.1.0-release-notes.html. For upgrades from previous versions of Fusion 5.0.x, see the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 |5.0.3-4|2020-02-26|Updated query pipeline service to support filtering Solr pods by hostname regex match, e.g. `lw.nodeFilter=host:search` will send queries to Solr pods that contain "search" in their hostname. This is useful when using TLOG and PULL replica types where you don’t want queries to go to nodes hosting TLOG replicas and only want to target PULL replicas.
