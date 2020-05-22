@@ -431,11 +431,19 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 
 Our EKS script creates a classic ELB for exposing fusion proxy service. In case you need to change this behavior or create another type of ELB, you can follow these steps:
 
-. Install an alb ingress controller:
+
+. Using https://github.com/kubernetes-sigs/aws-alb-ingress-controller[AWS ALB Ingress Controller^]:
+
+.. Attach the following this https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.5/docs/examples/iam-policy.json[policy^] to the role which is associated to your eks nodes.
+.. Add the helm incubator repository:
+```
+helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubator
+```
+.. Install an alb ingress controller:
 ```
 helm install incubator/aws-alb-ingress-controller --set autoDiscoverAwsRegion=true --set autoDiscoverAwsVpcID=true --set clusterName=<cluster_name>
 ```
-.. Change the proxy service type from LoadBalancer to Nodeport. One option is updating the following values in your fusion values yaml file and apply the changes using the upgrade script::
+... Change the proxy service type from LoadBalancer to Nodeport. One option is updating the following values in your fusion values yaml file and apply the changes using the upgrade script::
 ```
 api-gateway:
   service:
@@ -443,7 +451,7 @@ api-gateway:
     port: 6764
     targetPort: 6764
 ```
-.. Create an ingress-controller for redirecting the port to the proxy service, you can use this example:
+... Create an ingress-controller for redirecting the port to the proxy service, you can use this example:
 ```
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -466,8 +474,8 @@ spec:
               servicePort: 6764
 
 ```
-.. Wait until an application load balancer is assigned to your ingress, you can check it with: `kubectl get ing -n <your-namespace>`
-.. Finally, use Route 53 or your DNS provider for creating an ALIAS DNS record to your `<your_dns_name>` pointing to the load balancer DNS name.
+... Wait until an application load balancer is assigned to your ingress, you can check it with: `kubectl get ing -n <your-namespace>`
+... Finally, use Route 53 or your DNS provider for creating an A ALIAS DNS record to `<your_dns_name>` pointing to the load balancer DNS name.
 
 
 // end::eks[]
