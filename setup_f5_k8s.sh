@@ -394,7 +394,7 @@ function ingress_setup() {
     done
   else
     #EKS setup for supporting ALBs and nginx ingress
-    ALB_DNS=$(kubectl get ing ${CLUSTER_NAME}-nginx-ingress --output=jsonpath={.status..loadBalancer..ingress[].hostname})
+    ALB_DNS=$(kubectl get ing ${RELEASE}-api-gateway --output=jsonpath={.status..loadBalancer..ingress[].hostname})
 
     echo -e "\n\nPlease ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${ALB_DNS}\n"
   fi

@@ -394,36 +394,19 @@ if [ "${INGRESS_HOSTNAME}" != "" ] && [ "${DEPLOY_ALB}" == "1" ]; then
     fi
   fi
 
-  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: "${CLUSTER_NAME}-nginx-ingress"
-  namespace: "${NAMESPACE}"
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-  labels:
-    app: nginx-ingress
-spec:
-  rules:
-    - host: "${INGRESS_HOSTNAME}"
-      http:
-        paths:
-          - path: /*
-            backend:
-              serviceName: "proxy"
-              servicePort: 6764
-
-EOF
   API_GATEWAY_VALUES="api-gateway-values.yaml"
   INGRESS_VALUES="${INGRESS_VALUES} --values api-gateway-values.yaml"
   tee "${API_GATEWAY_VALUES}" << END
 api-gateway:
   service:
     type: "NodePort"
-    port: 6764
-    targetPort: 6764
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+    enabled: true
+    host: "${INGRESS_HOSTNAME}"
+    path: "/*"
 END
 fi
 
