@@ -179,4 +179,4 @@ helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespa
   --render-subchart-notes --wait
 
 echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
-helm ls
+helm ls -n "${NAMESPACE}"
