@@ -41,7 +41,7 @@ function print_usage() {
   echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --deploy-alb      Deploys alb ingress controller \n"
   echo -e "  --n-alb           Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
-  echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. Used with alb ingress controller "
+  echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
   echo -e "                    The hostname must be a public DNS record that can be updated to point to the ALB DNS name\n"
   echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
   echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
