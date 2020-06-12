@@ -48,6 +48,11 @@ ml-model-service:
     imagePullPolicy: "IfNotPresent"
   nodeSelector:
     {NODE_POOL}
+  pod:
+    annotations:
+      prometheus.io/port: "8086"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
   modelRepoImpl: fusion
   fs:
     enabled: true
@@ -138,10 +143,20 @@ insights:
 job-launcher:
   nodeSelector:
     {NODE_POOL}
+  pod:
+    annotations:
+      prometheus.io/port: "8083"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 
 job-rest-server:
   nodeSelector:
     {NODE_POOL}
+  pod:
+    annotations:
+      prometheus.io/port: "8081"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
 
 logstash:
   nodeSelector:
