@@ -40,7 +40,7 @@ function print_usage() {
   echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --deploy-alb      Deploys alb ingress controller \n"
-  echo -e "  --n-alb           Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
+  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
   echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
   echo -e "                    The hostname must be a public DNS record that can be updated to point to the ALB DNS name\n"
   echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
@@ -186,9 +186,9 @@ if [ $# -gt 0 ]; then
             DEPLOY_ALB=1
             shift 1
         ;;
-        --n-alb)
+        --alb-namespace)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
-              print_usage "$SCRIPT_CMD" "Missing value for the --n-alb parameter!"
+              print_usage "$SCRIPT_CMD" "Missing value for the --alb-namespace parameter!"
               exit 1
             fi
             ALB_NAMESPACE="$2"
