@@ -432,8 +432,8 @@ See: https://aws.amazon.com/premiumsupport/knowledge-center/terminate-https-traf
 Our EKS script creates a classic ELB for exposing fusion proxy service. In case you need to change this behavior and use https://github.com/kubernetes-sigs/aws-alb-ingress-controller[AWS ALB Ingress Controller^] instead you can use the following parameters when  running the `setup_f5_eks.sh` script:
 
 ```
---deploy-alb  # Tells the script to deploy an ALB
---n-alb       # Namespace to deploy the ALB, if it is not specicified the namespace for fusion would be used.
+--deploy-alb     # Tells the script to deploy an ALB
+--alb-namespace  # Namespace to deploy the ALB, if it is not specicified the namespace for fusion would be used.
 ```
 
 The ALB is configured by default with `--set autoDiscoverAwsRegion=true` and  `--set autoDiscoverAwsVpcID=true`. To use an ALB also an ingress with a DNS name is required, you can use the `-h` option to create an ingress with the required DNS name.
@@ -485,6 +485,17 @@ data:
 ```
 
 Use the following command for applying the yaml file: `kubectl apply -f aws-auth.yaml`
+
+=== Remove EKS cluster
+
+In case you have deployed an ALB ingress controller, you would need to remove the policy that was created for managing the ALB before removing the cluster. You can use the following command for it:
+
+```
+aws iam --profile <profile-name> delete-policy --policy-arn arn:aws:iam::<account_id>:policy/eksctl-<cluster-name>-alb-policy
+```
+
+Also you can remove it manually using the AWS console: https://console.aws.amazon.com/iam/home?region=us-west-2#/policies , searching for `eksctl-<cluster-name>-alb-policy`.
+
 
 // end::eks[]
 
