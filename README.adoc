@@ -494,8 +494,23 @@ In case you have deployed an ALB ingress controller, you would need to remove th
 aws iam --profile <profile-name> delete-policy --policy-arn arn:aws:iam::<account_id>:policy/eksctl-<cluster-name>-alb-policy
 ```
 
-Also you can remove it manually using the AWS console: https://console.aws.amazon.com/iam/home?region=us-west-2#/policies , searching for `eksctl-<cluster-name>-alb-policy`.
+Also you can remove it manually using the https://console.aws.amazon.com/iam/home?region=us-west-2#/policies[AWS IAM console], searching for `eksctl-<cluster-name>-alb-policy`.
 
+After that you should remove the ALB with `helm delete`, list the current releases with `helm list`.
+
+The EKS cluster is created using Cloudformation stacks so you need to remove them to delete the cluster, you can check them in the https://us-west-2.console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks?filteringText=&filteringStatus=active&viewNested=true&hideStacks=false[AWS Cloudformation Console], check for the following stacks:
+
+- eksctl-<cluster-name>-nodegroup-standard-workers
+- eksctl-<cluster-name>-cluster
+
+The `eksctl-<cluster-name>-nodegroup-standard-workers` stack should be the first to be removed. After that we can remove the `eksctl-<cluster-name>-cluster` stack.
+
+Also you can use the following commands>:
+```
+aws cloudformation --profile <profile-name> delete-stack --stack-name eksctl-<cluster-name>-nodegroup-standard-workers
+aws cloudformation --profile <profile-name> delete-stack --stack-name eksctl-<cluster-name>-cluster
+
+```
 
 // end::eks[]
 
