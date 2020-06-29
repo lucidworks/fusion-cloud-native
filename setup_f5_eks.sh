@@ -19,6 +19,8 @@ AMI="auto"
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
+DEPLOY_ALB=
+ALB_NAMESPACE=
 
 function print_usage() {
   CMD="$1"
@@ -37,6 +39,10 @@ function print_usage() {
   echo -e "  -z                AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
+  echo -e "  --deploy-alb      Deploys alb ingress controller \n"
+  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
+  echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
+  echo -e "                    The hostname must be a public DNS record that can be updated to point to the ALB DNS name\n"
   echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
   echo -e "                    defaults to 'install' which installs Prometheus and Grafana from the stable Helm repo,"
   echo -e "                    'provided' enables pod annotations on Fusion services to work with Prometheus but does not install anything\n"
@@ -94,6 +100,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             REGION="$2"
+            shift 2
+        ;;
+        -h)
+            if [[ -h "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -h parameter!"
+              exit 1
+            fi
+            INGRESS_HOSTNAME="$2"
             shift 2
         ;;
         -i)
@@ -166,6 +180,18 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             CREATE_MODE="$2"
+            shift 2
+        ;;
+        --deploy-alb)
+            DEPLOY_ALB=1
+            shift 1
+        ;;
+        --alb-namespace)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --alb-namespace parameter!"
+              exit 1
+            fi
+            ALB_NAMESPACE="$2"
             shift 2
         ;;
         --upgrade)
@@ -348,6 +374,75 @@ fi
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 
 
+INGRESS_VALUES=""
+if [ "${DEPLOY_ALB}" == "1" ]; then
+
+  #Creating required ALB policy and attaching it to the Cluster Node Group
+
+  wget https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.5/docs/examples/iam-policy.json -O alb-policy.json
+
+  NODE_GROUP_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stack-resource --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --logical-resource-id NodeInstanceRole --query 'StackResourceDetail.PhysicalResourceId' --output text)
+
+  POLICY_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" iam create-policy --policy-name eksctl-${CLUSTER_NAME}-alb-policy --policy-document file://alb-policy.json --query 'Policy.Arn' --output text)
+
+  aws --profile "${AWS_ACCOUNT}" --region "${REGION}" iam attach-role-policy --role-name ${NODE_GROUP_ARN} --policy-arn ${POLICY_ARN}
+
+
+  ALB_NS=""
+
+  if [ -z "${ALB_NAMESPACE}" ]; then
+    ALB_NS=${NAMESPACE}
+  else
+    ALB_NS=${ALB_NAMESPACE}
+  fi
+
+  # need to create the namespace if it doesn't exist yet
+  if ! kubectl get namespace "${ALB_NS}" > /dev/null 2>&1; then
+    if [ "${UPGRADE}" != "1" ]; then
+      kubectl create namespace "${ALB_NS}"
+      kubectl label namespace "${ALB_NS}" "owner=${OWNER_LABEL}"
+      echo -e "\nCreated namespace ${ALB_NS} with owner label ${OWNER_LABEL}\n"
+    fi
+  fi
+
+  #Installing ALB
+
+  echo -e "\nInstalling Alb Ingress Controller"
+
+  if ! helm repo list | grep -q "https://kubernetes-charts-incubator.storage.googleapis.com"; then
+    echo -e "\nAdding the Incubator chart repo to helm repo list"
+    helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com
+  fi
+
+  helm repo update
+
+  helm install incubator/aws-alb-ingress-controller --namespace "${ALB_NS}" --set autoDiscoverAwsRegion=true --set autoDiscoverAwsVpcID=true --set clusterName=${CLUSTER_NAME} --generate-name
+
+fi
+
+if [ "${INGRESS_HOSTNAME}" != "" ]; then
+
+  API_GATEWAY_VALUES="api-gateway-values.yaml"
+  INGRESS_VALUES="${INGRESS_VALUES} --values api-gateway-values.yaml"
+  tee "${API_GATEWAY_VALUES}" << END
+api-gateway:
+  service:
+    type: "NodePort"
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+    enabled: true
+    host: "${INGRESS_HOSTNAME}"
+    path: "/*"
+END
+fi
+
+INGRESS_ARG=""
+if [ ! -z "${INGRESS_HOSTNAME}" ]; then
+  INGRESS_ARG=" --ingress ${INGRESS_HOSTNAME} ${INGRESS_VALUES}"
+fi
+
 # Pass in custom values
 VALUES_STRING=""
 for v in "${MY_VALUES[@]}"; do
@@ -381,6 +476,6 @@ fi
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${UPGRADE_ARGS}"
 ( "${SCRIPT_DIR}/setup_f5_k8s.sh" -c "$CLUSTER_NAME" -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${UPGRADE_ARGS} )
+  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result

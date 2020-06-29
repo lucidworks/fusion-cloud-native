@@ -377,20 +377,28 @@ function proxy_url() {
 
 # ingress_setup informs the user how to finish setting up the DNS records for their ingress with hostname
 function ingress_setup() {
-  echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
-  loops=24
-  while (( loops > 0 )); do
-    ingressIp=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-    if [[ ! -z ${ingressIp} ]]; then
-      export INGRESS_IP="${ingressIp}"
-      break
-    fi
-    loops=$(( loops - 1 ))
-    echo -ne "."
-    sleep 5
-  done
-  echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
-  echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
+  if [ "${PROVIDER}" != "eks" ]; then
+    echo -ne "\nWaiting for the Loadbalancer IP to be assigned"
+    loops=24
+    while (( loops > 0 )); do
+      ingressIp=$(kubectl --namespace "${NAMESPACE}" get ingress "${RELEASE}-api-gateway" -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+      if [[ ! -z ${ingressIp} ]]; then
+        export INGRESS_IP="${ingressIp}"
+        break
+      fi
+      loops=$(( loops - 1 ))
+      echo -ne "."
+      sleep 5
+      echo -e "\n\nFusion 5 Gateway service exposed at: ${INGRESS_HOSTNAME}\n"
+      echo -e "Please ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${INGRESS_IP}"
+    done
+  else
+    #EKS setup for supporting ALBs and nginx ingress
+    ALB_DNS=$(kubectl get ing ${RELEASE}-api-gateway --output=jsonpath={.status..loadBalancer..ingress[].hostname})
+
+    echo -e "\n\nPlease ensure that the public DNS record for ${INGRESS_HOSTNAME} is updated to point to ${ALB_DNS}\n"
+  fi
+
   if [ "$TLS_ENABLED" == "1" ]; then
   echo -e "An SSL certificate will be automatically generated once the public DNS record has been updated,\nthis may take up to an hour after DNS has updated to be issued.\nYou can use kubectl get managedcertificates -o yaml to check the status of the certificate issue process."
   fi
