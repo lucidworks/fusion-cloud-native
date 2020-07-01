@@ -5,11 +5,10 @@
 solr:
   resources:
     requests:
-      cpu: 500m
-      memory: 5Gi
+      cpu: 800m
+      memory: 6Gi
     limits:
-      cpu: 1
-      memory: 5Gi
+      memory: 6Gi
 
 pulsar:
   broker:
@@ -18,7 +17,6 @@ pulsar:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 600m
         memory: 2300Mi
   bookkeeper:
     resources:
@@ -26,7 +24,6 @@ pulsar:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 600m
         memory: 2300Mi
 
 admin-ui:
@@ -35,16 +32,14 @@ admin-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 api-gateway:
   resources:
     requests:
-      cpu: "400m"
+      cpu: "500m"
       memory: "2300Mi"
     limits:
-      cpu: 800m
       memory: "2300Mi"
 
 auth-ui:
@@ -53,7 +48,6 @@ auth-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 classic-rest-service:
@@ -62,7 +56,6 @@ classic-rest-service:
       cpu: "300m"
       memory: "2300Mi"
     limits:
-      cpu: "600m"
       memory: "2300Mi"
 
 devops-ui:
@@ -71,7 +64,6 @@ devops-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 fusion-admin:
@@ -80,7 +72,6 @@ fusion-admin:
       cpu: "400m"
       memory: "2300Mi"
     limits:
-      cpu: "800m"
       memory: "2300Mi"
 
 fusion-indexing:
@@ -89,7 +80,6 @@ fusion-indexing:
       cpu: "500m"
       memory: "800Mi"
     limits:
-      cpu: "900m"
       memory: "1600Mi"
 
 insights:
@@ -98,7 +88,6 @@ insights:
       cpu: "50m"
       memory: "500Mi"
     limits:
-      cpu: "100m"
       memory: "1Gi"
 
 job-launcher:
@@ -108,7 +97,6 @@ job-launcher:
       cpu: 200m
     limits:
       memory: 3Gi
-      cpu: 800m
 
 job-rest-server:
   resources:
@@ -117,7 +105,6 @@ job-rest-server:
       cpu: 200m
     limits:
       memory: 1Gi
-      cpu: 800m
 
 ml-model-service:
   pythonService:
@@ -127,7 +114,6 @@ ml-model-service:
         cpu: 300m
       limits:
         memory: 3Gi
-        cpu: 800m
   javaService:
     resources:
       requests:
@@ -135,15 +121,13 @@ ml-model-service:
         cpu: 800m
       limits:
         memory: 3Gi
-        cpu: 1500m
 
 query-pipeline:
   resources:
     requests:
-      cpu: "600m"
+      cpu: "700m"
       memory: "2300Mi"
     limits:
-      cpu: 1500m
       memory: "3300Mi"
 
 rest-service:
@@ -152,7 +136,6 @@ rest-service:
       cpu: "200m"
       memory: "1500Mi"
     limits:
-      cpu: "400m"
       memory: "2300Mi"
 
 rpc-service:
@@ -161,7 +144,6 @@ rpc-service:
       cpu: "300m"
       memory: "1500Mi"
     limits:
-      cpu: "600m"
       memory: "2300Mi"
 
 rules-ui:
@@ -170,17 +152,15 @@ rules-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 zookeeper:
   resources:
     requests:
       memory: 1Gi
-      cpu: 300m
+      cpu: 400m
     limits:
       memory: 1500Mi
-      cpu: 800m
 
 sql-service:
   resources:
@@ -188,7 +168,6 @@ sql-service:
       cpu: "500m"
       memory: 2Gi
     limits:
-      cpu: "800m"
       memory: 2Gi
 
 webapps:
@@ -197,5 +176,4 @@ webapps:
       cpu: "300m"
       memory: "800Mi"
     limits:
-      cpu: "400m"
       memory: "1300Mi"

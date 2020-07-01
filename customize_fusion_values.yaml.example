@@ -18,7 +18,7 @@ solr:
   updateStrategy:
     type: "RollingUpdate"
   javaMem: "-Xmx2g -Dfusion_node_type=system"
-  solrGcTune: "-XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
+  solrGcTune: "-XX:+ExitOnOutOfMemoryError -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
   volumeClaimTemplates:
     storageSize: "{SOLR_DISK_GB}Gi"
   replicaCount: {SOLR_REPLICAS}
@@ -72,7 +72,7 @@ fusion-indexing:
 query-pipeline:
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000"
+  javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
   livenessProbe:
     failureThreshold: 10
     httpGet:
@@ -108,7 +108,7 @@ api-gateway:
     externalTrafficPolicy: "Local"
   nodeSelector:
     {NODE_POOL}
-  javaToolOptions: "-Xms2g -Xmx2g -Djwt.token.user-cache-size=100 -Dhttp.maxConnections=1000"
+  javaToolOptions: "-Xms2g -Xmx2g -Djwt.token.user-cache-size=100 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
   pod:
     annotations:
       prometheus.io/port: "6764"
