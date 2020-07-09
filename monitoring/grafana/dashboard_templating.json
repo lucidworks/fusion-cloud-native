@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 21,
-  "iteration": 1594262883069,
+  "iteration": 1594263542360,
   "links": [],
   "panels": [
     {
@@ -214,7 +214,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -223,7 +223,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "p99 Template Render Time (histogram)",
+          "title": "p99 Template Trigger and Render Time (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -275,7 +275,7 @@
             "y": 9
           },
           "hiddenSeries": false,
-          "id": 100,
+          "id": 62,
           "legend": {
             "avg": false,
             "current": false,
@@ -301,7 +301,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(template_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -310,7 +310,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "p50 Template Render Times",
+          "title": "p95 Template Trigger and Render Times",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -388,7 +388,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -397,7 +397,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "p75 Template Render Times",
+          "title": "p75 Template Trigger and Render Times",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -449,7 +449,7 @@
             "y": 17
           },
           "hiddenSeries": false,
-          "id": 62,
+          "id": 100,
           "legend": {
             "avg": false,
             "current": false,
@@ -475,7 +475,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -484,7 +484,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "p95 Template Render Times",
+          "title": "p50 Template Trigger and Render Times",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -563,7 +563,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}} {{zoneType}}",
               "refId": "A"
@@ -652,7 +652,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}} {{zoneType}}",
               "refId": "A"
@@ -741,7 +741,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}} {{zoneType}}",
               "refId": "A"
@@ -829,7 +829,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}} {{zoneType}}",
               "refId": "A"
@@ -917,7 +917,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}) by (error, appId, zoneType)",
+              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, appId, zoneType)",
               "legendFormat": "{{appId}} {{zoneType}} (error {{error}})",
               "refId": "A"
             }
@@ -1004,7 +1004,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum  by (error, appId, zoneType)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\"}[1m]))",
+              "expr": "sum  by (error, appId, zoneType)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
               "legendFormat": "{{appId}} {{zoneType}} renders per minute",
               "refId": "A"
             }
@@ -1055,7 +1055,7 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "datasource": null,
       "gridPos": {
         "h": 1,
@@ -1064,96 +1064,888 @@
         "y": 9
       },
       "id": 102,
-      "panels": [],
-      "title": "Templates and Zones (By Template)",
-      "type": "row"
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 10
-      },
-      "hiddenSeries": false,
-      "id": 104,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
+      "panels": [
         {
-          "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(template_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
-          "legendFormat": "{{templateId}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "p99 Template Render Time (histogram)",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "s",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 10
+          },
+          "hiddenSeries": false,
+          "id": 104,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "legendFormat": "{{templateId}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "p99 Template Trigger and Render Time (histogram)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         },
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 10
+          },
+          "hiddenSeries": false,
+          "id": 110,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "legendFormat": "{{templateId}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "p95 Template Trigger and Render Times",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "hiddenSeries": false,
+          "id": 108,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "legendFormat": "{{templateId}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "p75 Template Trigger and Render Times",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "hiddenSeries": false,
+          "id": 106,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.5, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "legendFormat": "{{templateId}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "p50 Template Trigger and Render Times",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 26
+          },
+          "hiddenSeries": false,
+          "id": 112,
+          "interval": "",
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "intervalFactor": 2,
+              "legendFormat": "{{templateId}} {{zoneType}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zone Type p99 Render Times (histogram)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 26
+          },
+          "hiddenSeries": false,
+          "id": 113,
+          "interval": "",
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "intervalFactor": 2,
+              "legendFormat": "{{templateId}} {{zoneType}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zone Type p95 Render Times (histogram)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 34
+          },
+          "hiddenSeries": false,
+          "id": 114,
+          "interval": "",
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.75, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "intervalFactor": 2,
+              "legendFormat": "{{templateId}} {{zoneType}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zone Type p75 Render Times (histogram)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 34
+          },
+          "hiddenSeries": false,
+          "id": 115,
+          "interval": "",
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.50, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "intervalFactor": 2,
+              "legendFormat": "{{templateId}} {{zoneType}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zone Type p50 Render Times (histogram)",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "s",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 42
+          },
+          "hiddenSeries": false,
+          "id": 116,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, templateId, zoneType)",
+              "legendFormat": "{{templateId}} {{zoneType}} (error {{error}})",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zone Render Count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 42
+          },
+          "hiddenSeries": false,
+          "id": 117,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum  by (error, templateId, zoneType)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
+              "legendFormat": "{{templateId}} {{zoneType}} renders per minute",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "Zones Rendered per minute",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "Templates and Zones (By Template)",
+      "type": "row"
     },
     {
       "collapsed": true,
@@ -1162,7 +1954,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 10
       },
       "id": 58,
       "panels": [
@@ -1617,7 +2409,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 11
       },
       "id": 60,
       "panels": [
@@ -1806,7 +2598,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 12
       },
       "id": 56,
       "panels": [
@@ -2239,5 +3031,5 @@
   "timezone": "",
   "title": "Templating Metrics",
   "uid": "cACmdI2Zz1a112",
-  "version": 10
+  "version": 17
 }
