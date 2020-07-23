@@ -23,7 +23,7 @@ This topic covers some of the most important concepts of the Fusion cluster depi
 
 //tag::which[]
 
-Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusion 5 runs on any modern version of Kuberentes (v 1.12 or newer). In fact, very little code in Fusion has any awareness of Kubernetes or Docker. The K8s ecosystem is moving very fast and infrastructure providers are quickly offering some flavor of Kubernetes. However, the beauty of Kubernetes is that applications like Fusion do not need to care about the underlying infrastructure. Although Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, do not take this to mean Fusion only runs on those flavors of Kubernetes. In general, as long as K8s is running, Fusion 5 can run on it.
+Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusion 5 runs on any modern version of Kuberentes (v 1.14 or newer). In fact, very little code in Fusion has any awareness of Kubernetes or Docker. The K8s ecosystem is moving very fast and infrastructure providers are quickly offering some flavor of Kubernetes. However, the beauty of Kubernetes is that applications like Fusion do not need to care about the underlying infrastructure. Although Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, do not take this to mean Fusion only runs on those flavors of Kubernetes. In general, as long as K8s is running, Fusion 5 can run on it.
 
 //end::which[]
 
