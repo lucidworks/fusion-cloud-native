@@ -563,9 +563,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{appId}} {{zoneType}}",
+              "legendFormat": "{{appId}}",
               "refId": "A"
             }
           ],
@@ -573,7 +573,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p99 Render Times (histogram)",
+          "title": "Zone p99 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -652,9 +652,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{appId}} {{zoneType}}",
+              "legendFormat": "{{appId}}",
               "refId": "A"
             }
           ],
@@ -662,7 +662,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p95 Render Times (histogram)",
+          "title": "Zone p95 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -741,9 +741,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{appId}} {{zoneType}}",
+              "legendFormat": "{{appId}}",
               "refId": "A"
             }
           ],
@@ -751,7 +751,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p75 Render Times (histogram)",
+          "title": "Zone p75 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -829,9 +829,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(zoneType, appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{appId}} {{zoneType}}",
+              "legendFormat": "{{appId}}",
               "refId": "A"
             }
           ],
@@ -839,7 +839,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p50 Render Times",
+          "title": "Zone p50 Render Times",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -917,8 +917,8 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, appId, zoneType)",
-              "legendFormat": "{{appId}} {{zoneType}} (error {{error}})",
+              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, appId)",
+              "legendFormat": "{{appId}} (error {{error}})",
               "refId": "A"
             }
           ],
@@ -1004,8 +1004,8 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum  by (error, appId, zoneType)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
-              "legendFormat": "{{appId}} {{zoneType}} renders per minute",
+              "expr": "sum  by (error, appId)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
+              "legendFormat": "{{appId}} renders per minute",
               "refId": "A"
             }
           ],
@@ -1455,9 +1455,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{templateId}} {{zoneType}}",
+              "legendFormat": "{{templateId}}",
               "refId": "A"
             }
           ],
@@ -1465,7 +1465,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p99 Render Times (histogram)",
+          "title": "Zone p99 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1544,9 +1544,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{templateId}} {{zoneType}}",
+              "legendFormat": "{{templateId}}",
               "refId": "A"
             }
           ],
@@ -1554,7 +1554,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p95 Render Times (histogram)",
+          "title": "Zone p95 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1633,9 +1633,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{templateId}} {{zoneType}}",
+              "legendFormat": "{{templateId}}",
               "refId": "A"
             }
           ],
@@ -1643,7 +1643,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p75 Render Times (histogram)",
+          "title": "Zone p75 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1722,9 +1722,9 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum by(zoneType, templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.50, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
-              "legendFormat": "{{templateId}} {{zoneType}}",
+              "legendFormat": "{{templateId}}",
               "refId": "A"
             }
           ],
@@ -1732,7 +1732,7 @@
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Zone Type p50 Render Times (histogram)",
+          "title": "Zone p50 Render Times (histogram)",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1810,8 +1810,8 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, templateId, zoneType)",
-              "legendFormat": "{{templateId}} {{zoneType}} (error {{error}})",
+              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, templateId)",
+              "legendFormat": "{{templateId}} (error {{error}})",
               "refId": "A"
             }
           ],
@@ -1897,8 +1897,8 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum  by (error, templateId, zoneType)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
-              "legendFormat": "{{templateId}} {{zoneType}} renders per minute",
+              "expr": "sum  by (error, templateId)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
+              "legendFormat": "{{templateId}} renders per minute",
               "refId": "A"
             }
           ],
@@ -3283,33 +3283,6 @@
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allValue": null,
-        "current": {
-          "text": "All",
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": "Prometheus",
-        "definition": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",zoneType=~\".+\"},zoneType)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Zone Type",
-        "multi": true,
-        "name": "zone",
-        "options": [],
-        "query": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",zoneType=~\".+\"},zoneType)",
-        "refresh": 1,
-        "regex": "/(.+)/",
-        "skipUrlSync": false,
-        "sort": 1,
         "tagValuesQuery": "",
         "tags": [],
         "tagsQuery": "",
