@@ -439,6 +439,8 @@ Our EKS script creates a classic ELB for exposing fusion proxy service. In case 
 --alb-namespace  # Namespace to deploy the ALB, if it is not specicified the namespace for fusion would be used.
 ```
 
+In case you need to deploy an internal ALB you can use the `--internal` option. This will create the nodes in the internal subnets. Fusion will be reachable from an AWS instance located in any of the external subnets on the same VPC.
+
 The ALB is configured by default with `--set autoDiscoverAwsRegion=true` and  `--set autoDiscoverAwsVpcID=true`. To use an ALB also an ingress with a DNS name is required, you can use the `-h` option to create an ingress with the required DNS name.
 
 Finally, use Route 53 or your DNS provider for creating an A ALIAS DNS record for your DNS name pointing to the ingress ADRESS. You can get the address listing the ingress using the command `kubectl get ing`.
