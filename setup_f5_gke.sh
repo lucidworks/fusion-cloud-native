@@ -477,90 +477,12 @@ for v in "${MY_VALUES[@]}"; do
 done
 
 if [ "${ENABLE_SOLR_BACKUP}" == "1" ]; then
-  NFS_NAME="${CLUSTER_NAME}-${NAMESPACE}-${RELEASE}"
-  NFS_NAME="${NFS_NAME//_/-}"
-  if [ -z "${GCLOUD_ZONE}" ]; then
-    GCLOUD_ZONE=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
-  fi
-  echo -e "\n Creating GCP filestore instance with name: '${NFS_NAME}' in zone: '${GCLOUD_ZONE}'"
-  gcloud --project "${GCLOUD_PROJECT}" filestore instances create "${NFS_NAME}" \
-    --tier=STANDARD \
-    --file-share=name="solrbackups,capacity=${SOLR_BACKUP_NFS_GB}GB" \
-    --zone="${GCLOUD_ZONE}" \
-    --network=name="default"
-
-  NFS_IP="$(gcloud filestore instances describe "${NFS_NAME}" \
-    --project="${GCLOUD_PROJECT}" \
-    --zone="${GCLOUD_ZONE}" \
-    --format="value(networks.ipAddresses[0])")"
-
-  # need to create the namespace if it doesn't exist yet
-  if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
-    if [ "${UPGRADE}" != "1" ]; then
-      kubectl create namespace "${NAMESPACE}"
-      kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
-      echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
-    fi
-  fi
   BACKUP_VALUES="gke_${CLUSTER_NAME}_${RELEASE}_backup_values.yaml"
-  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: ${NAMESPACE}-solr-backups
-  annotations:
-    pv.beta.kubernetes.io/gid: "8983"
-spec:
-  capacity:
-    storage: ${SOLR_BACKUP_NFS_GB}G
-  accessModes:
-    - ReadWriteMany
-  nfs:
-    path: /solrbackups
-    server: ${NFS_IP}
-EOF
-
-
-  cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: fusion-solr-backup-claim
-spec:
-  volumeName: ${NAMESPACE}-solr-backups
-  accessModes:
-    - ReadWriteMany
-  storageClassName: ""
-  resources:
-    requests:
-      storage: ${SOLR_BACKUP_NFS_GB}G
-EOF
-
-  tee "${BACKUP_VALUES}" << END
-solr-backup-runner:
-  enabled: true
-  sharedPersistentVolumeName: ${NAMESPACE}-solr-backups
-
-solr:
-  additionalInitContainers:
-    - name: chown-backup-directory
-      securityContext:
-        runAsUser: 0
-      image: busybox:latest
-      command: ['/bin/sh', '-c', "owner=\$(stat -c '%u' /mnt/solr-backups);  if [ ! \"\${owner}\" = \"8983\" ]; then chown -R 8983:8983 /mnt/solr-backups; fi "]
-      volumeMounts:
-        - mountPath: /mnt/solr-backups
-          name: solr-backups
-  additionalVolumes:
-    - name: solr-backups
-      persistentVolumeClaim:
-        claimName: fusion-solr-backup-claim
-  additionalVolumeMounts:
-    - name: solr-backups
-      mountPath: "/mnt/solr-backups"
-END
   VALUES_STRING="${VALUES_STRING} --values ${BACKUP_VALUES}"
-
+  if [ -z "${GCLOUD_ZONE}" ]; then
+    GCLOUD_ZONE=$(gcloud --project "${GCLOUD_PROJECT}" compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
+  fi
+  ${SCRIPT_DIR}/setup_gke_filestore.sh -n "${NAMESPACE}" --zone "${GCLOUD_ZONE}" -r "${RELEASE}" -c "${CLUSTER_NAME}" -p "${GCLOUD_PROJECT}" --backup-values-file "${BACKUP_VALUES}" || exit 1
 fi
 
 INGRESS_VALUES=""
