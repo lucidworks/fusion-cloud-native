@@ -299,7 +299,7 @@ fi
 if [ "${LISTOUT}" == "[]" ]; then
 
   if [ "$AZURE_LOCATION" == "" ]; then
-    AZURE_LOCATION="useast2"
+    AZURE_LOCATION="eastus2"
     echo -e "\nWARNING: ${AZURE_RESOURCE_GROUP} not found! Creating new with default location ${AZURE_LOCATION}\n"
   fi
 
