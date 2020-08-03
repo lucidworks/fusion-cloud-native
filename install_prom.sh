@@ -166,7 +166,7 @@ echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... t
 
 helm dep up ./monitoring/helm/fusion-monitoring
 
-helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
   --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
   --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
   --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
