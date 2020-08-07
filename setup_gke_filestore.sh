@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 GCLOUD_PROJECT=
@@ -147,12 +147,14 @@ if [ -z "${GCLOUD_ZONE}" ]; then
   exit 1
 fi
 
-echo -e "\n Creating GCP filestore instance with name: '${NFS_NAME}' in zone: '${GCLOUD_ZONE}'"
-gcloud --project "${GCLOUD_PROJECT}" filestore instances create "${NFS_NAME}" \
-  --tier=STANDARD \
-  --file-share=name="solrbackups,capacity=${SOLR_BACKUP_NFS_GB}GB" \
-  --zone="${GCLOUD_ZONE}" \
-  --network=name="default"
+if ! gcloud --project "${GCLOUD_PROJECT}" filestore instances list --filter="${NFS_NAME}" | grep "${NFS_NAME}" > /dev/null 2>&1; then 
+  echo -e "\n Creating GCP filestore instance with name: '${NFS_NAME}' in zone: '${GCLOUD_ZONE}'"
+  gcloud --project "${GCLOUD_PROJECT}" filestore instances create "${NFS_NAME}" \
+    --tier=STANDARD \
+    --file-share=name="solrbackups,capacity=${SOLR_BACKUP_NFS_GB}GB" \
+    --zone="${GCLOUD_ZONE}" \
+    --network=name="default"
+fi 
 
 NFS_IP="$(gcloud filestore instances describe "${NFS_NAME}" \
   --project="${GCLOUD_PROJECT}" \
