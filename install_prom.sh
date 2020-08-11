@@ -2,6 +2,7 @@
 
 PROVIDER=gke
 NODE_POOL=""
+UPGRADE=0
 
 function print_usage() {
   CMD="$1"
@@ -134,8 +135,8 @@ if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
 fi
 
 if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-monitoring"; then
-  echo -e "\nERROR: There is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-monitoring\n"
-  exit 1
+  echo -e "\nThere is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-monitoring, assuming this is an upgrade\n"
+  UPGRADE=1
 fi
 
 if [ "${NODE_POOL}" == "" ]; then
@@ -162,11 +163,13 @@ if [ ! -f "${MONITORING_VALUES}" ]; then
 fi
 
 
-echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
+if [ "$UPGRADE" != "1" ]; then
+  echo -e "\nInstalling Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.\n"
+fi
 
 helm dep up ./monitoring/helm/fusion-monitoring
 
-helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
   --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
   --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
   --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
@@ -178,5 +181,10 @@ helm install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespa
   --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
   --render-subchart-notes --wait
 
-echo -e "\n\nSuccessfully installed Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
+ACTION=installed
+if [ "$UPGRADE" == "1" ]; then
+  ACTION="upgraded"
+fi
+
+echo -e "\n\nSuccessfully $ACTION Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
 helm ls -n "${NAMESPACE}"
