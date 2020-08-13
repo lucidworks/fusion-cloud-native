@@ -1,6 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
+KUBERNETES_VERSION="1.14"
 INSTANCE_TYPE="m5.2xlarge"
 CHART_VERSION="5.1.4"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
@@ -21,6 +22,7 @@ DRY_RUN=""
 SOLR_DISK_GB=50
 DEPLOY_ALB=
 ALB_NAMESPACE=
+INTERNAL=false
 
 function print_usage() {
   CMD="$1"
@@ -40,7 +42,8 @@ function print_usage() {
   echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --deploy-alb      Deploys alb ingress controller \n"
-  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
+  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namespace specified with the -n parameter will be used\n"
+  echo -e "  --internal-alb    Deploys and internal ALB\n"
   echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
   echo -e "                    The hostname must be a public DNS record that can be updated to point to the ALB DNS name\n"
   echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
@@ -194,6 +197,10 @@ if [ $# -gt 0 ]; then
             ALB_NAMESPACE="$2"
             shift 2
         ;;
+        --internal-alb)
+            INTERNAL=true
+            shift 1
+        ;;
         --upgrade)
             UPGRADE=1
             shift 1
@@ -326,6 +333,7 @@ kind: ClusterConfig
 metadata:
   name: ${CLUSTER_NAME}
   region: ${REGION}
+  version: "${KUBERNETES_VERSION}"
 
 nodeGroups:
   - name: standard-workers
@@ -336,6 +344,7 @@ nodeGroups:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+    privateNetworking: ${INTERNAL}
     ami: ${AMI}
     maxSize: 6
     minSize: 0
@@ -379,7 +388,7 @@ if [ "${DEPLOY_ALB}" == "1" ]; then
 
   #Creating required ALB policy and attaching it to the Cluster Node Group
 
-  wget https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.5/docs/examples/iam-policy.json -O alb-policy.json
+  wget https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/master/docs/examples/iam-policy.json -O alb-policy.json
 
   NODE_GROUP_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stack-resource --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --logical-resource-id NodeInstanceRole --query 'StackResourceDetail.PhysicalResourceId' --output text)
 
@@ -420,6 +429,15 @@ if [ "${DEPLOY_ALB}" == "1" ]; then
 
 fi
 
+ALB_SCHEME=""
+
+if [ "${INTERNAL}" == true ]; then
+  ALB_SCHEME="internal"
+else
+  ALB_SCHEME="internet-facing"
+fi
+
+
 if [ "${INGRESS_HOSTNAME}" != "" ]; then
 
   API_GATEWAY_VALUES="api-gateway-values.yaml"
@@ -431,7 +449,7 @@ api-gateway:
   ingress:
     annotations:
       kubernetes.io/ingress.class: alb
-      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/scheme: "${ALB_SCHEME}"
     enabled: true
     host: "${INGRESS_HOSTNAME}"
     path: "/*"
