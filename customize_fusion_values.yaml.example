@@ -184,9 +184,6 @@ webapps:
 fusion-jupyter:
   enabled: false
 
-templating:
-  enabled: false
-
 pulsar:
   broker:
     annotations:
