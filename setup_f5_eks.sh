@@ -22,7 +22,7 @@ DRY_RUN=""
 SOLR_DISK_GB=50
 DEPLOY_ALB=
 ALB_NAMESPACE=
-INTERNAL=false
+INTERNAL_ALB=false
 
 function print_usage() {
   CMD="$1"
@@ -42,8 +42,8 @@ function print_usage() {
   echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
   echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --deploy-alb      Deploys alb ingress controller \n"
-  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namspace specified with the -n parameter will be used\n"
-  echo -e "  --internal        Deploys and internal ALB\n"
+  echo -e "  --alb-namespace   Namespace for deploying ALB, if not specified the namespace specified with the -n parameter will be used\n"
+  echo -e "  --internal-alb    Deploys and internal ALB\n"
   echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
   echo -e "                    The hostname must be a public DNS record that can be updated to point to the ALB DNS name\n"
   echo -e "  --prometheus      Enable Prometheus and Grafana for monitoring Fusion services, pass one of: install, provided, none;"
@@ -197,8 +197,8 @@ if [ $# -gt 0 ]; then
             ALB_NAMESPACE="$2"
             shift 2
         ;;
-        --internal)
-            INTERNAL=true
+        --internal-alb)
+            INTERNAL_ALB=true
             shift 1
         ;;
         --upgrade)
@@ -431,7 +431,7 @@ fi
 
 ALB_SCHEME=""
 
-if [ "${INTERNAL}" == true ]; then
+if [ "${INTERNAL_ALB}" == true ]; then
   ALB_SCHEME="internal"
 else
   ALB_SCHEME="internet-facing"
