@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.1.2"
+CHART_VERSION="5.2.0"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -299,7 +299,7 @@ fi
 if [ "${LISTOUT}" == "[]" ]; then
 
   if [ "$AZURE_LOCATION" == "" ]; then
-    AZURE_LOCATION="useast2"
+    AZURE_LOCATION="eastus2"
     echo -e "\nWARNING: ${AZURE_RESOURCE_GROUP} not found! Creating new with default location ${AZURE_LOCATION}\n"
   fi
 

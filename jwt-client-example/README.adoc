@@ -11,7 +11,7 @@ This app shows how to use Fusion REST APIs with JWT. Examples are provided for v
 
 == JWT Client Authentication Flow
 
-. Get a JWT using the `/ouath2/token` endpoint.
+. Get a JWT using the `/oauth2/token` endpoint.
 . Save the JWT.
 . Schedule the JWT to be refreshed before the expiration time of the current JWT. Repeat this every time a new JWT
 is obtained.

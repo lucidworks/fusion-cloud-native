@@ -43,6 +43,8 @@ prometheus:
     nodeSelector:
       {NODE_POOL}
     enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
   server:
     nodeSelector:
       {NODE_POOL}
