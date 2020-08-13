@@ -164,31 +164,6 @@ ml-model-service:
       limits:
         memory: 128Mi
         cpu: 500m
-  ambassador:
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 500m
-      limits:
-        memory: 512Mi
-        cpu: 1
-  argo:
-    controller:
-      resources:
-        requests:
-          memory: 256Mi
-          cpu: 200m
-        limits:
-          memory: 256Mi
-          cpu: 1
-    ui:
-      resources:
-        requests:
-          memory: 64Mi
-          cpu: 200m
-        limits:
-          memory: 128Mi
-          cpu: 1
   pythonService:
     resources:
       requests:
@@ -212,7 +187,6 @@ ml-model-service:
           cpu: "50m"
         limits:
           memory: "256Mi"
-          cpu: "100m"
     controller:
       resources:
         requests:
@@ -220,8 +194,6 @@ ml-model-service:
           cpu: "50m"
         limits:
           memory: "256Mi"
-          cpu: "100m"
-
   ambassador:
     resources:
       requests:
@@ -229,7 +201,6 @@ ml-model-service:
         cpu: "100m"
       limits:
         memory: "256Mi"
-        cpu: "200m"
 
 # Requires Fusion 5.1.2 or above
 fusion-question-answering:
