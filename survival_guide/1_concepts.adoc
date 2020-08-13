@@ -70,6 +70,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`auth-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the login form.
 
+|`config-sync` |HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Synchronizes config between GitHub and Fusion.
+
 |`connectors-classic` |REST/HTTP |StatefulSet |`analytics` or `system` |Yes (CPU or custom metric) |REST service for supporting non-RPC connector plugins.
 
 |`connectors-rest` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Routes REST API requests to connectors-classic and connectors-rpc.
