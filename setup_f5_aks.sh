@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INSTANCE_TYPE="Standard_D4_v3"
-CHART_VERSION="5.1.1"
+CHART_VERSION="5.2.0"
 NODE_COUNT=3
 AKS_MASTER_VERSION="1.13.11"
 CERT_CLUSTER_ISSUER="letsencrypt"
@@ -299,7 +299,7 @@ fi
 if [ "${LISTOUT}" == "[]" ]; then
 
   if [ "$AZURE_LOCATION" == "" ]; then
-    AZURE_LOCATION="useast2"
+    AZURE_LOCATION="eastus2"
     echo -e "\nWARNING: ${AZURE_RESOURCE_GROUP} not found! Creating new with default location ${AZURE_LOCATION}\n"
   fi
 
@@ -530,7 +530,7 @@ if [ ! -z "${INGRESS_VALUES}" ]; then
       PROMETHEUS_ON=false
     fi
 
-    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --provider "aks" --prometheus $PROMETHEUS_ON \
+    source ./customize_fusion_values.sh $DEFAULT_MY_VALUES -c $CLUSTER_NAME -n $NAMESPACE -r $RELEASE --version "${CHART_VERSION}" --provider "aks" --prometheus $PROMETHEUS_ON \
       --num-solr $SOLR_REPLICAS --solr-disk-gb $SOLR_DISK_GB --node-pool "${NODE_POOL}"
     VALUES_STRING="--values ${DEFAULT_MY_VALUES}"
   fi

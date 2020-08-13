@@ -9,7 +9,7 @@ PROVIDER=gke
 RESOURCES=false
 AFFINITY=false
 REPLICAS=false
-CHART_VERSION="5.1.1"
+CHART_VERSION="5.2.0"
 NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
@@ -27,7 +27,8 @@ function print_usage() {
   echo -e "  -c                      Cluster name (required)\n"
   echo -e "  -n                      Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -r                      Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
-  echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke; defaults to 'gke'\n"
+  echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
+  echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke, oc; defaults to 'gke'\n"
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
   echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
   echo -e "  --solr-disk-gb          Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
@@ -82,6 +83,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             RELEASE="$2"
+            shift 2
+        ;;
+        --version)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --version parameter!"
+              exit 1
+            fi
+            CHART_VERSION="$2"
             shift 2
         ;;
         --provider)
@@ -218,7 +227,7 @@ fi
 ZK_REPLICAS=3
 
 cp customize_fusion_values.yaml.example $MY_VALUES
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
   sed -i -e "s|{ZK_REPLICAS}|${ZK_REPLICAS}|g" "$MY_VALUES"
@@ -241,7 +250,7 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
   MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
   if [ ! -f "${MONITORING_VALUES}" ]; then
     cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
-    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
       sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
       sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
     else
@@ -253,7 +262,7 @@ if [ "$PROMETHEUS_ON" == "true" ]; then
 fi
 
 cp upgrade_fusion.sh.example "${OUTPUT_SCRIPT}"
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|<PROVIDER>|${PROVIDER}|g" "$OUTPUT_SCRIPT"
   sed -i -e "s|<CLUSTER>|${CLUSTER_NAME}|g" "$OUTPUT_SCRIPT"
   sed -i -e "s|<RELEASE>|${RELEASE}|g" "$OUTPUT_SCRIPT"
@@ -275,13 +284,13 @@ if [ "$RESOURCES" == "true" ]; then
   cp example-values/resources.yaml "${resyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${resyaml}\""
 
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys" ]]; then
     sed -i -e "s|<RESOURCES_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<RESOURCES_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
     sed -i -e "s|<RESOURCES_YAML>||g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<RESOURCES_YAML>||g" "$OUTPUT_SCRIPT"
@@ -293,13 +302,13 @@ if [ "$AFFINITY" == "true" ]; then
   cp example-values/affinity.yaml "${affyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${affyaml}\""
 
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
     sed -i -e "s|<AFFINITY_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<AFFINITY_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
     sed -i -e "s|<AFFINITY_YAML>||g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<AFFINITY_YAML>||g" "$OUTPUT_SCRIPT"
@@ -311,13 +320,13 @@ if [ "$REPLICAS" == "true" ]; then
   cp example-values/replicas.yaml "${repyaml}"
   replace="MY_VALUES=\"\$MY_VALUES --values ${repyaml}\""
 
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
     sed -i -e "s|<REPLICAS_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<REPLICAS_YAML>|${replace}|g" "$OUTPUT_SCRIPT"
   fi
 else
-  if [[ "$OSTYPE" == "linux-gnu" ]]; then
+  if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
     sed -i -e "s|<REPLICAS_YAML>||g" "$OUTPUT_SCRIPT"
   else
     sed -i '' -e "s|<REPLICAS_YAML>||g" "$OUTPUT_SCRIPT"
@@ -331,7 +340,7 @@ if [ ! -z "${ADDITIONAL_VALUES[*]}" ]; then
   done
   ADDITIONAL_VALUES_STRING="MY_VALUES=\"\$MY_VALUES $ADDITIONAL_VALUES_STRING\""
 fi
-if [[ "$OSTYPE" == "linux-gnu" ]]; then
+if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
 else
   sed -i '' -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"

@@ -3,30 +3,52 @@
 # If this is not desired then change the requested values to match the limits.
 
 solr:
+  initContainer:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 128Mi
   resources:
     requests:
-      cpu: 500m
-      memory: 5Gi
+      cpu: 800m
+      memory: 6Gi
     limits:
-      cpu: 1
-      memory: 5Gi
+      memory: 6Gi
 
 pulsar:
   broker:
+    initContainer:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 512Mi
     resources:
       requests:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 600m
         memory: 2300Mi
+
   bookkeeper:
+    initContainer:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 512Mi
     resources:
       requests:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 600m
         memory: 2300Mi
 
 admin-ui:
@@ -35,16 +57,22 @@ admin-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 api-gateway:
+  jksSetup:
+    resources:
+      requests:
+        cpu: "400m"
+        memory: "256Mi"
+      limits:
+        cpu: "400m"
+        memory: "256Mi"
   resources:
     requests:
-      cpu: "400m"
+      cpu: "500m"
       memory: "2300Mi"
     limits:
-      cpu: 800m
       memory: "2300Mi"
 
 auth-ui:
@@ -53,7 +81,6 @@ auth-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 classic-rest-service:
@@ -62,7 +89,6 @@ classic-rest-service:
       cpu: "300m"
       memory: "2300Mi"
     limits:
-      cpu: "600m"
       memory: "2300Mi"
 
 devops-ui:
@@ -71,7 +97,6 @@ devops-ui:
       cpu: "50m"
       memory: "8Mi"
     limits:
-      cpu: "50m"
       memory: "32Mi"
 
 fusion-admin:
@@ -80,7 +105,6 @@ fusion-admin:
       cpu: "400m"
       memory: "2300Mi"
     limits:
-      cpu: "800m"
       memory: "2300Mi"
 
 fusion-indexing:
@@ -89,7 +113,6 @@ fusion-indexing:
       cpu: "500m"
       memory: "800Mi"
     limits:
-      cpu: "900m"
       memory: "1600Mi"
 
 insights:
@@ -98,17 +121,31 @@ insights:
       cpu: "50m"
       memory: "500Mi"
     limits:
-      cpu: "100m"
       memory: "1Gi"
 
 job-launcher:
+  sparkCleanup:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+  argoCleanup:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
   resources:
     requests:
       memory: 2Gi
       cpu: 200m
     limits:
       memory: 3Gi
-      cpu: 800m
 
 job-rest-server:
   resources:
@@ -117,9 +154,41 @@ job-rest-server:
       cpu: 200m
     limits:
       memory: 1Gi
-      cpu: 800m
 
 ml-model-service:
+  preinstall:
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 100m
+      limits:
+        memory: 128Mi
+        cpu: 500m
+  ambassador:
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 500m
+      limits:
+        memory: 512Mi
+        cpu: 1
+  argo:
+    controller:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 200m
+        limits:
+          memory: 256Mi
+          cpu: 1
+    ui:
+      resources:
+        requests:
+          memory: 64Mi
+          cpu: 200m
+        limits:
+          memory: 128Mi
+          cpu: 1
   pythonService:
     resources:
       requests:
@@ -127,7 +196,6 @@ ml-model-service:
         cpu: 300m
       limits:
         memory: 3Gi
-        cpu: 800m
   javaService:
     resources:
       requests:
@@ -135,7 +203,6 @@ ml-model-service:
         cpu: 800m
       limits:
         memory: 3Gi
-        cpu: 1500m
   # Requires Fusion 5.1.2 or above
   argo:
     ui:
@@ -256,10 +323,9 @@ fusion-question-answering:
 query-pipeline:
   resources:
     requests:
-      cpu: "600m"
+      cpu: "700m"
       memory: "2300Mi"
     limits:
-      cpu: 1500m
       memory: "3300Mi"
 
 rest-service:
@@ -268,7 +334,6 @@ rest-service:
       cpu: "200m"
       memory: "1500Mi"
     limits:
-      cpu: "400m"
       memory: "2300Mi"
 
 rpc-service:
@@ -277,10 +342,9 @@ rpc-service:
       cpu: "300m"
       memory: "1500Mi"
     limits:
-      cpu: "600m"
       memory: "2300Mi"
 
-rules-ui:
+pm-ui:
   resources:
     requests:
       cpu: "50m"
@@ -289,14 +353,21 @@ rules-ui:
       cpu: "50m"
       memory: "32Mi"
 
+rules-ui:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+    limits:
+      memory: "32Mi"
+
 zookeeper:
   resources:
     requests:
       memory: 1Gi
-      cpu: 300m
+      cpu: 400m
     limits:
       memory: 1500Mi
-      cpu: 800m
 
 sql-service:
   resources:
@@ -304,7 +375,6 @@ sql-service:
       cpu: "500m"
       memory: 2Gi
     limits:
-      cpu: "800m"
       memory: 2Gi
 
 webapps:
@@ -313,5 +383,21 @@ webapps:
       cpu: "300m"
       memory: "800Mi"
     limits:
-      cpu: "400m"
       memory: "1300Mi"
+
+logstash:
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 1
+    limits:
+      memory: 1Gi
+      cpu: 2
+  initContainer:
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "32Mi"
+      limits:
+        cpu: "150m"
+        memory: "64Mi"

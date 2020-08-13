@@ -25,7 +25,9 @@ if [ ! -z "${DRY_RUN_REQUESTED}" ]; then
 fi
 
 current_context=$(kubectl config current-context | grep "$CLUSTER_NAME")
-if [ "${current_context}" == "" ]; then
+
+#Openshift doesn't include the cluster name as a part of the current context
+if [[ "${current_context}" == "" && "$PROVIDER" != "oc" ]]; then
   echo -e "\nERROR: Current kubeconfig not pointing to the $CLUSTER_NAME cluster!\nPlease update your current config to the correct cluster for upgrading Fusion.\n"
   exit 1
 fi

@@ -318,6 +318,133 @@ A Kubernetes network policy governs how groups of pods are allowed to communicat
 
 To install the network policy for Fusion services, pass `--set global.networkPolicyEnabled=true` when installing the Fusion Helm chart.
 
+[[private-registry]]
+=== On-premises Private Docker Registries
+
+For on-premises Kubernetes deployments, your organization may not allow Kubernetes to pull Fusion's Docker images from DockerHub (https://hub.docker.com/u/lucidworks/).
+If this is the case, then you need to transfer the public images from DockerHub over to your private Docker registry.
+
+Here's a rough outline of the process we recommend, but you may need to adapt the process to work within your organization's security policies:
+
+[loweralpha]
+. You'll need a workstation that has access to DockerHub (hub.docker.com) and can connect to your internal Docker registry, most likely via VPN connection. We'll refer to this computer as `envoy`.
+
+. Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
+
+. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
++
+```
+apachepulsar/pulsar-all:2.5.0
+argoproj/argoui:v2.4.3
+argoproj/workflow-controller:v2.4.3
+bitnami/kubectl:1.15-debian-9
+busybox:1.31.1
+busybox:latest
+curlimages/curl:7.68.0
+docker.io/seldonio/seldon-core-operator:1.0.1
+grafana/grafana:6.6.2
+jimmidyson/configmap-reload:v0.3.0
+lucidworks/admin-ui:5.1.1
+lucidworks/api-gateway:5.1.1
+lucidworks/auth-ui:5.1.0
+lucidworks/classic-rest-service:5.1.1
+lucidworks/devops-ui:5.1.0
+lucidworks/fusion-api:5.1.1
+lucidworks/fusion-indexing:5.1.1
+lucidworks/fusion-logstash:5.1.0
+lucidworks/insights:5.1.0
+lucidworks/job-launcher:5.1.1
+lucidworks/job-rest-server:5.1.1
+lucidworks/ml-model-service:5.1.0
+lucidworks/ml-python-image:5.1.0
+lucidworks/pm-ui:5.1.0
+lucidworks/query-pipeline:5.1.1
+lucidworks/rest-service:5.1.1
+lucidworks/rpc-service:5.1.1
+lucidworks/rules-ui:5.1.0
+lucidworks/webapps:5.1.0
+prom/prometheus:v2.16.0
+prom/pushgateway:v1.0.1
+quay.io/coreos/kube-state-metrics:v1.9.5
+quay.io/datawire/ambassador:0.86.1
+seldonio/seldon-core-operator:1.0.1
+solr:8.4.1
+zookeeper:3.5.6
+```
++
+For example, to pull the query pipeline image, you would do:
++
+```
+docker pull lucidworks/query-pipeline:5.1.1
+```
++
+See `docker pull --help` for more information about pulling Docker images.
+
+. Establish connection from `envoy` to the private Docker registry, most likely this requires you to open a VPN connection. Consult with your internal IT support for help as needed.
++
+We'll refer to the private Docker registry as `<internal-private-registry>` in the steps below.
+
+. Push images from envoy’s Docker registry into their private registry (will take a long time).
++
+You'll need to re-tag all images for the internal registry. For example, to tag the query-pipeline image, you would do:
++
+```
+docker tag lucidworks/query-pipeline:5.1.1 <internal-private-registry>/query-pipeline:5.1.1
+```
++
+After tagging, push each image to the internal repo, e.g.:
++
+```
+docker push <internal-private-registry>/query-pipeline:5.1.1
+```
+
+. Install the Docker registry secret into Kubernetes.
++
+For background on pulling images from private registries, see: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
++
+You'll need to create docker-registry secret in the Kubernetes namespace where you want to install Fusion using a command similar to:
++
+```
+SECRET_NAME=<internal-private-registry>
+REPO=<internal-private-registry>
+
+kubectl create secret docker-registry "${SECRET_NAME}" \
+  --namespace "${NAMESPACE}" \
+  --docker-server="${REPO}" \
+  --docker-username=${REPO_USER} \
+  --docker-password=${REPO_PASS} \
+  --docker-email=${REPO_USER}
+```
+
+. Update the custom values yaml for your cluster to point to your private registry and secret for Kubernetes to pull images.
++
+For instance:
++
+[source,yaml]
+```
+query-pipeline:
+  image:
+    imagePullSecrets:
+      - name: <internal-private-registry>
+    repository: <internal-private-registry>
+```
++
+Do this for all Fusion services.
+
+. Customize Helm Chart
++
+All the Fusion services allow you to override the `imagePullSecrets` setting using custom values yaml, but other 3rd party services such as Zookeeper, Pulsar, Prometheus,
+and Grafana do not allow you to supply the pull secret using custom values yaml. Consequently, we recommend patching the default service account for your namespace to add the pull secret:
++
+```
+kubectl patch sa default -n $NAMESPACE \
+  -p '"imagePullSecrets": [{"name": "<internal-private-registry>" }]'
+```
++
+IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step g above.
+
+This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
+
 [[install]]
 === Install Fusion 5 on Kubernetes
 
