@@ -162,7 +162,7 @@ rules-ui:
 webapps:
   livenessProbe:
     initialDelaySeconds: 60
-  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false"
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false -XX:+ExitOnOutOfMemoryError"
   nodeSelector:
     {NODE_POOL}
 
@@ -178,3 +178,40 @@ pulsar:
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8000"
+
+# TODO: To run the config-sync service in publisher mode, provide
+# your GitHub repo URL, branch, username, and email
+# and install the GitHub OAuth token in a secret named
+# config-sync-github-oauth-token
+# for subscriber mode, enable pulsar and use the "sub" profile
+# springProfilesOverride: "kubernetes,jwt,fusion,sub", see below
+config-sync:
+  enabled: false
+  logstashEnabled: false
+  pub:
+    git:
+      repo: TODO_GITHUB_REPO_URL
+      alias: fusion-config-sync
+      branch: stage
+    github:
+      username: TODO_GITHUB_USERNAME
+      email: TODO_GITHUB_EMAIL
+  pulsar:
+    enabled: false
+  springProfilesOverride: "kubernetes,jwt,fusion,pub"
+
+# Uncomment for subscriber mode
+#config-sync:
+#  enabled: true
+#  logstashEnabled: false
+#  springProfilesOverride: "kubernetes,jwt,fusion,sub"
+#  sub:
+#    pollEnabled: false
+#    git:
+#      repo: TODO_GITHUB_REPO_URL
+#      alias: fusion-config-sync
+#      branch: prod
+#    github:
+#      username: TODO_GITHUB_USERNAME
+#      email: TODO_GITHUB_EMAIL
+
