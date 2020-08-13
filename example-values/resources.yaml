@@ -3,6 +3,14 @@
 # If this is not desired then change the requested values to match the limits.
 
 solr:
+  initContainer:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 64Mi
+      limits:
+        cpu: 150m
+        memory: 128Mi
   resources:
     requests:
       cpu: 800m
@@ -12,13 +20,30 @@ solr:
 
 pulsar:
   broker:
+    initContainer:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 512Mi
     resources:
       requests:
         cpu: 300m
         memory: 2300Mi
       limits:
         memory: 2300Mi
+
   bookkeeper:
+    initContainer:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          cpu: 1
+          memory: 512Mi
     resources:
       requests:
         cpu: 300m
@@ -35,6 +60,14 @@ admin-ui:
       memory: "32Mi"
 
 api-gateway:
+  jksSetup:
+    resources:
+      requests:
+        cpu: "400m"
+        memory: "256Mi"
+      limits:
+        cpu: "400m"
+        memory: "256Mi"
   resources:
     requests:
       cpu: "500m"
@@ -91,6 +124,22 @@ insights:
       memory: "1Gi"
 
 job-launcher:
+  sparkCleanup:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+  argoCleanup:
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "128Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
   resources:
     requests:
       memory: 2Gi
@@ -107,6 +156,39 @@ job-rest-server:
       memory: 1Gi
 
 ml-model-service:
+  preinstall:
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 100m
+      limits:
+        memory: 128Mi
+        cpu: 500m
+  ambassador:
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 500m
+      limits:
+        memory: 512Mi
+        cpu: 1
+  argo:
+    controller:
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 200m
+        limits:
+          memory: 256Mi
+          cpu: 1
+    ui:
+      resources:
+        requests:
+          memory: 64Mi
+          cpu: 200m
+        limits:
+          memory: 128Mi
+          cpu: 1
   pythonService:
     resources:
       requests:
@@ -146,6 +228,15 @@ rpc-service:
     limits:
       memory: "2300Mi"
 
+pm-ui:
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "8Mi"
+    limits:
+      cpu: "50m"
+      memory: "32Mi"
+
 rules-ui:
   resources:
     requests:
@@ -177,3 +268,20 @@ webapps:
       memory: "800Mi"
     limits:
       memory: "1300Mi"
+
+logstash:
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 1
+    limits:
+      memory: 1Gi
+      cpu: 2
+  initContainer:
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "32Mi"
+      limits:
+        cpu: "150m"
+        memory: "64Mi"
