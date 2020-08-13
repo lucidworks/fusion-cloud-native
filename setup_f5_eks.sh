@@ -22,7 +22,7 @@ DRY_RUN=""
 SOLR_DISK_GB=50
 DEPLOY_ALB=
 ALB_NAMESPACE=
-INTERNAL_ALB=false
+INTERNAL=false
 
 function print_usage() {
   CMD="$1"
@@ -198,7 +198,7 @@ if [ $# -gt 0 ]; then
             shift 2
         ;;
         --internal-alb)
-            INTERNAL_ALB=true
+            INTERNAL=true
             shift 1
         ;;
         --upgrade)
@@ -431,7 +431,7 @@ fi
 
 ALB_SCHEME=""
 
-if [ "${INTERNAL_ALB}" == true ]; then
+if [ "${INTERNAL}" == true ]; then
   ALB_SCHEME="internal"
 else
   ALB_SCHEME="internet-facing"
