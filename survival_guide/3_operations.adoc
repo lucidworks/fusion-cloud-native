@@ -30,34 +30,41 @@ TIP: The script assumes your kubeconfig is pointing to the correct cluster; if n
 
 // tag::logging[]
 
-Fusion services come pre-configured to write log messages to stdout (common pattern in K8s) and send log messages to Logstash (deployed in our Helm chart).  Logstash is configured to index log messages into the Fusion `system_logs` collection.
+Fusion services come pre-configured to write log messages to stdout (common pattern in K8s) and index log messages into the Fusion `system_logs` collection via a pulsar message queue processed by the `fusion-log-forwarder` component.
 
 The Log Viewer integrated into the Fusion Admin UI provides basic log analytics for the logs collected in `system_logs`.  You can also use your preferred log analytics stack, such as ELK, Splunk, DataDog, or similar.
 
 For integration with an existing log infrastructure, you have two basic choices:
 
-==== Disable Logstash and scrape logs from stdout
+==== Disable Log forwarding and scrape logs from stdout
 
-. In your custom values YAML files, set `logstashEnabled: false` for all services.
+. In your custom values YAML files, set
+```
+global:
+  logging:
+    disablePulsar: true
+```
 . Configure your logging infrastructure to scrape logs from the stdout from each pod.
+
+It is possible to setup fusion to output json formatted logs to stdout to ease configuration of log forwarders, to enable this add the following to the values file:
+```
+global:
+  logging:
+    jsonOutput: true
+```
 +
 This is a very common pattern in Kubernetes and most modern log analytics solutions have good integration with Kubernetes.
 //In most cases, the customers ops team will help guide you on how they want this to work (typically with a log shipper process deployed as a DaemonSet on each node), there’s not much you’ll have to do.
 
 ==== Use Logstash to send logs
 
-This is a good option if you use ELK but don't have an existing integration with Kubernetes.  This option requires some changes to the Logstash configuration in your custom values YAML file.
-//Again, most would use something like Filebeat as a DaemonSet to do this vs. relying on our Logstash.
-
-===== Elasticsearch
-
-Elasticsearch is a common tool used to store and query logs and can be easily configured as an output for Logstash. Just include the `elasticsearchHost` to our Helm chart and set it to `host:port`. In most cases, the port number will be 9200, as in the example below.
-
-[source,yaml]
-----
-logstash:
-   elasticsearchHost: <elasticsearch-host>:9200
-----
+This is a good option if you use ELK but don't have an existing integration with Kubernetes. Fusion can be configured to send logs directly to a user's already configured logstash instance by setting the following in your values file:
+```
+global:
+  logging:
+    logstashHost: <logstash_host>
+```
+// This will not forward logs from solr/zookeeper/pulsar etc, so using something like fluentd is the preferred option
 
 // end::logging[]
 
