@@ -9,7 +9,7 @@ The latest version of Fusion 5 is 5.2.0. The migration process varies depending 
 
 == Migrating from Fusion 5.1.4 to 5.2.0
 
-There are no additional steps that need to be run to migrate from fusion 5.1.4 to 5.2.0. Simply following the link:https://doc.lucidworks.com/how-to/upgrade-fusion-with-helm3.html[Fusion upgrade instructions].
+There are no additional steps that need to be run to migrate from Fusion 5.1.4 to 5.2.0. Simply following the link:https://doc.lucidworks.com/how-to/upgrade-fusion-with-helm3.html[Fusion upgrade instructions].
 
 Please note, it is not currently possible to update an existing cluster enable or disable TLS between services so this cannot be enabled as part of a migration.
 
