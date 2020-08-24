@@ -48,9 +48,15 @@ The various properties you can override are:
     val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
     val username = getStr("qps.fusion.user", "admin")
     val password = getStr("qps.fusion.pass", "password123")
+    val templatingStr = getStr("qps.templating", "false").toLowerCase()
 ```
 
 To run in Kubernetes, you can do something like this after pushing your image to gcr.io:
 ```
 kubectl run --generator=run-pod/v1 --image=us.gcr.io/lw-sales/gatling-qps:tjp --env="JAVA_OPTS=-Dqps.fusion.url=https://... -Dqps.app=lab4" gatling-qps -- -s FusionQueryTraffic
 ```
+
+## Templating
+By setting qps.query.url to reach s"${proxyHostAndPort}/api/templating/render/${appId}", the templating service
+render endpoint will be queried instead of the
+query endpoint. This allows load testing the templating service.
