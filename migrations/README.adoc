@@ -9,7 +9,14 @@ The latest version of Fusion 5 is 5.2.0. The migration process varies depending 
 
 == Migrating from Fusion 5.1.4 to 5.2.0
 
-There are no additional steps that need to be run to migrate from Fusion 5.1.4 to 5.2.0. Simply following the link:https://doc.lucidworks.com/how-to/upgrade-fusion-with-helm3.html[Fusion upgrade instructions].
+In Fusion 5.2.0 logstash has been removed from the deployment, if you were previously using logstash to forward logs to an external cluster please setup
+an external logstash instance pointing to this cluster and then add:
+```
+global:
+  logging:
+    logstashHost: <logstash_host>
+```
+to your values file before upgrading by following the link:https://doc.lucidworks.com/how-to/upgrade-fusion-with-helm3.html[Fusion upgrade instructions].  
 
 Please note, it is not currently possible to update an existing cluster enable or disable TLS between services so this cannot be enabled as part of a migration.
 
