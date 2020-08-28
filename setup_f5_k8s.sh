@@ -436,7 +436,7 @@ if [ "$UPGRADE" != "1" ]; then
     if [ "${NODE_POOL}" != "" ] && [ "${NODE_POOL}" != "{}" ]; then
       node_selector=$(tr ': ' '=' <<<"${NODE_POOL}")
       #Adding a retry loop because EKS takes more time to create nodes.
-      retries=3
+      retries=6
       while (( retries > 0 )); do
         find_nodes=$(kubectl get nodes -l "${node_selector}" | grep -i ready)
         has_nodes=$?
@@ -445,9 +445,9 @@ if [ "$UPGRADE" != "1" ]; then
           num_nodes=$(kubectl get nodes -l "${node_selector}" | grep -i ready | wc -l)
           retries=-1
         else
-          echo -e "\nERROR: No 'Ready' nodes found matching nodeSelector: ${node_selector}! Retrying in 60 seconds"
+          echo -e "\nERROR: No 'Ready' nodes found matching nodeSelector: ${node_selector}! Retrying in 30 seconds"
           echo -ne "."
-          sleep 60
+          sleep 30
           retries=$(( retries - 1 ))
         fi
       done
