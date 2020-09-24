@@ -392,3 +392,11 @@ logstash:
       limits:
         cpu: "150m"
         memory: "64Mi"
+
+config-sync:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        memory: 2Gi
