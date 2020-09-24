@@ -115,6 +115,14 @@ fusion-indexing:
     limits:
       memory: "1600Mi"
 
+fusion-log-forwarder:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "64Mi"
+    limits:
+      memory: "128Mi"
+
 insights:
   resources:
     requests:
