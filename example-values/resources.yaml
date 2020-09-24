@@ -400,3 +400,11 @@ config-sync:
         memory: 1Gi
       limits:
         memory: 2Gi
+
+connector-plugin-service:
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "1500Mi"
+    limits:
+      memory: "2300Mi"
