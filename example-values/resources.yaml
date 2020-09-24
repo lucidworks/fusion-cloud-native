@@ -115,6 +115,14 @@ fusion-indexing:
     limits:
       memory: "1600Mi"
 
+fusion-log-forwarder:
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "64Mi"
+    limits:
+      memory: "128Mi"
+
 insights:
   resources:
     requests:
@@ -299,6 +307,26 @@ query-pipeline:
     limits:
       memory: "3300Mi"
 
+# if PM templating feature is being used (similar needs as query-pipeline):
+templating:
+  resources:
+    requests:
+      cpu: "700m"
+      memory: "2300Mi"
+    limits:
+      memory: "3300Mi"
+
+# if PM templating feature is not being used
+# the service is still needed but only for minimal PM functionality,
+# can use the following commented out values instead of the above:
+#templating:
+#  resources:
+#    requests:
+#      cpu: "100m"
+#      memory: "1Gi"
+#    limits:
+#      memory: "2Gi"
+
 rest-service:
   resources:
     requests:
@@ -372,3 +400,19 @@ logstash:
       limits:
         cpu: "150m"
         memory: "64Mi"
+
+config-sync:
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        memory: 2Gi
+
+connector-plugin-service:
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "1500Mi"
+    limits:
+      memory: "2300Mi"
