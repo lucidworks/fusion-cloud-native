@@ -368,7 +368,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
   if [ "$CREATE_MODE" == "demo" ]; then
 
     if [ "${INSTANCE_TYPE}" == "" ]; then
-      INSTANCE_TYPE="n1-standard-8"
+      INSTANCE_TYPE="n1-standard-16"
     fi
 
     if [ -z ${SOLR_REPLICAS+x} ]; then
