@@ -3,9 +3,104 @@
 :toclevels: 5
 :toc-title:
 
-The latest version of Fusion 5 is 5.2.0. The migration process varies depending on your current version of Fusion.
+The latest version of Fusion 5 is 5.3.0. The migration process varies depending on your current version of Fusion.
 
 // tag::body[]
+
+== Migrating from Fusion 5.2.1 to 5.3.0
+
+Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
+For additional background on the Solr text tagger and the `FST50` postings format, see: https://lucene.apache.org/solr/guide/8_3/the-tagger-handler.html
+
+Consequently, before you upgrade to Solr 8.6.3, you need to re-index the query_rewrite documents to remove the use of the `postingsFormat`.
+Otherwise, when Solr 8.6.3 initializes, it will not be able to load the query_rewrite collections.
+After upgrading, you'll re-index once again to restore the `postingsFormat` using the new implementation; the custom `postingsFormat` is essential for achieving optimal text tagging performance.
+
+==== Prerequisites
+
+Make sure you're running on Solr 8.4.1 and that all collections are healthy.
+
+You *should not* be actively making changes to the `query_rewrite` collections (via Rules UI) during the upgrade process.
+
+For production systems, this upgrade process should be performed during a maintenance window.
+
+===== Backup the query_rewrite and query_rewrite_staging collections
+
+Lucidworks recommends taking a backup of your query rewrite collections just in case something goes wrong with the upgrade, especially for production environments.
+
+Depending on your Ingress config, the export may take too long and timeout. Consequently, we recommend opening a kubectl port-forward to the Fusion Gateway pod:
+```
+kubectl port-forward <POD> 6764
+```
+
+Then export the collection(s) to a local JSON file using the `/query/query-rewrite/export/<COLL>` endpoint. For instance:
+```
+PROXY="http://localhost:6764"
+APP="YOUR_FUSION_APP_ID"
+curl -u $CREDS "$PROXY/query/query-rewrite/export/${APP}_query_rewrite_staging" > ${APP}_query_rewrite_staging.json
+curl -u $CREDS "$PROXY/query/query-rewrite/export/${APP}_query_rewrite" > ${APP}_query_rewrite.json
+```
+__Replace `$CREDS` with your Fusion admin username and password__, for example `-u admin:somepassword`
+
+Repeat this command for *every Fusion application* that has data indexed in the `query_rewrite_staging` and `query_rewrite` collections.
+
+
+==== Upgrade Steps
+
+In order to upgrade from Solr 8.4.1 to 8.6.3, you need to re-index all query_rewrite and query_rewrite_staging collections that have indexed data.
+
+Lucidworks provides a utility Docker image to drive the re-index process.
+
+If your installation does not have indexed documents in any of the `query_rewrite` collections, then you can safely upgrade to Solr 8.6.3 using a Helm upgrade.
+
+1) Run the *prepare* step
+
+The *prepare* step re-indexes the query_rewrite collections into a temp collection after removing the `postingsFormat` from the `tagger` field type in the Solr schema.
+This ensures the temp collections can be restored when Solr 8.6.3 initializes.
+
+```
+kubectl run --generator=run-pod/v1 \
+  --image="lucidworks/fm-upgrade-query-rewrite:2.x" \
+  --restart=Never \
+  --env="HELM_RELEASE=<CHANGEME>" \
+  --env="TARGET_SOLR_VERSION=8.6.3" \
+  --env="ACTION=prepare" prepare-upgrade-solr863
+```
+*Be sure to change the HELM_RELEASE value to the release name (NOT the version) of your Fusion 5 installation.* You can find this using `helm list`
+against your Fusion 5 namespace (find the release that's using the "fusion" chart and look at the name column). Typically, the
+release name is the same as your namespace name.
+
+Wait until the `prepare-upgrade-solr863` pod shows status `Completed`
+
+2) Upgrade to Solr 8.6.3 using the standard Fusion 5 Helm upgrade process (set the Solr tag version to `8.6.3` in custom values yaml)
+
+3) Verify all `*_temp_fix` collections are online and healthy
+
+4) Run the *restore* step
+
+The *restore* step re-indexes the temp collections back into the original query_rewrite collections after restoring the `postingsFormat` on the tagger field with the new implementation added in Lucene 8.6.3.
+
+```
+kubectl run --generator=run-pod/v1 \
+  --image="lucidworks/fm-upgrade-query-rewrite:2.x" \
+  --restart=Never \
+  --env="HELM_RELEASE=<CHANGEME>" \
+  --env="TARGET_SOLR_VERSION=8.6.3" \
+  --env="ACTION=restore" restore-upgrade-solr863
+```
+*Be sure to change the HELM_RELEASE value to the release name of your Fusion 5 installation.*
+
+Wait until the `restore-upgrade-solr863` pod shows status `Completed`
+
+5) Verify all query rewrite collections are online and healthy
+
+6) Delete the prepare and restore pods
+
+```
+kubectl delete po prepare-upgrade-solr863
+kubectl delete po restore-upgrade-solr863
+```
+
 
 == Migrating from Fusion 5.1.4 to 5.2.0
 
