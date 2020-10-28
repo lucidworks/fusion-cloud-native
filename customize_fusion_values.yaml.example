@@ -194,6 +194,15 @@ pulsar:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8000"
 
+templating:
+  nodeSelector:
+    {NODE_POOL}
+  pod:
+    annotations:
+      prometheus.io/port: "5250"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
 # TODO: To run the config-sync service in publisher mode, provide
 # your GitHub repo URL, branch, username, and email
 # and install the GitHub OAuth token in a secret named
