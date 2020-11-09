@@ -304,7 +304,7 @@ This way you don't have to remember to pass the additional `tls-values.yaml` fil
 
 // tag::upgrade-gke[]
 
-Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 
 During installation, the setup script generates a file named `gke_<cluster>_<release>_fusion_values.yaml`; use this file to customize Fusion settings.
 
@@ -453,7 +453,7 @@ Finally, use Route 53 or your DNS provider for creating an A ALIAS DNS record fo
 
 // tag::upgrade-eks[]
 
-Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 
 To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
 
@@ -613,7 +613,7 @@ This way, you don't have to remember to pass the additional `tls-values.yaml` fi
 
 // tag::upgrade-aks[]
 
-Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 
 To make things easier for you, our setup script creates an upgrade script you can use to perform upgrades, see:
 
@@ -671,7 +671,7 @@ The `customize_fusion_values.sh` script creates an upgrade script to install/upg
 
 // tag::upgrade-other[]
 
-Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide] before proceeding with an upgrade.
+Before you begin, please consult the https://github.com/lucidworks/fusion-cloud-native/tree/master/migrations[Migration Guide].
 
 To update an existing installation, do:
 ```
