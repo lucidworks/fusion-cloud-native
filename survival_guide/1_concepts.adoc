@@ -92,7 +92,15 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`logstash` |HTTP |StatefulSet |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA |Collects logs from the other microservices and either indexes into system_logs or ships them to an external service like Elastic
 
+|`*-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Stores logs and prior Argo workflow runs.
+
+|`milvus` |REST/HTTP |Deployment |`analytics` or `system`| Not required; only 1 pod should be sufficient for most clusters |Dense Vector Search Engine for ML models active.
+
+|`milvus-mysql` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Handles metadata for Milvus service active.
+
 |`ml-model-service` |REST/HTTP and gRPC |Deployment |`search` |Yes (CPU or custom metric) |Exposes gRPC endpoints for generating predictions from ML models.
+
+|`pm-ui` |Web |Deployment  |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Predictive Merchandiser app.
 
 |`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
 
@@ -104,7 +112,11 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`rules-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Rules UI.
 
+|`seldon-ambassador` |Web |Deployment |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA  |Load balancing and proxy for Seldon Core deployments.
+
 |`seldon-core` |REST/GRPC |Deployment |`system` |Yes (CPU or custom metric) |Serves models built in any model building framework.
+
+|`seldon-webhook-service` |Web  |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Maintains Seldon Core deployments for ML model serving active.
 
 |`solr` |HTTP |StatefulSet |At least 3 nodes in `search`, 2 in `analytics`, and 2 in `system` |Yes (CPU or custom metric) |Search engine.
 
@@ -115,6 +127,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
 
 Exposes a JDBC endpoint for the SQL service.
+
+|`templating` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Retrieves and renders Predictive Merchandiser templates.
 
 |`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
 
