@@ -68,6 +68,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`argo` |HTTP |Deployment |`system` |Yes (CPU or custom metric) |Orchestrates parallel jobs on Kubernetes.
 
+|`argo-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Stores logs and prior Argo workflow runs.
+
 |`auth-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the login form.
 
 |`config-sync` |HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Synchronizes config between GitHub and Fusion.
@@ -91,8 +93,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`jupyter` |HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Jupyter notebook for ad hoc analytics and visualization.
 
 |`logstash` |HTTP |StatefulSet |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA |Collects logs from the other microservices and either indexes into system_logs or ships them to an external service like Elastic
-
-|`*-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Stores logs and prior Argo workflow runs.
 
 |`milvus` |REST/HTTP |Deployment |`analytics` or `system`| Not required; only 1 pod should be sufficient for most clusters |Dense Vector Search Engine for ML models active.
 
