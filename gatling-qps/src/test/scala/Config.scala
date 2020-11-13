@@ -1,9 +1,11 @@
+import java.lang.Exception
 import java.util.UUID
 import java.util.concurrent.{Executors, ThreadFactory, TimeUnit}
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import scalaj.http.{Http, HttpResponse}
+import sun.jvm.hotspot.HelloWorld.e
 
 import scala.io.Source
 
@@ -45,7 +47,7 @@ object Config {
   val testDurationMins = getInt("qps.duration.mins", 5)
   val queryFeederSource = getStr("qps.feeder.source", "data/example_queries.csv")
   val rampDurationSecs = getInt("qps.ramp.secs", 5)
-  val proxyHostAndPort = getStr("qps.fusion.url", "https://konrad2.lucidworkstest.com")
+  val proxyHostAndPort = getStr("qps.fusion.url", "https://gatlingtest.lucidworkstest.com")
   val appId = getStr("qps.app", "Test_App")
   val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
   val username = getStr("qps.fusion.user", "admin")
@@ -77,10 +79,14 @@ object Config {
       .timeout(10000, 60000)
       .execute(parser = { inputStream => {
         val response = Source.fromInputStream(inputStream).mkString
-        jsonObjectMapper.readTree(response)
+        try {
+          jsonObjectMapper.readTree(response)
+        } catch {
+          case e: Exception => response
+        }
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to set default admin password ${testPassword} due to: ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to set default admin password ${testPassword} due to: ${jsonResp.code} ${jsonResp.body}")
   }
 
   def updateJwtToken() = {
@@ -119,6 +125,7 @@ object Config {
     println(s"Started background thread to refresh JWT in ${jwtExpiresIn} seconds from now ...\n")
   }
 
+
   def createTestApp() = {
     val createAppUrl = s"${proxyHostAndPort}/api/apps?relatedObjects=true"
     val testApp = jsonObjectMapper.writeValueAsString(Map("id" -> appId, "name" -> appId))
@@ -128,10 +135,14 @@ object Config {
       .timeout(10000, 60000)
       .execute(parser = { inputStream => {
         val response = Source.fromInputStream(inputStream).mkString
-        jsonObjectMapper.readTree(response)
+        try {
+          jsonObjectMapper.readTree(response)
+        } catch {
+          case e: Exception => response
+        }
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create App ${testApp} due to: ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create App ${testApp} due to: ${jsonResp.code} ${jsonResp.body}")
   }
 
   def createTestDatasource() = {
@@ -156,10 +167,14 @@ object Config {
       .timeout(10000, 60000)
       .execute(parser = { inputStream => {
         val response = Source.fromInputStream(inputStream).mkString
-        jsonObjectMapper.readTree(response)
+        try {
+          jsonObjectMapper.readTree(response)
+        } catch {
+          case e: Exception => response
+        }
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create datasource ${testDatasource} due to: ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create datasource ${testDatasource} due to: ${jsonResp.code} ${jsonResp.body}")
   }
 
   def createTestQueryPipeline() = {
@@ -314,10 +329,14 @@ object Config {
       .timeout(10000, 60000)
       .execute(parser = { inputStream => {
         val response = Source.fromInputStream(inputStream).mkString
-        jsonObjectMapper.readTree(response)
+        try {
+          jsonObjectMapper.readTree(response)
+        } catch {
+          case e: Exception => response
+        }
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create query pipeline ${testPipeline} due to-> ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create query pipeline ${testPipeline} due to-> ${jsonResp.code} ${jsonResp.body}")
   }
 
   def startDatasourceAndWaitForSuccess() = {
@@ -333,12 +352,16 @@ object Config {
       .timeout(10000, 60000)
       .execute(parser = { inputStream => {
         val response = Source.fromInputStream(inputStream).mkString
-        jsonObjectMapper.readTree(response)
+        try {
+          jsonObjectMapper.readTree(response)
+        } catch {
+          case e: Exception => response
+        }
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to start datasource ${start} due to: ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to start datasource ${start} due to: ${jsonResp.code} ${jsonResp.body}")
 
-    while(!getDatasourceJobStatus().body.get("status").asText.equals("success")) {
+    while (!getDatasourceJobStatus().body.get("status").asText.equals("success")) {
       Thread.sleep(1000)
     }
   }
@@ -350,6 +373,9 @@ object Config {
       .execute(
         parser = { inputStream => {
           val response = Source.fromInputStream(inputStream).mkString
+          if (response.contains(500)) {
+            print(response)
+          }
           jsonObjectMapper.readTree(response)
         }
         }
