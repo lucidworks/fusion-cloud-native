@@ -20,6 +20,7 @@ class FusionQueryTraffic extends Simulation {
   object Query {
 
     Config.logConfig()
+    Config.setupAdminUser()
     Config.initJwtAndStartBgRefreshThread()
     Config.createTestApp()
     Config.createTestDatasource()

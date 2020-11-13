@@ -45,7 +45,7 @@ object Config {
   val testDurationMins = getInt("qps.duration.mins", 5)
   val queryFeederSource = getStr("qps.feeder.source", "data/example_queries.csv")
   val rampDurationSecs = getInt("qps.ramp.secs", 5)
-  val proxyHostAndPort = getStr("qps.fusion.url", "https://master.lucidworkstest.com")
+  val proxyHostAndPort = getStr("qps.fusion.url", "https://konrad2.lucidworkstest.com")
   val appId = getStr("qps.app", "Test_App")
   val queryUrl = getStr("qps.query.url", s"${proxyHostAndPort}/api/apps/${appId}/query/${appId}")
   val username = getStr("qps.fusion.user", "admin")
@@ -67,6 +67,20 @@ object Config {
     println(s"\t qps.query.url = ${queryUrl}")
     println(s"\t qps.fusion.user = ${username}")
     println("")
+  }
+
+  def setupAdminUser() = {
+    val createAppUrl = s"${proxyHostAndPort}/api"
+    val testPassword = jsonObjectMapper.writeValueAsString(Map("password" -> "password123"))
+    val jsonResp = Http(createAppUrl).postData(testPassword)
+      .header("Content-Type", "application/json;charset=UTF-8")
+      .timeout(10000, 60000)
+      .execute(parser = { inputStream => {
+        val response = Source.fromInputStream(inputStream).mkString
+        jsonObjectMapper.readTree(response)
+      }
+      })
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to set default admin password ${testPassword} due to: ${jsonResp.code}")
   }
 
   def updateJwtToken() = {
@@ -303,7 +317,7 @@ object Config {
         jsonObjectMapper.readTree(response)
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create pipeline ${testPipeline} due to-> ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create query pipeline ${testPipeline} due to-> ${jsonResp.code}")
   }
 
   def startDatasourceAndWaitForSuccess() = {
@@ -322,7 +336,7 @@ object Config {
         jsonObjectMapper.readTree(response)
       }
       })
-    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to create datasource ${start} due to: ${jsonResp.code}")
+    if (!jsonResp.is2xx) throw new RuntimeException(s"Failed to start datasource ${start} due to: ${jsonResp.code}")
 
     while(!getDatasourceJobStatus().body.get("status").asText.equals("success")) {
       Thread.sleep(1000)
