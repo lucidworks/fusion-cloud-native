@@ -13,8 +13,6 @@ sql-service:
 solr:
   nodeSelector:
     {NODE_POOL}
-  image:
-    tag: 8.4.1
   updateStrategy:
     type: "RollingUpdate"
   javaMem: "-Xmx2g -Dfusion_node_type=system"
@@ -238,4 +236,3 @@ config-sync:
 #    github:
 #      username: TODO_GITHUB_USERNAME
 #      email: TODO_GITHUB_EMAIL
-

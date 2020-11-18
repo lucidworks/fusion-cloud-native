@@ -2,7 +2,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE=""
-CHART_VERSION="5.2.2"
+CHART_VERSION="5.3.0"
 GKE_MASTER_VERSION="-"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
@@ -368,7 +368,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
   if [ "$CREATE_MODE" == "demo" ]; then
 
     if [ "${INSTANCE_TYPE}" == "" ]; then
-      INSTANCE_TYPE="n1-standard-16"
+      INSTANCE_TYPE="n1-standard-32"
     fi
 
     if [ -z ${SOLR_REPLICAS+x} ]; then
