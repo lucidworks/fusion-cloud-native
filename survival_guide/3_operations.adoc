@@ -84,8 +84,10 @@ kubectl get secret --namespace "${NAMESPACE}" ${RELEASE}-monitoring-grafana \
   -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ----
 To see the name of the Grafana deployment, do: `kubectl get deploy`
++
+TIP: Replace `${RELEASE}` with your Helm release label, which is typically the same as your `${NAMESPACE}` value.
 
-. With Grafana, you can either set up a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s `LoadBalancer`. To define a `LoadBalancer`, do (replace `${RELEASE}` with your Helm release label, typically the same as your namespace):
+. With Grafana, you can either set up a temporary port-forward to a Grafana pod or expose Grafana on an external IP using a K8s `LoadBalancer`. To define a `LoadBalancer`, do:
 +
 [source,bash]
 ----
