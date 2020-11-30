@@ -52,7 +52,7 @@ pulsar:
         memory: 2300Mi
 
 argo:
-  ui:
+  server:
     resources:
       requests:
         memory: "128Mi"
@@ -67,13 +67,13 @@ argo:
       limits:
         memory: "256Mi"
 
-ambassador:
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "256Mi"
+seldon-core-operator:
+  manager:
+    cpuLimit: 300m
+    cpuRequest: 200m
+    memoryLimit: 300Mi
+    memoryRequest: 200Mi
+
 
 admin-ui:
   resources:
