@@ -961,7 +961,6 @@ You can now access the Spark History Server at `\http://localhost:18080`. Run a 
 
 //end::history-access[]
 
-[[GPU Support]]
 === GPU Support for Deep Learning Training
 
 // tag::gpu-support[]
