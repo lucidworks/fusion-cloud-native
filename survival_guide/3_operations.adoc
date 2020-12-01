@@ -1059,7 +1059,7 @@ ml-model-service:
 After your cluster is up and running you will need to update the cluster with the GPU version of Milvus as follows:
 
 . Download the current Milvus settings:
-`kubernetes get deployment milvus-writable -o yaml > milvus.yaml`
+`kubectl get deployment milvus-writable -o yaml > milvus.yaml`
 . Edit the settings in the `milvus.yaml` file, which you just created, to specify the GPU version of Milvus.
 .. The Milvus version will appear on two lines that will look something like:
 ... `app.kubernetes.io/version: 0.10.2-*cpu*-d081520-8a2393`
@@ -1070,7 +1070,7 @@ and
 and
 ... `image: milvusdb/milvus:0.10.2-*gpu*-d081520-8a2393`
 . Apply the changes:
-`kubernetes apply -f milvus.yaml`
+`kubectl apply -f milvus.yaml`
 
 // end::gpu-support[]
 
