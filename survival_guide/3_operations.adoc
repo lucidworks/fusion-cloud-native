@@ -1021,6 +1021,39 @@ question-answering:
 
 Note that this setup deploys all workflow steps onto the GPU node _except_ for the Seldon Core deployment. As the deployment will live on after the workflow has completed, if it assigned to the GPU node it would prevent GKE from spinning the GPU node down, increasing operating expense. 
 
+==== Setting up Milvus on GPU with GKE
+
+As with Training Smart Answers on GPU with GKE, setting up Milvus on GPU first requires the creation of a GPU resource/nodepool.  The setup is the same as described above.
+
+In your custom values YAML file, at the end of the section for the ml-model-service, add a section for Milvus as shown below (assuming the name of your GPU nodepool is `gpu-nodepool`). The taints/tolerations and resource keys shown below are for a GKE-based setup and will likely vary depending on your cloud provider.
+
+[source,yaml]
+----
+ml-model-service:
+# ml-model-service yaml settings:
+# ...
+# followed by the Milvus settings:
+  milvus:
+    gpu:
+      enabled: true
+    image:
+      repository: milvusdb/milvus
+      tag: 0.10.2-gpu-d081520-8a2393
+      pullPolicy: "IfNotPresent"
+      resources:
+        requests:
+          nvidia.com/gpu: 1
+        limits:
+          nvidia.com/gpu: 1
+    nodeSelector:
+      cloud.google.com/gke-nodepool: gpu-nodepool
+    tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "present"
+        effect: "NoSchedule"
+----
+
 // end::gpu-support[]
 
 
