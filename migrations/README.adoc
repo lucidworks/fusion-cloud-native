@@ -30,7 +30,7 @@ Run the below commands in the terminal or update the creds in the update_signal_
 ```
 PROXY="http://localhost:6764"
 APP="YOUR_FUSION_APP_ID"
-curl -u $CREDS -X POST "$PROXY/api/update/all/signalCollection" > ${APP}_signal_collection_update.json
+curl -u $CREDS -X POST "$PROXY/api/update/all/signalCollection"
 ```
 __Replace `$CREDS` with your Fusion admin username and password__, for example `-u admin:somepassword`
 
