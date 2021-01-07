@@ -80,6 +80,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`connectors-rpc` |gRPC |Deployment |`analytics` or `system` |Yes (CPU or custom metric) |gRPC service for managing SDK-based connector plugins.
 
+|`connector-plugin-service-<connector_plugin>` | HTTP/TCP |Deployment |`analytics` or `system` |Yes (CPU or custom metric) | Running instance of each connector plugin. Note: There is a base deployment connector-plugin-service with 0 replicas which is used for deploying each connector plugin. It should not be deleted or scaled.
+
 |`devops-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the DevOps UI.
 
 |`indexing` |REST/HTTP |Deployment |`search` or `analytics` depending on write-volume |Yes (CPU or custom metric) |Processes indexing requests.
