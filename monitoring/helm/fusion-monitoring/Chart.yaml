@@ -12,11 +12,11 @@ maintainers:
 dependencies:
 - name: prometheus
   version: 10.5.2
-  repository: "https://kubernetes-charts.storage.googleapis.com"
+  repository: https://prometheus-community.github.io/helm-charts
   tags:
     - prometheus
 - name: grafana
   version: 5.0.3
-  repository: "https://kubernetes-charts.storage.googleapis.com"
+  repository: https://grafana.github.io/helm-charts
   tags:
     - grafana
