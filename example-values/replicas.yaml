@@ -144,3 +144,7 @@ zookeeper:
   replicaCount: 3
 
 
+connector-plugin-service:
+  replicaCount: 3
+
+
