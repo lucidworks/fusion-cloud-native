@@ -114,6 +114,7 @@ rpc-service:
     # WARN this setting is global and will affect all plugins.
     # This setting only affect new plugins deployments.
     # Scale them up/down manually if needed.
+    # The replicas for plugins can be modified by modifying plugin.replicas in values.yaml file for rpc-connectors
     replicas: 1
   autoscaling:
     enabled: true
