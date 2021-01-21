@@ -109,6 +109,13 @@ rest-service:
 
 rpc-service:
   replicaCount: 2
+  plugins:
+    # Number of replicas of each plugin service.
+    # WARN this setting is global and will affect all plugins.
+    # This setting only affect new plugins deployments.
+    # Scale them up/down manually if needed.
+    # The replicas for plugins can be modified by modifying plugin.replicas in values.yaml file for rpc-connectors
+    replicas: 1
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -145,6 +152,7 @@ zookeeper:
 
 
 connector-plugin-service:
-  replicaCount: 3
+  # the base connector-plugin-service deployment must be 0
+  replicaCount: 0
 
 
