@@ -123,7 +123,7 @@ rpc-service:
         resource:
           name: cpu
           targetAverageUtilization: 70
-  
+
 rules-ui:
   replicaCount: 1
 
