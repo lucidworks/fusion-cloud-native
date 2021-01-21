@@ -111,8 +111,8 @@ rpc-service:
   replicaCount: 2
   plugins:
     # number of replicas of each plugin service
-    # WARN this setting is global and will afect all plugins.
-    # Scale them up/down manully if needed.
+    # WARN this setting is global and will affect all plugins.
+    # Scale them up/down manually if needed.
     replicas: 1
   autoscaling:
     enabled: true
@@ -150,7 +150,7 @@ zookeeper:
 
 
 connector-plugin-service:
-  # the base connector-plugin-service deployment mush be 0
+  # the base connector-plugin-service deployment must be 0
   replicaCount: 0
 
 
