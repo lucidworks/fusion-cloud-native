@@ -110,8 +110,9 @@ rest-service:
 rpc-service:
   replicaCount: 2
   plugins:
-    # number of replicas of each plugin service
+    # Number of replicas of each plugin service.
     # WARN this setting is global and will affect all plugins.
+    # This setting only affect new plugins deployments.
     # Scale them up/down manually if needed.
     replicas: 1
   autoscaling:
