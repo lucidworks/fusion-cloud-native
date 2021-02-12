@@ -1,0 +1,49 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.backup.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.backup.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "{{ include "fusion.solr-backup-runner.fullname" .  }}-backup"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ include "fusion.solr-backup-runner.fullname" . }}-backup"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "solr-backup-runner"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+{{- if .Values.backup.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.backup.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ else }} []
+{{- end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.backup.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      ports:
+      - protocol: TCP
+        port: 8983
+{{ if .Values.backup.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.backup.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

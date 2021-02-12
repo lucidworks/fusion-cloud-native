@@ -1,0 +1,22 @@
+{{- if .Values.components.broker }}
+{{- if .Values.broker.pdb.usePolicy }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.broker.component }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.broker.component }}
+  {{- if .Values.broker.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.broker.pdb.maxUnavailable }}
+  {{- else if .Values.broker.pdb.minAvailable }}
+  minAvailable: {{ .Values.broker.pdb.minAvailable }}
+  {{- end }}
+{{- end }}
+{{- end }}

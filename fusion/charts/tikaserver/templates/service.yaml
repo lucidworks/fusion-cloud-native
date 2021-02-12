@@ -1,0 +1,20 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "fusion.tikaserver.serviceName" . }}"
+  labels:
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.tikaserver.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4 }}
+spec:
+  ports:
+    - name: "tikaserver"
+      port: {{ .Values.port }}
+  selector:
+    app.kubernetes.io/name: "{{ include "fusion.tikaserver.name" . }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "tikaserver"
+  type: {{ .Values.service.type }}

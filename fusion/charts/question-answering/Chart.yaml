@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: "5"
+description: A helm chart to install details for the QnA and other model services
+keywords:
+- fusion
+- ml
+- qna
+maintainers:
+- email: ian.pointer@lucidworks.com
+  name: Ian Pointer
+name: question-answering
+type: application
+version: 1.4.2

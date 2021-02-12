@@ -1,0 +1,25 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "fusion.fusion-admin.serviceName" . }}
+  labels:
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    {{ include "fusion.fusion-admin.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4}}
+spec:
+    ports:
+        - port: {{ .Values.service.externalPort }}
+          targetPort: {{ .Values.service.internalPort }}
+          name: {{ .Values.service.name }}
+    type: {{ .Values.service.type }}
+    selector:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "fusion-admin"
+      app.kubernetes.io/part-of: "fusion"

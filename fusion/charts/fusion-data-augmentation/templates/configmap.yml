@@ -1,0 +1,621 @@
+{{- $tlsEnabled := .Values.tls.enabled -}}
+  {{- if .Values.global -}}
+  {{- if .Values.global.tlsEnabled -}}
+  {{ $tlsEnabled = true }}
+  {{- end }}
+  {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "argo-data-augmentation-workflow"
+data:
+  application.yaml: |-
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: data-augmentation-
+      labels:
+        workflows.argoproj.io/controller-instanceid: "{{`{{INSTANCEID}}`}}"
+        jobRunId: "{{`{{JOB_RUN_ID}}`}}"
+        jobConfigId: "{{`{{JOB_CONFIG_ID}}`}}"
+    spec:
+      serviceAccountName: "{{`{{SERVICE_ACCOUNT}}`}}"
+      entrypoint: workflow
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+      imagePullSecrets:
+      {{ .Values.image.imagePullSecrets| toYaml | nindent 8 }}
+
+      volumeClaimTemplates:
+        - metadata:
+            name: workspace
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 25Gi
+
+      volumes:
+      # This secret is set by Fusion cluster installation scripts / cluster administrator
+      - name: secrets
+        secret:
+          secretName: service-account-key
+          items:
+          - key: sa
+            path: service-account-key
+{{- if $tlsEnabled }}
+      - name: fusion-truststore
+        secret:
+          secretName: fusion-truststore
+{{- end }}
+      - name: cloud-secret
+        secret:
+          secretName: {{`{{CLOUD_SECRET}}`}}
+
+      # Global parameters
+      arguments:
+        parameters:
+        - name: cloud_secret
+          value: "{{`{{CLOUD_SECRET}}`}}"
+
+        - name: job_run_id
+          value: "{{`{{JOB_RUN_ID}}`}}"
+
+        - name: include_original_data
+          value: "{{`{{INCLUDE_ORIGINAL_DATA}}`}}"
+
+        - name: keystroke_blob_list
+          value: "{{`{{KEYSTROKE_BLOB_LIST}}`}}"
+
+        - name: synonym_dictionary_list
+          value: "{{`{{SYNONYM_DICTIONARY_LIST}}`}}"
+
+      # Configuration JSON passed to Python model training
+      # Required.
+        - name: config_json
+          value: |-
+            {{`{{CONFIG_JSON}}`}}
+
+        - name: config_io_json
+          value: |-
+            {{`{{CONFIG_IO_JSON}}`}}
+
+      # Hostname of Zookeeper
+        - name: zkhost
+          value: "{{`{{ZOOKEEPER}}`}}"
+
+        - name: docker_repo
+          value: "{{ .Values.image.repository }}"
+
+        - name: image_pull_policy
+          value: "{{ .Values.image.imagePullPolicy }}"
+
+        - name: ambassador_endpoint
+        # this should be templated in by Helm chart to ambassador release name
+          value: "{{`{{AMBASSADOR}}`}}"
+
+        - name: namespace
+          value: "{{ .Release.Namespace }}"
+
+        - name: spark_solr_tag
+          value: "{{`{{sparkSolrEtl}}`}}"
+
+        - name: data_augmentation_tag
+          value: "{{ .Values.image.data_augmentation_tag | default .Values.image.tag }}"
+
+        - name: utilities_tag
+          value: "{{`{{workflowUtilitiesTag}}`}}"
+
+
+      templates:
+      - name: workflow
+        steps:
+
+        ############################################################################################
+        # volume-fix: Setup volume ownership and permissions
+        ############################################################################################
+        - - name: volume-fix
+            template: volume-fix
+        ############################################################################################
+        # init-workspace: Initializes directory structure for mounted volume
+        ############################################################################################
+        - - name: init-workspace
+            template: init-workspace
+        ############################################################################################
+        # write-configs: Write JSON from config_json parameter to file.
+        ############################################################################################
+        - - name: write-job-configs
+            template: write-job-configs
+        - - name: write-io-configs
+            template: write-io-configs
+        - - name: add-zkHost
+            template: add-zkHost
+        ############################################################################################
+        # pull-data: Pulls data from Solr into parquet files.
+        ############################################################################################
+        - - name: pull-data-training-and-metadata
+            template: pull-data-training-and-metadata
+            when: "\"{{`{{workflow.parameters.cloud_secret}}`}}\" == \"\""
+        - - name: pull-data-training-and-metadata-cloud
+            template: pull-data-training-and-metadata-cloud
+            when: "\"{{`{{workflow.parameters.cloud_secret}}`}}\" != \"\""
+        - - name: volume-fix2
+            template: volume-fix
+        - - name: synonym-list
+            template: synonym-list
+        - - name: download-synonym-dictionary
+            template: download-synonym-dictionary
+            when: "\"{{`{{workflow.parameters.synonym_dictionary_list}}`}}\" != \"NONE\""
+            arguments:
+              parameters:
+                - name: blobName
+                  value: "{{`{{item}}`}}"
+            withParam: "{{`{{steps.synonym-list.outputs.result}}`}}"
+        - - name: keystroke-list
+            template: keystroke-list
+        - - name: download-keystroke-blob
+            template: download-keystroke-blob
+            when: "\"{{`{{workflow.parameters.keystroke_blob_list}}`}}\" != \"NONE\""
+            arguments:
+              parameters:
+                - name: keyStrokeBlob
+                  value: "{{`{{item}}`}}"
+            withParam: "{{`{{steps.keystroke-list.outputs.result}}`}}"
+
+        ############################################################################################
+        # augment: Perform data augmentation
+        ############################################################################################
+        - - name: augment
+            template: augment
+
+        ############################################################################################
+        # push: Push matrices to solr
+        ############################################################################################
+        - - name: push-augmented-data
+            template: push-augmented-data
+            when: "{{`(\"{{workflow.parameters.cloud_secret}}\" == \"\")`}}"
+        - - name: push-augmented-data-cloud
+            template: push-augmented-data-cloud
+            when: "{{`(\"{{workflow.parameters.cloud_secret}}\" != \"\")`}}"
+
+      - name: volume-fix
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: busybox
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12  }}
+
+          command: ["sh", "-c", "chown -R 8764:8764 /workspace"]
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: init-workspace
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10 }}
+        container:
+          # Using fusion-data-augmentation image to make sure the right user is used
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-data-augmentation:{{`{{workflow.parameters.data_augmentation_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12 }}
+
+          command: [ sh, -c ]
+          args: [ "mkdir -p /workspace/configs /workspace/input /workspace/output" ]
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: write-job-configs
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          # Using fusion-data-augmentation image to make sure the right user is used
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-data-augmentation:{{`{{workflow.parameters.data_augmentation_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12  }}
+
+          command: [sh, -c]
+          args: ["echo '{{`{{workflow.parameters.config_json}}`}}' > /workspace/configs/config.json; cat /workspace/configs/config.json; ls -lR /workspace"]
+
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: write-io-configs
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          # Using fusion-data-augmentation image to make sure the right user is used
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-data-augmentation:{{`{{workflow.parameters.data_augmentation_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12  }}
+
+          command: [sh, -c]
+          args: ["echo '{{`{{workflow.parameters.config_io_json}}`}}' > /workspace/configs/io_config.json; cat /workspace/configs/io_config.json; ls -lr /workspace"]
+
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: add-zkHost
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        script:
+          # Using fusion-data-augmentation image to make sure the right user is used
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-data-augmentation:{{`{{workflow.parameters.data_augmentation_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12  }}
+
+          command: [python]
+          source: |
+            import json
+            with open('/workspace/configs/io_config.json', 'r') as f:
+                data = json.load(f)
+            keys = ['pullConfig', 'pushConfig', 'removeConfig']
+            for key in keys:
+                if key in data:
+                    for config in data[key]:
+                        config['zkHost'] = "{{`{{workflow.parameters.zkhost}}`}}"
+            with open('/workspace/configs/io_config.json', 'w') as f:
+                json.dump(data, f)
+
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: pull-data-training-and-metadata
+        nodeSelector:
+          {{ .Values.nodeSelector.etl | default .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.etl | default .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/spark-solr-etl:{{`{{workflow.parameters.spark_solr_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.etl | default .Values.resources.default | toYaml | nindent 12  }}
+
+          args: ["pull",
+                "/workspace/configs/io_config.json",
+                "/workspace/input/input_df.parquet"
+          ]
+
+{{- if $tlsEnabled }}
+          env:
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "-Djavax.net.ssl.trustStore=/etc/ssl/truststore/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/truststore/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/truststore/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}"
+{{- end }}
+          volumeMounts:
+{{- if $tlsEnabled }}
+            - name: "fusion-truststore"
+              mountPath: "/etc/ssl/truststore"
+{{ end }}
+            - name: workspace
+              mountPath: /workspace
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: pull-data-training-and-metadata-cloud
+        nodeSelector:
+          {{ .Values.nodeSelector.etl | default .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.etl | default .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/spark-solr-etl:{{`{{workflow.parameters.spark_solr_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.etl | default .Values.resources.default | toYaml | nindent 12  }}
+
+          args: ["pull",
+                  "/workspace/configs/io_config.json",
+                  "/workspace/input/input_df.parquet"
+            ]
+
+{{- if $tlsEnabled }}
+          env:
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "-Djavax.net.ssl.trustStore=/etc/ssl/truststore/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/truststore/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/truststore/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}"
+{{- end }}
+          volumeMounts:
+{{- if $tlsEnabled }}
+            - name: "fusion-truststore"
+              mountPath: "/etc/ssl/truststore"
+{{ end }}
+            - name: workspace
+              mountPath: /workspace
+
+            - name: cloud-secret
+              mountPath: "/etc/secrets"
+              readOnly: true
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: synonym-list
+        script:
+          image: python:alpine3.7
+          command: [ python ]
+          source: |
+              import json
+              import sys
+              synonyms = "{{`{{workflow.parameters.synonym_dictionary_list}}`}}"
+              if synonyms == "NONE":
+                  json.dump([], sys.stdout)
+              else:
+                  list_of_values = synonyms.split(",")
+                  json.dump(list_of_values, sys.stdout)
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: download-synonym-dictionary
+        inputs:
+          parameters:
+          - name: blobName
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10 }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12 }}
+          command: [ tini, --, python, transfer_blobs.py ]
+          args: [ "download",
+                  "--service-protocol={{- ternary "https" "http" $tlsEnabled -}}",
+                  "--service-host=admin",
+                  "--service-port=8765",
+                  "--path=api/v1/blobs/{{`{{inputs.parameters.blobName}}`}}",
+                  "--key-path=/etc/secrets/service-account-key",
+                  "--jks-url={{- ternary "https" "http" $tlsEnabled -}}://proxy:6764/api/internal",
+                  "--download-location=/workspace/configs/",
+                  "--pass-in-config=False"
+          ]
+{{- if $tlsEnabled }}
+          env:
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+          - name: secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+{{ end }}
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-model-service
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: keystroke-list
+        script:
+          image: python:alpine3.7
+          command: [ python ]
+          source: |
+              import json
+              import sys
+              keystrokes = "{{`{{workflow.parameters.keystroke_blob_list}}`}}"
+              if keystrokes == "NONE":
+                  json.dump([], sys.stdout)
+              else:
+                  list_of_values = keystrokes.split(",")
+                  json.dump(list_of_values, sys.stdout)
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+
+      - name: download-keystroke-blob
+        inputs:
+          parameters:
+          - name: keyStrokeBlob
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10 }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default  | toYaml | nindent 12 }}
+          command: [ tini, --, python, transfer_blobs.py ]
+          args: [ "download",
+                  "--service-protocol={{- ternary "https" "http" $tlsEnabled -}}",
+                  "--service-host=admin",
+                  "--service-port=8765",
+                  "--path=api/v1/blobs/{{`{{inputs.parameters.keyStrokeBlob}}`}}",
+                  "--key-path=/etc/secrets/service-account-key",
+                  "--jks-url={{- ternary "https" "http" $tlsEnabled -}}://proxy:6764/api/internal",
+                  "--download-location=/workspace/configs/",
+                  "--pass-in-config=False"
+                ]
+{{- if $tlsEnabled }}
+          env:
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+          - name: secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+{{ end }}
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-model-service
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: augment
+        nodeSelector:
+          {{ .Values.nodeSelector.augment | default .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.augment | default .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-data-augmentation:{{`{{workflow.parameters.data_augmentation_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.augment | default .Values.resources.default | toYaml | nindent 12  }}
+          env:
+            - name: LOGURU_LEVEL
+              value: {{ .Values.loguruLogLevel }}
+            - name: NLTK_DATA
+              value: /home/fusion/nltk_data
+
+          args: ["augment_data",
+                 "--job-run-id={{`{{workflow.parameters.job_run_id}}`}}",
+                 "--input-data-file=input_df.parquet",
+                 "--output-data-file=augmented_df.parquet",
+                 "--config-file-name=/src/working_dir/configs/config.json",
+                 "--include-original-data={{`{{workflow.parameters.include_original_data}}`}}"
+          ]
+
+          volumeMounts:
+          - name: workspace
+            mountPath: /src/working_dir
+
+        metadata:
+          labels:
+          app.kubernetes.io/component: ml-service-workflow
+          app.kubernetes.io/part-of: fusion
+          app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: push-augmented-data
+        nodeSelector:
+          {{ .Values.nodeSelector.etl | default .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.etl | default .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/spark-solr-etl:{{`{{workflow.parameters.spark_solr_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.etl | default .Values.resources.default | toYaml | nindent 12  }}
+          args: ["push",
+                  "/workspace/configs/io_config.json",
+                  "/workspace/output/augmented_df.parquet"
+          ]
+{{- if $tlsEnabled }}
+          env:
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "-Djavax.net.ssl.trustStore=/etc/ssl/truststore/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/truststore/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/truststore/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}"
+{{- end }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+{{- if $tlsEnabled }}
+          - name: "fusion-truststore"
+          mountPath: "/etc/ssl/truststore"
+{{ end }}
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: push-augmented-data-cloud
+        nodeSelector:
+          {{ .Values.nodeSelector.etl | default .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.etl | default .Values.tolerations.default | toYaml | nindent 10 }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/spark-solr-etl:{{`{{workflow.parameters.spark_solr_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.etl | default .Values.resources.default | toYaml | nindent 12 }}
+
+          args: [ "push",
+                  "/workspace/configs/io_config.json",
+                  "/workspace/output/augmented_df.parquet"
+                ]
+{{- if $tlsEnabled }}
+          env:
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "-Djavax.net.ssl.trustStore=/etc/ssl/truststore/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/truststore/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/truststore/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}"
+{{- end }}
+          volumeMounts:
+{{- if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+{{ end }}
+          - name: workspace
+            mountPath: /workspace
+
+          - name: cloud-secret
+            mountPath: "/etc/secrets"
+            readOnly: true
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"

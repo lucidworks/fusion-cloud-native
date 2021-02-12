@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: 1.16.0
+description: A helm chart to install details for the data augmentation service
+keywords:
+- fusion
+- ml
+- fusion-data-augmentation
+maintainers:
+- email: apurva.mishra@lucidworks.com
+  name: Apurva Mishra
+name: fusion-data-augmentation
+type: application
+version: 1.0.3

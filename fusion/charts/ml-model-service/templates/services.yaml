@@ -1,0 +1,47 @@
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-model-service
+  labels:
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.ml-model-service.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4}}
+spec:
+  ports:
+  - protocol: "TCP"
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+    name: jetty
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "ml-model-service"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.type }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-model-grpc
+  labels:
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.ml-model-service.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4}}
+spec:
+  ports:
+    - protocol: TCP
+      port: 6565
+      targetPort: 6565
+      name: grpc
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "ml-model-service"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.type }}

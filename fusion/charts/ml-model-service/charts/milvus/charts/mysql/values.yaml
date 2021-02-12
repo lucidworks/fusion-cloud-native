@@ -1,0 +1,90 @@
+affinity: {}
+args: []
+busybox:
+  image: busybox
+  tag: 1.31.1
+configurationFiles: {}
+configurationFilesPath: /etc/mysql/conf.d/
+deploymentAnnotations: {}
+extraInitContainers: |
+  # - name: do-something
+  #   image: busybox
+  #   command: ['do', 'something']
+extraVolumeMounts: |
+  # - name: extras
+  #   mountPath: /usr/share/extras
+  #   readOnly: true
+extraVolumes: |
+  # - name: extras
+  #   emptyDir: {}
+image: mysql
+imagePullPolicy: IfNotPresent
+imageTag: 5.7.30
+initContainer:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 10Mi
+initializationFiles: {}
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+metrics:
+  annotations: {}
+  enabled: false
+  flags: []
+  image: prom/mysqld-exporter
+  imagePullPolicy: IfNotPresent
+  imageTag: v0.10.0
+  livenessProbe:
+    initialDelaySeconds: 15
+    timeoutSeconds: 5
+  readinessProbe:
+    initialDelaySeconds: 5
+    timeoutSeconds: 1
+  resources: {}
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+nodeSelector: {}
+persistence:
+  accessMode: ReadWriteOnce
+  annotations: {}
+  enabled: true
+  size: 8Gi
+podAnnotations: {}
+podLabels: {}
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 1
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+securityContext:
+  enabled: false
+  fsGroup: 999
+  runAsUser: 999
+service:
+  annotations: {}
+  port: 3306
+  type: ClusterIP
+serviceAccount:
+  create: false
+ssl:
+  certificates: null
+  enabled: false
+  secret: mysql-ssl-certs
+strategy:
+  type: Recreate
+testFramework:
+  enabled: true
+  image: dduportal/bats
+  tag: 0.4.0
+tolerations: []

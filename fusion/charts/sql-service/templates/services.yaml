@@ -1,0 +1,55 @@
+---
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "sql-service"
+  labels:
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.sql-service.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.http.annotations | nindent 4}}
+spec:
+  ports:
+  - name: "http"
+    protocol: "TCP"
+    port: {{ .Values.service.http.port }}
+    targetPort: {{ .Values.service.http.targetPort }}
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "sql-service"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.http.type }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "sql-jdbc"
+  labels:
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.sql-service.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.thrift.annotations | nindent 4}}
+spec:
+  ports:
+    - name: "thrift"
+      protocol: "TCP"
+      port: {{ .Values.service.thrift.port }}
+      targetPort: {{ .Values.service.thrift.targetPort }}
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "sql-service"
+    app.kubernetes.io/component-role: "manager"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.thrift.type }}

@@ -1,0 +1,16 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: A Helm chart to install the Spring-based fusion-indexing service
+keywords:
+- fusion
+- indexing
+- index
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: fusion-indexing
+version: 2.7.4

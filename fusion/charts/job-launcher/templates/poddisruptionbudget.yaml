@@ -1,0 +1,15 @@
+---
+
+apiVersion: "policy/v1beta1"
+kind: "PodDisruptionBudget"
+metadata:
+  name: "{{ template "fusion.job-launcher.fullname" . }}"
+  labels:
+    {{ include "fusion.job-launcher.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "job-launcher"
+      app.kubernetes.io/part-of: "fusion"
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}

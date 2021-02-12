@@ -1,0 +1,43 @@
+{{- range $i, $nodePool := .Values.nodePools }}
+---
+
+{{- if $nodePool.autoscaling -}}
+{{- if $nodePool.autoscaling.enabled -}}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ $nodePool.name }}{{- if not (eq $nodePool.name "") -}}-{{- end -}}{{ include "solr.fullname" $ }}"
+  labels:
+    {{ include "solr.common.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/solrpool: "{{ $nodePool.name }}"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: statefulset
+    name: "{{ $nodePool.name }}{{- if not (eq $nodePool.name "") -}}-{{- end -}}{{ include "solr.fullname" $ }}"
+  minReplicas: {{ $nodePool.autoscaling.minReplicas }}
+  maxReplicas: {{ $nodePool.autoscaling.maxReplicas }}
+  metrics:
+    {{- toYaml $nodePool.autoscaling.metrics | nindent 4 }}
+{{- end -}}
+{{- else if $.Values.autoscaling.enabled -}}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: "{{ $nodePool.name }}-{{ include "solr.fullname" $ }}"
+  labels:
+    {{ include "solr.common.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: "server"
+    app.kubernetes.io/solrpool: "{{ $nodePool.name }}"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: statefulset
+    name: "{{ $nodePool.name }}-{{ include "solr.fullname" $ }}"
+  minReplicas: {{ $.Values.autoscaling.minReplicas }}
+  maxReplicas: {{ $.Values.autoscaling.maxReplicas }}
+  metrics:
+    {{- toYaml $.Values.autoscaling.metrics | nindent 4 }}
+{{- end -}}
+{{- end -}}

@@ -1,0 +1,22 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+- name: ambassador
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 5.3.0
+- condition: milvus.enabled
+  name: milvus
+  repository: https://milvus-io.github.io/milvus-helm/
+  version: 0.10.2
+description: A helm chart to install the ml-model-service component
+keywords:
+- fusion
+- ml-model-service
+maintainers:
+- email: tim.potter@lucidworks.com
+  name: Timothy Potter
+name: ml-model-service
+version: 1.17.0

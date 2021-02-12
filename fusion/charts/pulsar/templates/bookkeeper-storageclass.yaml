@@ -1,0 +1,35 @@
+{{- if .Values.components.bookkeeper }}
+{{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence }}
+{{- if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage)) .Values.bookkeeper.volumes.journal.storageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+provisioner: {{ .Values.bookkeeper.volumes.journal.storageClass.provisioner }}
+parameters:
+  type: {{ .Values.bookkeeper.volumes.journal.storageClass.type }}
+  fsType: {{ .Values.bookkeeper.volumes.journal.storageClass.fsType }}
+{{- end }}
+---
+
+{{- if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage)) .Values.bookkeeper.volumes.ledgers.storageClass }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+provisioner: {{ .Values.bookkeeper.volumes.ledgers.storageClass.provisioner }}
+parameters:
+  type: {{ .Values.bookkeeper.volumes.ledgers.storageClass.type }}
+  fsType: {{ .Values.bookkeeper.volumes.ledgers.storageClass.fsType }}
+{{- end }}
+
+{{- end }}
+{{- end }}

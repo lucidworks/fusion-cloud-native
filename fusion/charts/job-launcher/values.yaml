@@ -1,0 +1,110 @@
+accessLogEnabled: false
+affinity: {}
+ambassadorServiceName: local-ml-service-ambassador
+ambassadorServicePort: "80"
+argoCleanup:
+  resources: {}
+argoCleanupSchedule: 0 * * * *
+argoNamespace: default
+config:
+  springSecurity: ""
+configSources: []
+datadog:
+  enabled: false
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+envVars: []
+executorInstances: 2
+extraVolumes: []
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: job-launcher
+  repository: lucidworks
+  tag: latest
+javaToolOptions: -XX:+ExitOnOutOfMemoryError
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 3
+logLevelRoot: info
+mlModelServiceName: ml-model-service
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 8083
+preStopSleepTime: 40
+prometheus:
+  enabled: false
+  endpoint: 127.0.0.1:9091
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+rbac:
+  create: true
+readinessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+serverStopTimeout: 5000
+service:
+  annotations: {}
+  port: 8083
+  targetPort: 8083
+  type: ClusterIP
+sparkCleanup:
+  resources: {}
+sparkCleanupSchedule: 0 * * * *
+sparkNodeSelector: {}
+springProfiles: kubernetes,jwt,fusion
+terminationGracePeriodSeconds: 70
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

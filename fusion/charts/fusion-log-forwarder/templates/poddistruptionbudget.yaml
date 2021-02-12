@@ -1,0 +1,15 @@
+---
+
+apiVersion: "policy/v1beta1"
+kind: "PodDisruptionBudget"
+metadata:
+  name: "{{ template "fusion.fusion-log-forwarder.fullname" . }}"
+  labels:
+    {{ include "fusion.fusion-log-forwarder.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "fusion-log-forwarder"
+      app.kubernetes.io/part-of: "fusion"
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}

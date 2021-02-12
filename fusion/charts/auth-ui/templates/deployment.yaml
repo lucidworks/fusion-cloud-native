@@ -1,0 +1,104 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fusion.auth-ui.fullname" .  }}
+  labels:
+{{ include "fusion.auth-ui.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+{{- if .Values.deploymentStrategy }}
+  strategy:
+    {{ toYaml .Values.deploymentStrategy | nindent 4 }}
+{{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "auth-ui"
+      app.kubernetes.io/part-of: "fusion"
+  template:
+    metadata:
+      name: {{ include "fusion.auth-ui.fullname" .  }}
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: "auth-ui"
+        app.kubernetes.io/part-of: "fusion"
+    spec:
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: "nginx-config"
+          configMap:
+            name: "{{ template "fusion.auth-ui.fullname" . }}"
+{{- if $tlsEnabled }}
+{{ $params := dict "tlsServiceName" ( include "fusion.auth-ui.serviceName" . ) "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils }}
+{{ include "fusion.tls.volumes" $params | indent 8 }}
+{{- end }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.affinity }}
+      affinity:
+{{ tpl ( toYaml .Values.affinity ) . | indent 8 }}
+{{- end }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+      {{ if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      {{ end }}
+      {{ if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{ end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}
+      serviceAccountName: "{{ .Values.rbac.serviceAccountName | default ( include "fusion.auth-ui.fullname" . ) }}"
+
+      {{ if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{ end }}
+{{- if $tlsEnabled }}
+      initContainers:
+{{ $params := dict "tlsServiceName" ( include "fusion.auth-ui.serviceName" . ) "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils "securityContext" $.Values.securityContext }}
+{{ include "fusion.tls.init-container-v2" $params | indent 8 }}
+{{- end }}
+      containers:
+      - name: auth-ui
+        image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+        # args:
+        #   -
+        ports:
+          - containerPort: {{ .Values.service.http.targetPort }}
+            name: "jetty"
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: "nginx-config"
+            mountPath: "/etc/nginx/conf.d"
+{{- if $tlsEnabled }}
+          - name: "keystore-volume"
+            mountPath: "/etc/ssl/fusion_certs"
+{{- end }}
+
+        # livenessProbe:
+        #   initialDelaySeconds: 20
+        #   periodSeconds: 10
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: jetty
+        resources:
+{{ toYaml .Values.resources | indent 10 }}

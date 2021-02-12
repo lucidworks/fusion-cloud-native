@@ -1,0 +1,51 @@
+affinity: {}
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: insights
+  repository: lucidworks
+  tag: latest
+livenessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 10
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+nodeSelector: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 8080
+rbac:
+  create: true
+readinessProbe:
+  initialDelaySeconds: 8
+  periodSeconds: 5
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  annotations: {}
+  port: 8080
+  targetPort: 8080
+  type: ClusterIP

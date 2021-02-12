@@ -1,0 +1,115 @@
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "argo-delete-model-workflow"
+data:
+  application.yaml: |-
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: delete-model-
+      labels:
+        workflows.argoproj.io/controller-instanceid: "{{`{{INSTANCEID}}`}}"
+        jobRunId: "{{`{{JOB_RUN_ID}}`}}"
+        jobConfigId: "{{`{{JOB_CONFIG_ID}}`}}"
+    spec:
+      serviceAccountName: "{{`{{SERVICE_ACCOUNT}}`}}"
+      activeDeadlineSeconds: 300
+      imagePullSecrets:
+        {{ .Values.image.imagePullSecrets| toYaml | nindent 8 }}
+
+      volumes:
+      # This secret is set by Fusion cluster installation scripts / cluster administrator
+{{- if $tlsEnabled }}
+      - name: fusion-truststore
+        secret:
+          secretName: fusion-truststore
+{{- end }}
+      - name: secrets
+        secret:
+          secretName: service-account-key
+          items:
+          - key: sa
+            path: service-account-key
+      arguments:
+        parameters:
+        - name: model_name
+          value: "{{`{{MODEL_NAME}}`}}"
+
+        - name: ml_model_service_host
+          value: "{{`{{ML_MODEL_SERVICE}}`}}"
+
+        - name: fusion_docker_repo
+          value: "{{ .Values.image.repository }}"
+
+        - name: utilities_tag
+          value: "{{`{{workflowUtilitiesTag}}`}}"
+
+      entrypoint: workflow
+
+      templates:
+      - name: workflow
+        steps:
+        - - name: delete-model-from-seldon
+            template: delete-model-seldondeployment
+
+        - - name: delete-model-from-ml-service
+            template: delete-model-from-ml-service
+
+      - name: delete-model-seldondeployment
+        resource:
+          action: delete
+          manifest: |
+            apiVersion: machinelearning.seldon.io/v1
+            kind: SeldonDeployment
+            metadata:
+              name: "{{`{{workflow.parameters.model_name}}`}}"
+
+      - name: delete-model-from-ml-service
+        activeDeadlineSeconds: 120
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.fusion_docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: "FUSION_PROTOCOL"
+              value: "{{ $tlsEnabled | ternary "https" "http"  }}"
+{{- if $tlsEnabled }}
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+          volumeMounts:
+          - name: secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+            readOnly: true
+{{ end }}
+          command: [tini, --, python, transfer_blobs.py]
+          args: ["delete",
+                 {{ ternary "https" "http" $tlsEnabled | quote }},
+                 "{{`{{workflow.parameters.ml_model_service_host}}`}}",
+                 "8086",
+                 "ml-models/{{`{{workflow.parameters.model_name}}`}}",
+                 "/etc/secrets/service-account-key",
+                 "{{- ternary "https" "http" $tlsEnabled -}}://proxy:6764/api/internal"
+                ]
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"

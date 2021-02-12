@@ -1,0 +1,532 @@
+accessLogEnabled: false
+affinity: {}
+ambassador:
+  adminService:
+    annotations: {}
+    create: false
+    port: 8877
+    type: ClusterIP
+  affinity: {}
+  ambassadorConfig: ""
+  autoscaling:
+    enabled: false
+    maxReplicas: 5
+    metrics:
+    - resource:
+        name: cpu
+        targetAverageUtilization: 60
+      type: Resource
+    - resource:
+        name: memory
+        targetAverageUtilization: 60
+      type: Resource
+    minReplicas: 2
+  crds:
+    create: false
+    enabled: false
+    keep: true
+  daemonSet: false
+  deploymentAnnotations: {}
+  dnsPolicy: ClusterFirst
+  enabled: true
+  env: {}
+  fullnameOverride: ""
+  global: {}
+  hostNetwork: false
+  image:
+    pullPolicy: IfNotPresent
+    repository: quay.io/datawire/ambassador
+    tag: 0.86.1
+  imagePullSecrets: []
+  initContainers: []
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 3
+  nameOverride: ""
+  nodeSelector: {}
+  podAnnotations: {}
+  podDisruptionBudget: {}
+  podLabels: {}
+  priorityClassName: ""
+  pro:
+    authService:
+      enabled: true
+      optional_configurations: null
+    devPortal:
+      enabled: false
+    enabled: false
+    env: {}
+    image:
+      customBuildTag: null
+      repository: quay.io/datawire/ambassador_pro
+      tag: 0.11.0
+    licenseKey:
+      secret:
+        create: true
+        enabled: true
+      value: '{{INSERT LICENSE KEY HERE}}'
+    logLevel: info
+    ports:
+      auth: 8500
+      ratelimit: 8500
+    rateLimit:
+      enabled: true
+      redis:
+        annotations:
+          deployment: {}
+          service: {}
+        resources: {}
+    resources: {}
+  prometheusExporter:
+    enabled: false
+    pullPolicy: IfNotPresent
+    repository: prom/statsd-exporter
+    resources: {}
+    tag: v0.8.1
+  rbac:
+    create: true
+    podSecurityPolicies: {}
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 3
+  replicaCount: 1
+  resources: {}
+  scope:
+    singleNamespace: true
+  securityContext:
+    runAsUser: 8888
+  service:
+    annotations: null
+    ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 8443
+    type: ClusterIP
+  serviceAccount:
+    create: true
+    name: null
+  sidecarContainers: []
+  singleNamespace: true
+  tolerations: []
+  volumeMounts: []
+  volumes: []
+argoNodeSelector:
+  default: {}
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+fs:
+  enabled: true
+  workingDir: /tmp/model_repository
+fusion-common-utils:
+  global: {}
+gcs:
+  pretrained:
+    enabled: false
+    gcsPretrainedBucket: fusion-pretrained-models
+    gcsProjectName: fusion-download-hosting
+    gcsSecret:
+      key: fusion-download-hosting-3f391ae4694a.json
+      path: /app/gcs-pretrained-secret
+      secretName: fusion-pretrained-models-gcs-secret
+gcsBaseDirectoryName: ml-models
+gcsBucketName: fusion-ml-models
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: ml-model-service
+  repository: lucidworks
+  tag: latest
+javaService:
+  imageName: ml-model-service
+  resources: {}
+javaToolOptions: ""
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  failureThreshold: 10
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 3
+logLevelRoot: info
+milvus:
+  admin:
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      repository: milvusdb/milvus-em
+      tag: v0.4.0
+    replicas: 1
+    resources:
+      limits:
+        cpu: "2.0"
+        memory: 4Gi
+      requests:
+        cpu: "1.0"
+        memory: 2Gi
+    service:
+      annotations: {}
+      externalIPs: []
+      labels: {}
+      loadBalancerSourceRanges:
+      - 0.0.0.0/0
+      port: 3000
+      type: ClusterIP
+  affinity: {}
+  cache:
+    cacheSize: 4GB
+    insertBufferSize: 1GB
+  cluster:
+    enabled: false
+  enabled: true
+  externalMysql:
+    database: null
+    enabled: false
+    ip: null
+    password: null
+    port: null
+    user: null
+  extraConfigFiles: {}
+  extraContainers: ""
+  extraInitContainers: []
+  extraVolumeMounts: []
+  extraVolumes: []
+  fullnameOverride: milvus
+  global: {}
+  gpu:
+    buildIndexDevices:
+    - gpu0
+    cacheSize: 1GB
+    enabled: false
+    gpuSearchThreshold: 1000
+    searchDevices:
+    - gpu0
+  image:
+    pullPolicy: IfNotPresent
+    repository: milvusdb/milvus
+    resources:
+      limits:
+        cpu: "2.0"
+        memory: 6Gi
+      requests:
+        cpu: "1.0"
+        memory: 4Gi
+    tag: 0.10.2-cpu-d081520-8a2393
+  initContainerImage: alpine:3.8
+  livenessProbe:
+    failureThreshold: 5
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 10
+  logs:
+    level: debug
+    logRotateNum: 0
+    maxLogFileSize: 1024MB
+    path: /var/lib/milvus/logs
+  logsPersistence:
+    annotations: {}
+    enabled: false
+    mountPath: /var/lib/milvus/logs
+    persistentVolumeClaim:
+      accessModes: ReadWriteMany
+      existingClaim: ""
+      size: 5Gi
+      storageClass: null
+      subPath: ""
+  metrics:
+    address: 127.0.0.1
+    enabled: false
+    port: 9091
+  mishards:
+    debug: true
+    image:
+      pullPolicy: IfNotPresent
+      repository: milvusdb/mishards
+      tag: 0.10.2
+    maxworkers: 50
+    replicas: 1
+    resources:
+      limits:
+        cpu: "2.0"
+        memory: 2Gi
+      requests:
+        cpu: "0.5"
+        memory: 1Gi
+  mysql:
+    affinity: {}
+    args: []
+    busybox:
+      image: busybox
+      tag: 1.31.1
+    configurationFiles:
+      mysql.cnf: |-
+        [mysqld]
+        pid-file        = /var/run/mysqld/mysqld.pid
+        socket          = /var/run/mysqld/mysqld.sock
+        log-error       = /var/log/mysql/error.log # mount out to host
+        skip-name-resolve
+        # By default we only accept connections from localhost
+        bind-address   = 0.0.0.0
+        # Disabling symbolic-links is recommended to prevent assorted security risks
+        symbolic-links=0
+        character-set-server = utf8mb4
+        collation-server = utf8mb4_unicode_ci
+        init_connect='SET NAMES utf8mb4'
+        skip-character-set-client-handshake = true
+        max_connections = 1000
+        wait_timeout = 31536000
+    configurationFilesPath: /etc/mysql/conf.d/
+    deploymentAnnotations: {}
+    enabled: true
+    extraInitContainers: |
+      # - name: do-something
+      #   image: busybox
+      #   command: ['do', 'something']
+    extraVolumeMounts: |
+      # - name: extras
+      #   mountPath: /usr/share/extras
+      #   readOnly: true
+    extraVolumes: |
+      # - name: extras
+      #   emptyDir: {}
+    global: {}
+    image: mysql
+    imagePullPolicy: IfNotPresent
+    imageTag: 5.7.30
+    initContainer:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 10Mi
+    initializationFiles:
+      grant.sql: |-
+        GRANT ALL PRIVILEGES ON milvus.* TO 'root'@'%';
+        FLUSH PRIVILEGES;
+    livenessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 5
+    metrics:
+      annotations: {}
+      enabled: false
+      flags: []
+      image: prom/mysqld-exporter
+      imagePullPolicy: IfNotPresent
+      imageTag: v0.10.0
+      livenessProbe:
+        initialDelaySeconds: 15
+        timeoutSeconds: 5
+      readinessProbe:
+        initialDelaySeconds: 5
+        timeoutSeconds: 1
+      resources: {}
+      serviceMonitor:
+        additionalLabels: {}
+        enabled: false
+    mysqlDatabase: milvus
+    mysqlPassword: milvus
+    mysqlRootPassword: milvusroot
+    mysqlUser: milvus
+    name: mysql
+    nodeSelector: {}
+    persistence:
+      accessMode: ReadWriteOnce
+      annotations: {}
+      enabled: true
+      existingClaim: ""
+      size: 4Gi
+      storageClass: null
+    podAnnotations: {}
+    podLabels: {}
+    readinessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      timeoutSeconds: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    securityContext:
+      enabled: false
+      fsGroup: 999
+      runAsUser: 999
+    service:
+      annotations: {}
+      port: 3306
+      type: ClusterIP
+    serviceAccount:
+      create: false
+    ssl:
+      certificates: null
+      enabled: false
+      secret: mysql-ssl-certs
+    strategy:
+      type: Recreate
+    testFramework:
+      enabled: false
+      image: dduportal/bats
+      tag: 0.4.0
+    tolerations: []
+  network:
+    httpEnabled: true
+    httpPort: 19121
+  nodeSelector: {}
+  persistence:
+    annotations: {}
+    enabled: true
+    mountPath: /var/lib/milvus/db
+    persistentVolumeClaim:
+      accessModes: ReadWriteMany
+      existingClaim: milvuspvc
+      size: 50Gi
+      storageClass: null
+      subPath: ""
+  podAnnotations: {}
+  primaryPath: /var/lib/milvus
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 10
+  readonly:
+    cache:
+      cacheSize: 4GB
+      insertBufferSize: 1GB
+    gpu:
+      buildIndexDevices:
+      - gpu0
+      cacheSize: 1GB
+      enabled: false
+      gpuSearchThreshold: 1000
+      searchDevices:
+      - gpu0
+    logs:
+      level: debug
+      logRotateNum: 0
+      maxLogFileSize: 1024MB
+      path: /var/lib/milvus/logs
+    replicas: 1
+    resources:
+      limits:
+        cpu: "2.0"
+        memory: 6Gi
+      requests:
+        cpu: "1.0"
+        memory: 4Gi
+  replicas: 1
+  restartPolicy: Always
+  service:
+    annotations: {}
+    externalIPs: []
+    labels: {}
+    loadBalancerSourceRanges:
+    - 0.0.0.0/0
+    port: 19530
+    type: ClusterIP
+  serviceAccounts:
+    mishards:
+      create: false
+      name: null
+  storage:
+    autoFlushInterval: 1
+  terminationGracePeriodSeconds: 30
+  timeZone: UTC+8
+  tolerations: []
+  version: 0.5
+  wal:
+    bufferSize: 256MB
+    enabled: true
+    path: /var/lib/milvus/db/wal
+    recoveryErrorIgnore: false
+milvuspvc:
+  enabled: true
+  size: 30Gi
+modelRepoImpl: fusion
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 8086
+preinstall:
+  resources: {}
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+pythonService:
+  imageName: ml-python-image
+  resources: {}
+rbac:
+  create: true
+readinessProbe:
+  failureThreshold: 10
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  successThreshold: 1
+  timeoutSeconds: 3
+replicaCount: 1
+runLabelNamespaceJob: true
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  annotations: {}
+  port: 8086
+  targetPort: 8086
+  type: ClusterIP
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

@@ -1,0 +1,35 @@
+affinity: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: artifactory
+  name: fusion-jupyter
+  repository: fusion-dev-docker.ci-artifactory.lucidworks.com
+  tag: latest
+mountPath:
+  notebook: /home/jovyan/work
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+nodeSelector: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+replicaCount: 1
+resources: {}
+service:
+  port: 8888
+  targetPort: 8888
+  type: ClusterIP
+storage:
+  accessModes:
+  - ReadWriteOnce
+  requests: 8Gi
+zkConnectionString: zk:2181
+zkPort: 2181
+zkReplicaCount: 1
+zookeeper:
+  replicaCount: 1

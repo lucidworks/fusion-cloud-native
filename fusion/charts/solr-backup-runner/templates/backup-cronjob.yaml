@@ -1,0 +1,97 @@
+{{ $idx := 0 }}
+{{- range $collections, $schedule := .Values.backup.collection_schedules -}}
+{{- if $schedule }}
+---
+
+{{- $displayname := "" -}}
+{{- if eq $collections "*" }}
+{{- $displayname = "all" -}}
+{{- else -}}
+{{- $displayname = printf "subset-%d" $idx -}}
+{{- $idx = add $idx 1 -}}
+{{- end -}}
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ include "fusion.solr-backup-runner.fullname" $ }}-backup-{{ $displayname }}"
+spec:
+  schedule: "{{ $schedule }}"
+  concurrencyPolicy: "{{ $.Values.backup.concurrencyPolicy }}"
+  failedJobsHistoryLimit: {{ $.Values.backup.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ $.Values.backup.successfulJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ $.Values.backup.backoffLimit }}
+      {{- if $.Values.backup.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ $.Values.backup.activeDeadlineSeconds }}
+      {{- end }}
+      template:
+        metadata:
+          {{- if $.Values.backup.podAnnotations }}
+            {{ toYaml $.Values.backup.podAnnotations | nindent 12 }}
+          {{- end }}
+          labels:
+            app.kubernetes.io/name: "{{ include "fusion.solr-backup-runner.fullname" $ }}-backup-{{ $displayname }}"
+            app.kubernetes.io/instance: "{{ $.Release.Name }}"
+            app.kubernetes.io/component: "solr-backup-runner"
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: {{ $.Values.backup.fsGroup }}
+            runAsUser: {{ $.Values.backup.runAsUser }}
+          volumes:
+            - name: solr-backups
+              persistentVolumeClaim:
+                claimName: {{ required "The variable .Values.sharedPersistentVolumeName must be specifed for the solr-backup-runner" $.Values.sharedPersistentVolumeName }}
+        {{- if $.Values.backup.nodeSelector }}
+          nodeSelector:
+            {{ toYaml $.Values.backup.nodeSelector | nindent 8 }}
+        {{- end }}
+        {{- if $.Values.backup.affinity }}
+          affinity:
+            {{ tpl (toYaml $.Values.backup.affinity) . | nindent 8 }}
+        {{- end }}
+          imagePullSecrets:
+          {{ toYaml $.Values.image.imagePullSecrets | nindent 12 }}
+          {{- if $.Values.backup.priorityClassName }}
+          priorityClassName: "{{ $.Values.backup.priorityClassName }}"
+          {{- end }}
+          {{- if $.Values.backup.tolerations }}
+          tolerations: {{ $.Values.backup.tolerations | toYaml | nindent 8 }}
+          {{- end }}
+          {{- if $.Values.backup.schedulerName }}
+          schedulerName: {{ $.Values.backup.schedulerName | quote }}
+          {{- end }}
+          {{- if $.Values.backup.terminationGracePeriodSeconds }}
+          terminationGracePeriodSeconds: {{ $.Values.backup.terminationGracePeriodSeconds }}
+          {{- end }}
+          restartPolicy: "{{ $.Values.backup.restartPolicy }}"
+          containers:
+            - name: "solr-backups"
+              image: "{{ $.Values.image.repository }}/{{ $.Values.image.name }}:{{ $.Values.image.tag }}"
+              args:
+                - "backup"
+{{- if (not (eq $collections "*" )) }}
+{{- $collectionStringPart := split "," $collections -}}
+{{- range $idx, $collectionName := $collectionStringPart }}
+                - "--collection"
+                - "{{ $collectionName }}"
+{{- end }}
+{{- end }}
+              resources: {{ toYaml $.Values.backup.resources | nindent 16}}
+              env:
+                - name: "SOLRURL"
+                  value: "{{ include "fusion.solr-backup-runner.solrurl" $ }}"
+                - name: "LOCALBACKUPDIRECTORY"
+                  value: "{{ $.Values.localBackupDirectory }}"
+                - name: "SOLRBACKUPDIRECTORY"
+                  value: "{{ $.Values.solrBackupDirectory }}"
+                - name: "EXECUTORS"
+                  value: "{{ $.Values.backup.executorCount }}"
+              volumeMounts:
+                - name: solr-backups
+                  mountPath: "/mnt/solr-backups"
+
+{{ end -}}
+{{ end -}}

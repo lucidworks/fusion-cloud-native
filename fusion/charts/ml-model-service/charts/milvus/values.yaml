@@ -1,0 +1,289 @@
+admin:
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+    repository: milvusdb/milvus-em
+    tag: v0.4.0
+  replicas: 1
+  resources:
+    limits:
+      cpu: "2.0"
+      memory: 4Gi
+    requests:
+      cpu: "1.0"
+      memory: 2Gi
+  service:
+    annotations: {}
+    externalIPs: []
+    labels: {}
+    loadBalancerSourceRanges:
+    - 0.0.0.0/0
+    port: 3000
+    type: ClusterIP
+affinity: {}
+cache:
+  cacheSize: 4GB
+  insertBufferSize: 1GB
+cluster:
+  enabled: false
+externalMysql:
+  database: null
+  enabled: false
+  ip: null
+  password: null
+  port: null
+  user: null
+extraConfigFiles: {}
+extraContainers: ""
+extraInitContainers: []
+extraVolumeMounts: []
+extraVolumes: []
+gpu:
+  buildIndexDevices:
+  - gpu0
+  cacheSize: 1GB
+  enabled: false
+  gpuSearchThreshold: 1000
+  searchDevices:
+  - gpu0
+image:
+  pullPolicy: IfNotPresent
+  repository: milvusdb/milvus
+  resources:
+    limits:
+      cpu: "2.0"
+      memory: 6Gi
+    requests:
+      cpu: "1.0"
+      memory: 4Gi
+  tag: 0.10.2-cpu-d081520-8a2393
+initContainerImage: alpine:3.8
+livenessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 10
+logs:
+  level: debug
+  logRotateNum: 0
+  maxLogFileSize: 1024MB
+  path: /var/lib/milvus/logs
+logsPersistence:
+  annotations: {}
+  enabled: false
+  mountPath: /var/lib/milvus/logs
+  persistentVolumeClaim:
+    accessModes: ReadWriteMany
+    existingClaim: ""
+    size: 5Gi
+    storageClass: null
+    subPath: ""
+metrics:
+  address: 127.0.0.1
+  enabled: false
+  port: 9091
+mishards:
+  debug: true
+  image:
+    pullPolicy: IfNotPresent
+    repository: milvusdb/mishards
+    tag: 0.10.2
+  maxworkers: 50
+  replicas: 1
+  resources:
+    limits:
+      cpu: "2.0"
+      memory: 2Gi
+    requests:
+      cpu: "0.5"
+      memory: 1Gi
+mysql:
+  affinity: {}
+  args: []
+  busybox:
+    image: busybox
+    tag: 1.31.1
+  configurationFiles:
+    mysql.cnf: |-
+      [mysqld]
+      pid-file        = /var/run/mysqld/mysqld.pid
+      socket          = /var/run/mysqld/mysqld.sock
+      log-error       = /var/log/mysql/error.log # mount out to host
+      skip-name-resolve
+      # By default we only accept connections from localhost
+      bind-address   = 0.0.0.0
+      # Disabling symbolic-links is recommended to prevent assorted security risks
+      symbolic-links=0
+      character-set-server = utf8mb4
+      collation-server = utf8mb4_unicode_ci
+      init_connect='SET NAMES utf8mb4'
+      skip-character-set-client-handshake = true
+      max_connections = 1000
+      wait_timeout = 31536000
+  configurationFilesPath: /etc/mysql/conf.d/
+  deploymentAnnotations: {}
+  enabled: true
+  extraInitContainers: |
+    # - name: do-something
+    #   image: busybox
+    #   command: ['do', 'something']
+  extraVolumeMounts: |
+    # - name: extras
+    #   mountPath: /usr/share/extras
+    #   readOnly: true
+  extraVolumes: |
+    # - name: extras
+    #   emptyDir: {}
+  global: {}
+  image: mysql
+  imagePullPolicy: IfNotPresent
+  imageTag: 5.7.30
+  initContainer:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 10Mi
+  initializationFiles:
+    grant.sql: |-
+      GRANT ALL PRIVILEGES ON milvus.* TO 'root'@'%';
+      FLUSH PRIVILEGES;
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  metrics:
+    annotations: {}
+    enabled: false
+    flags: []
+    image: prom/mysqld-exporter
+    imagePullPolicy: IfNotPresent
+    imageTag: v0.10.0
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    readinessProbe:
+      initialDelaySeconds: 5
+      timeoutSeconds: 1
+    resources: {}
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: false
+  mysqlDatabase: milvus
+  mysqlPassword: milvus
+  mysqlRootPassword: milvusroot
+  mysqlUser: milvus
+  name: mysql
+  nodeSelector: {}
+  persistence:
+    accessMode: ReadWriteOnce
+    annotations: {}
+    enabled: true
+    existingClaim: ""
+    size: 4Gi
+    storageClass: null
+  podAnnotations: {}
+  podLabels: {}
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  securityContext:
+    enabled: false
+    fsGroup: 999
+    runAsUser: 999
+  service:
+    annotations: {}
+    port: 3306
+    type: ClusterIP
+  serviceAccount:
+    create: false
+  ssl:
+    certificates: null
+    enabled: false
+    secret: mysql-ssl-certs
+  strategy:
+    type: Recreate
+  testFramework:
+    enabled: false
+    image: dduportal/bats
+    tag: 0.4.0
+  tolerations: []
+network:
+  httpEnabled: true
+  httpPort: 19121
+nodeSelector: {}
+persistence:
+  annotations: {}
+  enabled: false
+  mountPath: /var/lib/milvus/db
+  persistentVolumeClaim:
+    accessModes: ReadWriteMany
+    existingClaim: ""
+    size: 50Gi
+    storageClass: null
+    subPath: ""
+podAnnotations: {}
+primaryPath: /var/lib/milvus
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 15
+  periodSeconds: 15
+  timeoutSeconds: 10
+readonly:
+  cache:
+    cacheSize: 4GB
+    insertBufferSize: 1GB
+  gpu:
+    buildIndexDevices:
+    - gpu0
+    cacheSize: 1GB
+    enabled: false
+    gpuSearchThreshold: 1000
+    searchDevices:
+    - gpu0
+  logs:
+    level: debug
+    logRotateNum: 0
+    maxLogFileSize: 1024MB
+    path: /var/lib/milvus/logs
+  replicas: 1
+  resources:
+    limits:
+      cpu: "2.0"
+      memory: 6Gi
+    requests:
+      cpu: "1.0"
+      memory: 4Gi
+replicas: 1
+restartPolicy: Always
+service:
+  annotations: {}
+  externalIPs: []
+  labels: {}
+  loadBalancerSourceRanges:
+  - 0.0.0.0/0
+  port: 19530
+  type: ClusterIP
+serviceAccounts:
+  mishards:
+    create: false
+    name: null
+storage:
+  autoFlushInterval: 1
+terminationGracePeriodSeconds: 30
+timeZone: UTC+8
+tolerations: []
+version: 0.5
+wal:
+  bufferSize: 256MB
+  enabled: true
+  path: /var/lib/milvus/db/wal
+  recoveryErrorIgnore: false

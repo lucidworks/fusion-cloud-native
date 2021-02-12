@@ -1,0 +1,16 @@
+apiVersion: v2
+appVersion: "5"
+description: A helm chart to install common argo workflows not tied to a particular
+  argo job deployment.
+keywords:
+- fusion
+- ai
+- jobs
+- common
+- milvus
+maintainers:
+- email: binoy.dalal1@lucidworks.com
+  name: Binoy Dalal
+name: argo-common-workflows
+type: application
+version: 1.0.1

@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: 1.0.0
+description: |
+  Deploys the solr-backup-runner which is responsible for
+  backing up solr to a shared directory
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: solr-backup-runner
+version: 1.0.3

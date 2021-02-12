@@ -1,0 +1,53 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fusion.pm-ui.fullname" .  }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component:  "pm-ui"
+      app.kubernetes.io/part-of: "fusion"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "api-gateway"
+      ports:
+      - protocol: TCP
+        port: 8080
+{{ if .Values.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+{{- if .Values.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

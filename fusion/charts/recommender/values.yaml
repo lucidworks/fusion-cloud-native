@@ -1,0 +1,34 @@
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  repository: lucidworks
+  tag: latest
+nodeSelector:
+  content:
+    etl: null
+    train: null
+  default: {}
+  user:
+    etl: null
+    train: null
+resources:
+  content:
+    etl: {}
+    train: {}
+  default: {}
+  user:
+    etl: {}
+    train: {}
+securityContext:
+  fsGroup: 8764
+tls:
+  enabled: false
+  keystorePassword: changeit
+tolerations:
+  content:
+    etl: null
+    train: null
+  default: []
+  user:
+    etl: null
+    train: null

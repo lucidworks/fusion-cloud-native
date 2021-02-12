@@ -1,0 +1,58 @@
+{{- if .Values.components.proxy }}
+{{- $tlsEnabled := or .Values.proxy.tls.enabled ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.proxy.component }}
+data:
+  clusterName: {{ .Values.clusterName }}
+  httpNumThreads: "8"
+  statusFilePath: "{{ template "pulsar.home" . }}/status"
+  # prometheus needs to access /metrics endpoint
+  {{- if $tlsEnabled }}
+  tlsEnabledInProxy: "true"
+  webServicePortTls: "{{ .Values.proxy.ports.https }}"
+  servicePortTls: "{{ .Values.proxy.ports.pulsarssl }}"
+  tlsCertificateFilePath: /tls/tls.crt
+  tlsKeyFilePath: /tls/tls.key
+  tlsTrustCertsFilePath: /tls/ca.crt
+  brokerServiceURLTLS: pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}
+  brokerWebServiceURLTLS: https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}
+  tlsEnabledWithBroker: "true"
+  tlsCertRefreshCheckDurationSec: "300"
+  brokerClientTrustCertsFilePath: "/tls/ca.crt"
+  {{- else }}
+  webServicePort: "{{ .Values.proxy.ports.http }}"
+  servicePort: "{{ .Values.proxy.ports.pulsar }}"
+  brokerServiceURL: pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}
+  brokerWebServiceURL: http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}
+  {{- end }}
+
+  # Authentication Settings
+  {{- if .Values.auth.authentication.enabled }}
+  authenticationEnabled: "true"
+  {{- if .Values.auth.authorization.enabled }}
+  # disable authorization on proxy and forward authorization credentials to broker
+  authorizationEnabled: "false"
+  forwardAuthorizationCredentials: "true"
+  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  {{- end }}
+  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  # token authentication configuration
+  authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
+  brokerClientAuthenticationParameters: "file:///pulsar/tokens/proxy/token"
+  brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
+  {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+  tokenSecretKey: "file:///pulsar/keys/token/secret.key"
+  {{- else }}
+  tokenPublicKey: "file:///pulsar/keys/token/public.key"
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{ toYaml .Values.proxy.configData | indent 2 }}
+{{- end }}

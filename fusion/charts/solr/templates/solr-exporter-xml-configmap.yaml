@@ -1,0 +1,13 @@
+{{- if .Values.exporter.configXml -}}
+---
+
+apiVersion: "v1"
+kind: "ConfigMap"
+metadata:
+  name: "{{ template "solr.exporter-configmap-name" . }}"
+  labels:
+{{ include "solr.common.labels" . | indent 4}}
+data:
+  solr-exporter.xml: |
+{{ .Values.exporter.configXml | indent 4 }}
+{{- end -}}

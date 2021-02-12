@@ -1,0 +1,157 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- $jsonOutput := ( eq (include "fusion.loggingJSONOutput" .) "true" ) }}
+{{- $logstashHost := (include "fusion.logstashHost" .) -}}
+{{- $logPulsar := ( eq (include "fusion.loggingDisablePulsar" .) "false" ) -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fusion.templating.fullname" .  }}
+  labels:
+    {{ include "fusion.templating.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.deploymentStrategy }}
+  strategy:
+    {{ toYaml .Values.deploymentStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "templating"
+      app.kubernetes.io/part-of: "fusion"
+  template:
+    metadata:
+      name: {{ include "fusion.templating.fullname" .  }}
+      labels:
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+        app.kubernetes.io/component: "templating"
+        app.kubernetes.io/part-of: "fusion"
+      annotations:
+        {{ toYaml .Values.pod.annotations | nindent 8 }}
+    spec:
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- if .Values.affinity }}
+      affinity:
+        {{ tpl (toYaml .Values.affinity) . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: "{{ .Values.rbac.serviceAccountName | default ( include "fusion.templating.fullname" . ) }}"
+      imagePullSecrets:
+{{ toYaml .Values.image.imagePullSecrets | indent 8 }}
+      {{ if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      {{ end }}
+      {{ if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{ end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}
+      {{ if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{ end }}
+      initContainers:
+{{- if $tlsEnabled -}}
+{{ $params := dict "tlsServiceName" ( include "fusion.templating.serviceName" . ) "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils "securityContext" $.Values.securityContext }}
+{{ include "fusion.tls.init-container-v2" $params | indent 8 }}
+{{- end }}
+{{- include "fusion.initContainers.checkZk-v2" . | nindent 8 }}
+{{- include "fusion.initContainers.checkPulsar-v2" . | nindent 8 }}
+      containers:
+      - name: templating
+        image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          privileged: false
+        args:
+          - "--spring.profiles.active={{ include "fusion.templating.springProfs" . }}{{- if $tlsEnabled }},tls{{- end }}{{- if $jsonOutput }},logjson{{- end }}{{- if $logstashHost }},logstash{{- end }}{{- if $logPulsar }},logpulsar{{- end }}"
+          - "--spring.cloud.kubernetes.config.name={{ include "fusion.templating.fullname" . }}"
+          - "--spring.cloud.kubernetes.secrets.paths=/etc/secrets"
+        {{- if .Values.secrets }}
+        envFrom:
+          - secretRef:
+              name: {{ template "fusion.templating.fullname" . }}
+        {{- end }}
+        env:
+          - name: "JAVA_TOOL_OPTIONS"
+            value: "{{ .Values.javaToolOptions }}
+{{- if $tlsEnabled }} -Dlogging.config=classpath:logback-kube-tls.xml {{- else }} -Dlogging.config=classpath:logback-kube.xml {{- end }}
+{{- if $tlsEnabled }} -Djavax.net.ssl.trustStore=/etc/ssl/keystores/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Djavax.net.ssl.trustStoreType=PKCS12 -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/keystores/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/keystores/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}{{- end -}}
+"
+        {{ if $logstashHost }}
+          - name: "LOGSTASH_HOST"
+            value: "{{ $logstashHost }}"
+        {{ end }}
+          - name: "COMPONENT"
+            value: "templating"
+          - name: "PULSAR_TENANT"
+            value: "{{ include "fusion.templating.kubeNamespace" . }}"
+          - name: "PULSAR_SERVICE_URL"
+            value: "{{ include "fusion.templating.pulsarServiceUrl" . }}"
+
+        ports:
+          - containerPort: {{ .Values.port }}
+            name: "jetty"
+        livenessProbe:
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          httpGet:
+            path: /actuator/health
+            port: "jetty"
+{{- if $tlsEnabled }}
+            scheme: HTTPS
+{{- end }}
+        readinessProbe:
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          httpGet:
+            path: /actuator/ready
+            port: "jetty"
+{{- if $tlsEnabled }}
+            scheme: HTTPS
+{{- end }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sleep", "{{ .Values.preStopSleepTime }}"]
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - name: secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+{{- if $tlsEnabled }}
+          - name: "keystore-volume"
+            mountPath: "/etc/ssl/keystores"
+{{- end }}
+        resources:
+          {{ toYaml .Values.resources | nindent 10 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: secrets
+          secret:
+            secretName: service-account-key
+            items:
+              - key: sa
+                path: service-account-key
+{{- if $tlsEnabled }}
+{{ $params := dict "tlsServiceName" ( include "fusion.templating.serviceName" . ) "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils }}
+{{ include "fusion.tls.volumes" $params | indent 8 }}
+{{- end -}}

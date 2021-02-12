@@ -1,0 +1,234 @@
+artifactRepository:
+  archiveLogs: false
+  s3:
+    accessKeySecret:
+      key: accesskey
+    insecure: true
+    secretKeySecret:
+      key: secretkey
+controller:
+  affinity: {}
+  containerRuntimeExecutor: docker
+  image:
+    tag: ""
+  instanceID:
+    enabled: true
+    useReleaseName: true
+  loadBalancerSourceRanges: []
+  logging:
+    globallevel: "0"
+    level: info
+  metricsConfig:
+    enabled: false
+    path: /metrics
+    port: 8080
+  metricsServicePort: 8080
+  metricsServicePortName: metrics
+  name: workflow-controller
+  nodeSelector: {}
+  pdb:
+    enabled: false
+  persistence: {}
+  podAnnotations: {}
+  podLabels: {}
+  replicas: 1
+  resources: {}
+  serviceAccount: argo
+  serviceAccountAnnotations: {}
+  serviceAnnotations: {}
+  serviceLabels: {}
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+  serviceType: ClusterIP
+  telemetryConfig:
+    enabled: false
+    path: /telemetry
+    port: 8081
+  telemetryServicePort: 8081
+  telemetryServicePortName: telemetry
+  tolerations: []
+  workflowDefaults: {}
+  workflowNamespaces:
+  - default
+crdVersion: v1alpha1
+createAggregateRoles: true
+executor:
+  env: {}
+  image:
+    tag: ""
+  resources: {}
+images:
+  controller: workflow-controller
+  executor: argoexec
+  namespace: argoproj
+  pullPolicy: Always
+  server: argocli
+  tag: v2.7.6
+init:
+  serviceAccount: ""
+installCRD: false
+minio:
+  DeploymentUpdate:
+    maxSurge: 100%
+    maxUnavailable: 0
+    type: RollingUpdate
+  StatefulSetUpdate:
+    updateStrategy: RollingUpdate
+  accessKey: AKIAIOSFODNN7EXAMPLE
+  affinity: {}
+  azuregateway:
+    enabled: false
+    replicas: 4
+  b2gateway:
+    enabled: false
+    replicas: 4
+  bucketRoot: ""
+  buckets: []
+  certsPath: /etc/minio/certs/
+  clusterDomain: cluster.local
+  configPathmc: /etc/minio/mc/
+  defaultBucket:
+    enabled: true
+    name: argo-artifacts
+    policy: none
+    purge: false
+  drivesPerNode: 1
+  environment:
+    MINIO_BROWSER: "on"
+  existingSecret: ""
+  extraArgs: []
+  fullnameOverride: ""
+  gcsgateway:
+    enabled: false
+    gcsKeyJson: ""
+    projectId: ""
+    replicas: 4
+  global: {}
+  image:
+    pullPolicy: IfNotPresent
+    repository: minio/minio
+    tag: RELEASE.2020-01-16T22-40-29Z
+  ingress:
+    annotations: {}
+    enabled: false
+    hosts:
+    - chart-example.local
+    labels: {}
+    path: /
+    tls: []
+  install: false
+  livenessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 30
+    successThreshold: 1
+    timeoutSeconds: 1
+  mcImage:
+    pullPolicy: IfNotPresent
+    repository: minio/mc
+    tag: RELEASE.2020-01-13T22-49-03Z
+  metrics:
+    serviceMonitor:
+      additionalLabels: {}
+      enabled: false
+  mode: standalone
+  mountPath: /export
+  nameOverride: ""
+  nasgateway:
+    enabled: false
+    pv: null
+    replicas: 4
+  networkPolicy:
+    allowExternal: true
+    enabled: false
+  nodeSelector: {}
+  ossgateway:
+    enabled: false
+    endpointURL: ""
+    replicas: 4
+  persistence:
+    VolumeName: ""
+    accessMode: ReadWriteOnce
+    enabled: true
+    existingClaim: ""
+    size: 10Gi
+    storageClass: ""
+    subPath: ""
+  podAnnotations: {}
+  podDisruptionBudget:
+    enabled: false
+    maxUnavailable: 1
+  podLabels: {}
+  priorityClassName: ""
+  readinessProbe:
+    failureThreshold: 3
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 1
+  replicas: 4
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  s3gateway:
+    enabled: false
+    replicas: 4
+    serviceEndpoint: ""
+  secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+  securityContext:
+    enabled: false
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsUser: 1000
+  service:
+    annotations: {}
+    clusterIP: null
+    externalIPs: []
+    nodePort: 31311
+    port: 9000
+    type: ClusterIP
+  serviceAccount:
+    create: true
+    name: null
+  tls:
+    certSecret: ""
+    enabled: false
+    privateKey: private.key
+    publicCrt: public.crt
+  tolerations: []
+  zones: 1
+rbac:
+  create: true
+server:
+  affinity: {}
+  baseHref: /
+  clusterWorkflowTemplates:
+    enableEditing: true
+  enabled: true
+  extraArgs: []
+  image:
+    tag: ""
+  ingress:
+    enabled: false
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  name: argo-ui
+  nodeSelector: {}
+  pdb:
+    enabled: false
+  podAnnotations: {}
+  podLabels: {}
+  replicas: 1
+  resources: {}
+  serviceAccount: argo-server
+  serviceAccountAnnotations: {}
+  serviceAnnotations: {}
+  serviceLabels: {}
+  servicePort: 2746
+  serviceType: ClusterIP
+  tolerations: []
+singleNamespace: true
+useDefaultArtifactRepo: false
+useStaticCredentials: true

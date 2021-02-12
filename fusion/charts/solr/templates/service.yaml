@@ -1,0 +1,24 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "{{ include "solr.service-name" . }}"
+  labels:
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    app.kubernetes.io/target-image-tag: "{{ .Values.image.tag }}"
+{{ include "solr.common.labels" . | indent 4 }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4}}
+spec:
+  type: "{{ .Values.service.type }}"
+  ports:
+  - port: {{ .Values.port }}
+    name: "solr-client"
+  selector:
+    app.kubernetes.io/name: "{{ include "solr.name" . }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "server"

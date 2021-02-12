@@ -1,0 +1,23 @@
+# deploy zookeeper only when `components.zookeeper` is true
+{{- if .Values.components.zookeeper }}
+{{- if .Values.zookeeper.pdb.usePolicy }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.zookeeper.component }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.zookeeper.component }}
+  {{- if .Values.zookeeper.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.zookeeper.pdb.maxUnavailable }}
+  {{- else if .Values.zookeeper.pdb.minAvailable }}
+  minAvailable: {{ .Values.zookeeper.pdb.minAvailable }}
+  {{- end }}
+{{- end }}
+{{- end }}

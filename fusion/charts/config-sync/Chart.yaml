@@ -1,0 +1,17 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: A helm chart to install the config-sync component
+keywords:
+- fusion
+- config-sync
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+- email: tim.potter@lucidworks.com
+  name: Timothy Potter
+name: config-sync
+version: 2.0.0

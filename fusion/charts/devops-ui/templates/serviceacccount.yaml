@@ -1,0 +1,52 @@
+{{- if .Values.rbac.create -}}
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ include "fusion.devops-ui.fullname" . }}"
+  labels:
+{{ include "fusion.devops-ui.labels" . | indent 4 }}
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- if $tlsEnabled }}
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: "{{ include "fusion.devops-ui.fullname" . }}"
+  labels:
+{{ include "fusion.devops-ui.labels" . | indent 4 }}
+rules:
+- apiGroups: [ "cert-manager.io" ]
+  resources: [ "certificates" ]
+  verbs: [ "get", "create", "delete" ]
+- apiGroups: [ "" ]
+  resources: [ "secrets" ]
+  verbs: [ "get" ]
+
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: "{{ include "fusion.devops-ui.fullname" . }}"
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "fusion.devops-ui.labels" . | indent 4 }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.devops-ui.fullname" . }}"
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: "{{ include "fusion.devops-ui.fullname" . }}"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end -}}
+
+{{- end }}

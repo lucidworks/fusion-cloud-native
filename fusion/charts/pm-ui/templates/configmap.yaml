@@ -1,0 +1,55 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.pm-ui.fullname" . }}"
+  labels:
+    {{ include "fusion.pm-ui.labels" . | nindent 4 }}
+data:
+  default.conf: |
+    server {
+        gzip on;
+        gzip_types    text/plain application/javascript application/x-javascript text/javascript text/xml text/css;
+        # error_log    /var/log/nginx/error.log debug;
+        # rewrite_log on;
+
+        listen       8080 {{ $tlsEnabled | ternary "ssl" "" }};
+        {{- if $tlsEnabled }}
+        ssl_certificate     /etc/ssl/fusion_certs/tls.crt;
+        ssl_certificate_key /etc/ssl/fusion_certs/tls.key;
+        {{- end }}
+        server_name  localhost;
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+
+        # Uncomment when running locally
+        # location ^~ /api/ {
+        #   proxy_pass http://host.docker.internal:6764/api/;
+        # }
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location =/predictive-merchandiser {
+            root /usr/share/nginx/html/predictive-merchandiser/;
+            try_files /index.html /predictive-merchandiser/index.html;
+        }
+
+        location /predictive-merchandiser/ {
+            location ~* p\-.*\.(js)$ {
+              expires 365d;
+              add_header Cache-Control "public";
+            }
+            alias   /usr/share/nginx/html/predictive-merchandiser/;
+            try_files $uri $uri/ /predictive-merchandiser/index.html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }

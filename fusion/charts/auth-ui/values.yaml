@@ -1,0 +1,74 @@
+affinity: {}
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: auth-ui
+  repository: lucidworks
+  tag: latest
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+logLevelRoot: info
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+rbac:
+  create: true
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  http:
+    annotations: {}
+    port: 8080
+    targetPort: 8080
+    type: ClusterIP
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: false
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h

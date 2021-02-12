@@ -1,0 +1,19 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: Lucidworks Fusion Connectors Backend Service
+keywords:
+- fusion
+- connectors
+- rpc
+- v2
+maintainers:
+- email: matt.mitchell@lucidworks.com
+  name: Matt Mitchell
+- email: puneet.khanal@lucidworks.com
+  name: Puneet Khanal
+name: connectors-backend
+version: 2.0.2

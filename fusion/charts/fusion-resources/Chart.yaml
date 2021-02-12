@@ -1,0 +1,15 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: A helm chart to install the shared resources for fusion
+keywords:
+- fusion
+- fusion-resources
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: fusion-resources
+version: 1.3.6

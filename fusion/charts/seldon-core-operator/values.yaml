@@ -1,0 +1,118 @@
+ambassador:
+  enabled: true
+  singleNamespace: true
+certManager:
+  enabled: false
+controllerId: ""
+crd:
+  create: false
+credentials:
+  gcs:
+    gcsCredentialFileName: gcloud-application-credentials.json
+  s3:
+    s3AccessKeyIDName: awsAccessKeyID
+    s3SecretAccessKeyName: awsSecretAccessKey
+defaultUserID: ""
+engine:
+  grpc:
+    port: 5001
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: seldonio/engine
+    tag: 1.1.0
+  logMessagesExternally: false
+  port: 8000
+  prometheus:
+    path: /prometheus
+  serviceAccount:
+    name: default
+  user: 8888
+executor:
+  enabled: true
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: seldonio/seldon-core-executor
+    tag: 1.1.0
+  metricsPortName: metrics
+  port: 8000
+  prometheus:
+    path: /prometheus
+  requestLogger:
+    defaultEndpoint: http://default-broker
+  serviceAccount:
+    name: default
+  user: 8888
+explainer:
+  image: seldonio/alibiexplainer:1.1.0
+image:
+  imagePullSecrets: []
+  pullPolicy: IfNotPresent
+  registry: docker.io
+  repository: seldonio/seldon-core-operator
+  tag: 1.1.0
+istio:
+  enabled: false
+  gateway: istio-system/seldon-gateway
+  tlsMode: ""
+kubeflow: false
+manager:
+  cpuLimit: 500m
+  cpuRequest: 100m
+  memoryLimit: 300Mi
+  memoryRequest: 200Mi
+managerCreateResources: false
+predictiveUnit:
+  defaultEnvSecretRefName: ""
+  metricsPortName: metrics
+  port: 9000
+predictor_servers:
+  MLFLOW_SERVER:
+    grpc:
+      defaultImageVersion: 1.1.0
+      image: seldonio/mlflowserver_grpc
+    rest:
+      defaultImageVersion: 1.1.0
+      image: seldonio/mlflowserver_rest
+  SKLEARN_SERVER:
+    grpc:
+      defaultImageVersion: 1.1.0
+      image: seldonio/sklearnserver_grpc
+    rest:
+      defaultImageVersion: 1.1.0
+      image: seldonio/sklearnserver_rest
+  TENSORFLOW_SERVER:
+    grpc:
+      defaultImageVersion: 1.1.0
+      image: seldonio/tfserving-proxy_grpc
+    rest:
+      defaultImageVersion: 1.1.0
+      image: seldonio/tfserving-proxy_rest
+    tensorflow: true
+    tfImage: tensorflow/serving:2.1.0
+  XGBOOST_SERVER:
+    grpc:
+      defaultImageVersion: 1.1.0
+      image: seldonio/xgboostserver_grpc
+    rest:
+      defaultImageVersion: 1.1.0
+      image: seldonio/xgboostserver_rest
+rbac:
+  configmap:
+    create: true
+  create: true
+serviceAccount:
+  create: true
+  name: seldon-manager
+singleNamespace: true
+storageInitializer:
+  cpuLimit: "1"
+  cpuRequest: 100m
+  image: gcr.io/kfserving/storage-initializer:v0.4.0
+  memoryLimit: 1Gi
+  memoryRequest: 100Mi
+usageMetrics:
+  enabled: false
+webhook:
+  port: 443

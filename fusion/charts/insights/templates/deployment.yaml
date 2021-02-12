@@ -1,0 +1,89 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fusion.insights.fullname" .  }}
+  labels:
+{{ include "fusion.insights.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+{{- if .Values.deploymentStrategy }}
+  strategy:
+    {{ toYaml .Values.deploymentStrategy | nindent 4 }}
+{{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "insights"
+      app.kubernetes.io/part-of: "fusion"
+  template:
+    metadata:
+      name: {{ include "fusion.insights.fullname" .  }}
+      labels:
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+        app.kubernetes.io/component: "insights"
+        app.kubernetes.io/part-of: "fusion"
+    spec:
+      imagePullSecrets:
+        {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.affinity }}
+      affinity:
+{{ tpl (toYaml .Values.affinity) . | indent 8 }}
+{{- end }}
+      volumes:
+        - name: "workdir"
+          emptyDir: {}
+      containers:
+        - name: insights
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+          {{- if .Values.secrets }}
+          envFrom:
+            - secretRef:
+                name: {{ template "fusion.insights.fullname" . }}
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.port }}
+              name: "tomcat"
+          # livenessProbe:
+          #   initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          #   periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          #   httpGet:
+          #     path: /status.jsp
+          #     port: tomcat
+          # readinessProbe:
+          #   initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          #   periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          #   httpGet:
+          #     path: /status.jsp
+          #     port: tomcat
+          resources:
+            {{ toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: workdir
+              mountPath: "/work"

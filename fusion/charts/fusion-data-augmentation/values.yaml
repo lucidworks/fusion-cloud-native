@@ -1,0 +1,22 @@
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets:
+  - name: artifactory
+  repository: fusion-dev-docker.ci-artifactory.lucidworks.com
+  tag: latest
+loguruLogLevel: INFO
+nodeSelector:
+  augment: null
+  default: {}
+  etl: null
+resources:
+  augment: null
+  default: {}
+  etl: null
+tls:
+  enabled: false
+  keystorePassword: changeit
+tolerations:
+  augment: null
+  default: []
+  etl: null

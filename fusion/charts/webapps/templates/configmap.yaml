@@ -1,0 +1,45 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.webapps.fullname" . }}"
+  labels:
+    {{ include "fusion.webapps.labels" . | nindent 4}}
+data:
+  application.yaml: |
+    logging:
+      level:
+        root: {{ .Values.logLevelRoot }}
+        org:
+            springframework:
+                cloud:
+                    client:
+                        discovery: TRACE
+    ribbon:
+      zookeeper:
+        enabled: false
+    spring:
+      cloud:
+        kubernetes:
+          enabled: true
+          ribbon:
+            enabled: true
+        zookeeper:
+          connect-string: "{{ template "fusion.zkConnectionString" . }}"
+          discovery:
+            enabled: false
+{{- if $tlsEnabled }}
+    server:
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/ssl/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/ssl/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}
+      sleuth:
+        enabled: false
+      zipkin:
+        enabled: false

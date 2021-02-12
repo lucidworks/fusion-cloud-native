@@ -1,0 +1,87 @@
+{{- if .Values.prune.enabled -}}
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: "{{ include "fusion.solr-backup-runner.fullname" . }}-prune"
+spec:
+  schedule: "{{ .Values.prune.schedule }}"
+  concurrencyPolicy: "{{ .Values.prune.concurrencyPolicy }}"
+  failedJobsHistoryLimit: {{ .Values.prune.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.prune.successfulJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.prune.backoffLimit }}
+      {{- if .Values.prune.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ .Values.prune.activeDeadlineSeconds }}
+      {{- end }}
+      template:
+        metadata:
+          {{- if .Values.prune.podAnnotations }}
+            {{ toYaml .Values.prune.podAnnotations | nindent 12 }}
+          {{- end }}
+          labels:
+            app.kubernetes.io/name: "{{ include "fusion.solr-backup-runner.fullname" . }}-prune"
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+            app.kubernetes.io/component: "solr-backup-runner"
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            fsGroup: {{ .Values.prune.fsGroup }}
+            runAsUser: {{ .Values.prune.runAsUser }}
+          volumes:
+            - name: solr-backups
+              persistentVolumeClaim:
+                claimName: {{ required "The variable .Values.sharedPersistentVolumeName must be specifed for the solr-backup-runner" .Values.sharedPersistentVolumeName }}
+            - name: policy-json
+              configMap:
+                name: "{{ include "fusion.solr-backup-runner.fullname" . }}-policies"
+
+        {{- if .Values.prune.nodeSelector }}
+          nodeSelector:
+            {{ toYaml .Values.prune.nodeSelector | nindent 8 }}
+        {{- end }}
+        {{- if .Values.prune.affinity }}
+          affinity:
+            {{ tpl (toYaml .Values.prune.affinity) . | nindent 8 }}
+        {{- end }}
+          imagePullSecrets:
+{{ toYaml .Values.image.imagePullSecrets | nindent 12 }}
+          {{- if .Values.prune.priorityClassName }}
+          priorityClassName: "{{ .Values.prune.priorityClassName }}"
+          {{- end }}
+          {{- if .Values.prune.tolerations }}
+          tolerations: {{ .Values.prune.tolerations | toYaml | nindent 8 }}
+          {{- end }}
+          {{- if .Values.prune.schedulerName }}
+          schedulerName: {{ .Values.prune.schedulerName | quote }}
+          {{- end }}
+          {{- if .Values.prune.terminationGracePeriodSeconds }}
+          terminationGracePeriodSeconds: {{ .Values.prune.terminationGracePeriodSeconds }}
+          {{- end }}
+          restartPolicy: "{{ .Values.prune.restartPolicy }}"
+          containers:
+            - name: "solr-prune"
+              image: "{{ .Values.image.repository }}/{{.Values.image.name }}:{{ .Values.image.tag }}"
+              args:
+                - "prune"
+              resources: {{ toYaml .Values.backup.resources | nindent 16}}
+              env:
+                - name: "SOLRURL"
+                  value: "{{ include "fusion.solr-backup-runner.solrurl" . }}"
+                - name: "LOCALBACKUPDIRECTORY"
+                  value: "{{ .Values.localBackupDirectory }}"
+                - name: "SOLRBACKUPDIRECTORY"
+                  value: "{{ .Values.solrBackupDirectory }}"
+                - name: "CONFIGFILE"
+                  value: /etc/solrbackuprunner/policies.json
+                - name: "EXECUTORS"
+                  value: "{{ $.Values.prune.executorCount }}"
+              volumeMounts:
+                - name: solr-backups
+                  mountPath: "/mnt/solr-backups"
+                - name: policy-json
+                  mountPath: "/etc/solrbackuprunner"
+
+{{- end -}}

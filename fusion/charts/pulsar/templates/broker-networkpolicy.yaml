@@ -1,0 +1,134 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.broker.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.broker.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+{{ $components:= list "query-pipeline" "fusion-indexing" "fusion-features" "fusion-log-forwarder" "api-gateway" "connectors-classic" "connectors-backend" "connectors" "fusion-admin" "insights" "job-launcher" "job-rest-server" "ml-model-service" "sql-service" "templating" "webapps" "connector-plugin" "config-sync" }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ template "pulsar.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ .Values.broker.component }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+{{- range $component := $components }}
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "{{ $component }}"
+{{- end }}
+      - podSelector:
+          matchLabels:
+            app: pulsar
+            component: {{ .Values.bookkeeper.component }}
+            release: {{ .Release.Name }}
+      - podSelector:
+          matchLabels:
+            app: pulsar
+            component: {{ .Values.broker.component }}
+            release: {{ .Release.Name }}
+      - podSelector:
+          matchLabels:
+            app: pulsar
+            component: {{ .Values.proxy.component }}
+            release: {{ .Release.Name }}
+      - podSelector:
+          matchLabels:
+            spark-role: driver
+      - podSelector:
+          matchLabels:
+            spark-role: executor
+      ports:
+      - protocol: TCP
+        port: {{ .Values.broker.ports.http }}
+      - protocol: TCP
+        port: {{ .Values.broker.ports.pulsar }}
+      - protocol: TCP
+        port: {{ .Values.broker.ports.https }}
+      - protocol: TCP
+        port: {{ .Values.broker.ports.pulsarssl }}
+
+{{ if .Values.broker.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.broker.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.broker.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.broker.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - to:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.broker.component }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.broker.ports.http }}
+        - protocol: TCP
+          port: {{ .Values.broker.ports.pulsar }}
+        - protocol: TCP
+          port: {{ .Values.broker.ports.https }}
+        - protocol: TCP
+          port: {{ .Values.broker.ports.pulsarssl }}
+    - to:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.proxy.component }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.proxy.ports.http }}
+        - protocol: TCP
+          port: {{ .Values.proxy.ports.pulsar }}
+        - protocol: TCP
+          port: {{ .Values.proxy.ports.https }}
+        - protocol: TCP
+          port: {{ .Values.proxy.ports.pulsarssl }}
+    - to:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.bookkeeper.component }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.bookkeeper.ports.http }}
+        - protocol: TCP
+          port: {{ .Values.bookkeeper.ports.bookie }}
+{{ if .Values.broker.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.broker.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

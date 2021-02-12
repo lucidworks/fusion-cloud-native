@@ -1,0 +1,104 @@
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+fusion-common-utils:
+  global: {}
+image:
+  imagePullSecrets: []
+  name: fusion-api
+  pullPolicy: IfNotPresent
+  repository: lucidworks
+  tag: latest
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  enabled: false
+  host: ingress.example.com
+  tls:
+    enabled: false
+jvmOptions: -XX:+ExitOnOutOfMemoryError -Xms1g -Xmx2g -Xss256k -Dhttp.maxConnections=1000
+  -XX:PermSize=256m -XX:MaxPermSize=512m
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 3
+name: admin
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+podDisruptionBudget:
+  maxUnavailable: 1
+preStopSleepTime: 15
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+rbac:
+  create: true
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 3
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  annotation: {}
+  externalPort: 8765
+  internalPort: 8765
+  name: http
+  type: ClusterIP
+solrAutoscalingPolicyJson:
+  set-cluster-policy:
+  - node: '#ANY'
+    replica: <2
+    shard: '#EACH'
+    strict: false
+  - replica: '#EQUAL'
+    strict: false
+    sysprop.solr_zone: '#EACH'
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

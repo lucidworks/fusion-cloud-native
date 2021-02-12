@@ -1,0 +1,25 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "fusion.connectors.serviceName" . }}
+  labels:
+    app.kubernetes.io/target-image-tag: "{{ .Values.image.tag }}"
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+{{ include "fusion.connectors.labels" . | indent 4 }}
+  annotations:
+{{ toYaml .Values.annotations | indent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "{{ .Values.component }}"
+    app.kubernetes.io/part-of: "fusion"
+  ports:
+    - protocol: TCP
+      port: {{ .Values.port.external }}
+      targetPort: {{ .Values.port.internal }}
+  type: ClusterIP

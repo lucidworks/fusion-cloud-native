@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: "5.4"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: A Helm chart to install the Spring-based fusion-features service
+name: fusion-features
+version: 0.0.1

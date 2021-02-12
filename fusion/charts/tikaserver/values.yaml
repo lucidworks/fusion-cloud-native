@@ -1,0 +1,56 @@
+affinity: {}
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: tika
+  repository: apache
+  tag: 1.25-full
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 2
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 9998
+preStopSleepTime: 10
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 15
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 2
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+serverStopTimeout: 5000
+service:
+  annotations: {}
+  port: 9998
+  targetPort: 9998
+  type: ClusterIP

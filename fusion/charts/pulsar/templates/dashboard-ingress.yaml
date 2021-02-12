@@ -1,0 +1,36 @@
+{{- if .Values.extra.dashboard }}
+{{- if .Values.dashboard.ingress.enabled }}
+apiVersion: extensions/v1beta1                                                                                                                                                            
+kind: Ingress                                                                                                                                                                             
+metadata:                                                                                                                                                                                 
+  labels:                                                                                                                                                                                 
+    app: {{ template "pulsar.name" . }}
+    chart: {{ template "pulsar.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    cluster: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
+  annotations:                                                                                                                                                                            
+{{- with .Values.dashboard.ingress.annotations }}
+{{ toYaml . | indent 4 }}
+{{- end }}
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+spec:                                                                                                                                                                                     
+{{- if .Values.dashboard.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.dashboard.ingress.hostname }}
+      {{- with .Values.dashboard.ingress.tls.secretName }}
+      secretName: {{ . }}
+      {{- end }}
+{{- end }}
+  rules:
+    - host: {{ required "Dashboard ingress hostname not provided" .Values.dashboard.ingress.hostname }}
+      http:
+        paths:
+          - path: {{ .Values.dashboard.ingress.path }}
+            backend:
+              serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
+              servicePort: {{ .Values.dashboard.ingress.port }}
+{{- end }}
+{{- end }}

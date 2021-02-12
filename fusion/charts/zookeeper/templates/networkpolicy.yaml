@@ -1,0 +1,106 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+{{ $components:= list "api-gateway" "fusion-admin" "query-pipeline" "fusion-indexing" "fusion-features" "admin-ui" "devops-ui" "rules-ui" "auth-ui" "job-launcher" "job-rest-server" "ml-model-service" "sql-service" "connectors-classic" "connectors-backend" "connectors" "webapps" "templating" "connector-plugin" "config-sync"}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ template "zookeeper.fullname" . }}
+spec:
+  podSelector:
+    matchLabels:
+      app: "zookeeper"
+      release: "{{ .Release.Name }}"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+{{- range $component := $components }}
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "{{ $component }}"
+{{- end }}
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "ml-service-workflow"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "fusion-jupyter"
+      - podSelector:
+          matchLabels:
+            app: "pulsar"
+      - podSelector:
+          matchLabels:
+            app: "logstash"
+      - podSelector:
+          matchLabels:
+            spark-role: driver
+      - podSelector:
+          matchLabels:
+            spark-role: executor
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - from:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 3888
+      - protocol: TCP
+        port: 2888
+{{ if .Values.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+      - protocol: TCP
+        port: 3888
+      - protocol: TCP
+        port: 2888
+{{ if .Values.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

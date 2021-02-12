@@ -1,0 +1,354 @@
+{{- if .Values.components.broker }}
+{{- $tlsEnabled := .Values.bookkeeper.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.broker.component }}
+spec:
+  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  replicas: {{ .Values.broker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.broker.component }}
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.broker.component }}
+      annotations:
+{{- with .Values.broker.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+      securityContext:
+{{- if .Values.bookkeeper.securityContext.runAsUser }}
+        runAsUser: {{ .Values.bookkeeper.securityContext.runAsUser }}
+{{- end }}
+{{- if .Values.bookkeeper.securityContext.fsGroup }}
+        fsGroup: {{ .Values.bookkeeper.securityContext.fsGroup }}
+{{- end }}
+      imagePullSecrets:
+        - name: "artifactory"
+        - name: "artifactory-stable"
+      serviceAccountName: "{{ .Values.broker.serviceAccountName | default ( printf "%s-%s-acct" (include "pulsar.fullname" .) ( .Values.broker.component )) }}"
+    {{- if .Values.broker.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.broker.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.broker.tolerations }}
+      tolerations:
+{{ toYaml .Values.broker.tolerations | indent 8 }}
+    {{- end }}
+      affinity:
+{{ tpl (toYaml .Values.broker.affinity) .  | indent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.broker.gracePeriod }}
+      imagePullSecrets:
+        {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
+      initContainers:
+{{- if $tlsEnabled -}}
+{{ $params := dict "Release" .Release "global" .Values.global "tls" .Values.broker.tls "tlsServiceName" (printf "%s-%s" ( include "pulsar.fullname" . ) .Values.broker.component ) "keytoolUtils" .Values.keytoolUtils "securityContext" .Values.broker.securityContext  }}
+{{ include "fusion.tls.init-container-v2" $params | indent 6 }}
+{{- end }}
+      # This initContainer will wait for bookkeeper initnewcluster to complete
+      # before initializing pulsar metadata
+      - name: pulsar-bookkeeper-verify-clusterid
+        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.broker.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        - >
+          cp conf/bookkeeper.conf "${PULSAR_BOOKKEEPER_CONF}";
+          bin/apply-config-from-env.py "${PULSAR_BOOKKEEPER_CONF}";
+          {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 10 }}
+          until bin/bookkeeper shell whatisinstanceid; do
+            sleep 3;
+          done;
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        env:
+          - name: "PULSAR_BOOKKEEPER_CONF"
+            value: "/tmp/bookeeper.conf"
+          - name: "BOOKIE_CONF"
+            value: "/tmp/bookeeper.conf"
+{{ if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+        volumeMounts:
+        - name: "writable-volume"
+          mountPath: "/tmp"
+{{ if $tlsEnabled }}
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+{{- end }}
+      - name: initialize-cluster-metadata
+        image: "{{ .Values.pulsar_metadata.image.repository }}:{{ .Values.pulsar_metadata.image.tag }}"
+        imagePullPolicy: {{ .Values.pulsar_metadata.image.pullPolicy }}
+        resources: {{ toYaml .Values.broker.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - >
+            {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+            bin/pulsar initialize-cluster-metadata \
+              --cluster {{ .Values.clusterName }} \
+              --zookeeper {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
+              {{- if .Values.pulsar_metadata.configurationStore }}
+              --configuration-store {{ .Values.pulsar_metadata.configurationStore }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }} \
+              {{- end }}
+              {{- if not .Values.pulsar_metadata.configurationStore }}
+              --configuration-store {{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }} \
+              {{- end }}
+              --web-service-url http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.cluster.local:8080/ \
+              --web-service-url-tls https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.cluster.local:8443/ \
+              --broker-service-url pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.cluster.local:6650/ \
+              --broker-service-url-tls pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}.{{ template "pulsar.namespace" . }}.svc.cluster.local:6651/ || true {{ if $tlsEnabled }}&
+            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/partitioned-topics/pulsar/system/persistent/transaction_coordinator_assign; do
+              echo "pulsar cluster {{ .Values.clusterName }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
+            done;
+            {{- end }}
+{{/*
+ Above the command on 2.5.2 hangs indefinitely if TLS is enabled, so if we do enable TLS then we send the command to the background
+ and wait until it has created the last node that it creates by polling zookeeper and then exit.
+*/}}
+{{ if $tlsEnabled }}
+        env:
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+        volumeMounts:
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+{{- end }}
+      # This init container will wait for zookeeper to be ready before
+      # deploying the bookies
+      - name: wait-zookeeper-ready
+        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        resources: {{ toYaml .Values.broker.initContainer.resources | nindent 10 }}
+        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        command: ["sh", "-c"]
+        args:
+          - >-
+            {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
+            {{- if .Values.pulsar_metadata.configurationStore }}
+            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ .Values.pulsar_metadata.configurationStore}} get {{ .Values.configurationStoreMetadataPrefix }}/admin/clusters/{{ template "pulsar.fullname" . }}; do
+            {{- end }}
+            {{- if not .Values.pulsar_metadata.configurationStore }}
+            until bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} get {{ .Values.metadataPrefix }}/admin/clusters/{{ .Values.clusterName }}; do
+            {{- end }}
+              echo "pulsar cluster {{ .Values.clusterName }} isn't initialized yet ... check in 3 seconds ..." && sleep 3;
+            done;
+{{ if $tlsEnabled }}
+        env:
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+        volumeMounts:
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+{{- end }}
+      # This init container will wait for bookkeeper to be ready before
+      # deploying the broker
+      - name: wait-bookkeeper-ready
+        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        resources: {{ toYaml .Values.broker.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+          - >
+            {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 12 }}
+            bin/apply-config-from-env.py conf/bookkeeper.conf;
+            until bin/bookkeeper shell whatisinstanceid; do
+              echo "bookkeeper cluster is not initialized yet. backoff for 3 seconds ...";
+              sleep 3;
+            done;
+            echo "bookkeeper cluster is already initialized";
+            bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }} | grep Name | wc -l)";
+            until [ ${bookieServiceNumber} -ge {{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }} ]; do
+              echo "bookkeeper cluster {{ template "pulsar.fullname" . }} isn't ready yet ... check in 10 seconds ...";
+              sleep 10;
+              bookieServiceNumber="$(nslookup -timeout=10 {{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }} | grep Name | wc -l)";
+            done;
+            echo "bookkeeper cluster is ready";
+        envFrom:
+          - configMapRef:
+              name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        env:
+          - name: "PULSAR_BOOKKEEPER_CONF"
+            value: "/tmp/bookeeper.conf"
+          - name: "BOOKIE_CONF"
+            value: "/tmp/bookeeper.conf"
+{{ if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+        volumeMounts:
+        - name: "writable-volume"
+          mountPath: "/tmp"
+{{- if $tlsEnabled }}
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.broker.certs.volumeMounts" . | nindent 8 }}
+{{- end }}
+      containers:
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+        image: "{{ .Values.images.broker.repository }}:{{ .Values.images.broker.tag }}"
+        imagePullPolicy: {{ .Values.images.broker.pullPolicy }}
+        {{- if .Values.broker.probe.liveness.enabled }}
+        livenessProbe:
+          initialDelaySeconds: {{ .Values.broker.probe.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.broker.probe.liveness.periodSeconds }}
+          failureThreshold: {{ .Values.broker.probe.liveness.failureThreshold }}
+          timeoutSeconds: {{ .Values.broker.probe.liveness.timeoutSeconds }}
+          exec:
+            command:
+              - sh
+              - -c
+              - |
+                #!/usr/bin/env bash -e
+                STATUS_CODE=$(curl --write-out %{http_code} --silent --output /dev/null {{ template "pulsar.broker.probe.liveness.url" . }})
+                if [ $STATUS_CODE -lt 400 ] || [ $STATUS_CODE -eq 404 ]; then
+                  exit 0;
+                else
+                  exit 1;
+                fi
+        {{- end }}
+        {{- if .Values.broker.probe.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /status.html
+            port: {{ .Values.broker.ports.http }}
+          initialDelaySeconds: {{ .Values.broker.probe.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.broker.probe.readiness.periodSeconds }}
+          failureThreshold: {{ .Values.broker.probe.readiness.failureThreshold }}
+          timeoutSeconds: {{ .Values.broker.probe.readiness.timeoutSeconds }}
+        {{- end }}
+        {{- if .Values.broker.probe.startup.enabled }}
+        startupProbe:
+          httpGet:
+            path: /status.html
+            port: {{ .Values.broker.ports.http }}
+          initialDelaySeconds: {{ .Values.broker.probe.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.broker.probe.startup.periodSeconds }}
+          failureThreshold: {{ .Values.broker.probe.startup.failureThreshold }}
+          timeoutSeconds: {{ .Values.broker.probe.startup.timeoutSeconds }}
+        {{- end }}
+      {{- if .Values.broker.resources }}
+        resources:
+{{ toYaml .Values.broker.resources | indent 10 }}
+      {{- end }}
+        command: ["sh", "-c"]
+        args:
+        - >
+          cp conf/broker.conf "${PULSAR_BROKER_CONF}";
+          bin/apply-config-from-env.py "${PULSAR_BROKER_CONF}";
+          cp conf/functions_worker.yml "${PULSAR_WORKER_CONF}";
+          bin/gen-yml-from-env.py "${PULSAR_WORKER_CONF}";
+          echo "OK" > /tmp/status;
+          {{- include "pulsar.broker.zookeeper.tls.settings" . | nindent 10 }}
+          bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+          while [ $? -eq 0 ]; do
+            echo "broker {{ template "pulsar.broker.hostname" . }} znode still exists ... check in 10 seconds ...";
+            sleep 10;
+            bin/pulsar zookeeper-shell -server {{ template "pulsar.zookeeper.connect" . }} get {{ template "pulsar.broker.znode" . }};
+          done;
+          cat conf/pulsar_env.sh;
+          bin/pulsar broker;
+        ports:
+        # prometheus needs to access /metrics endpoint
+        - name: http
+          containerPort: {{ .Values.broker.ports.http }}
+        - name: pulsar
+          containerPort: {{ .Values.broker.ports.pulsar }}
+        {{- if $tlsEnabled }}
+        - name: https
+          containerPort: {{ .Values.broker.ports.https }}
+        - name: pulsarssl
+          containerPort: {{ .Values.broker.ports.pulsarssl }}
+        {{- end }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+        env:
+          - name: "PULSAR_BROKER_CONF"
+            value: "/tmp/broker.conf"
+          - name: "PULSAR_WORKER_CONF"
+            value: "/tmp/functions_worker.yml"
+{{ if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+        volumeMounts:
+          - name: log4j-config
+            mountPath: "/pulsar/conf/log4j2.yaml"
+            subPath: "log4j2.yaml"
+          - name: "writable-volume"
+            mountPath: "/tmp"
+          {{- if .Values.auth.authentication.enabled }}
+          {{- if eq .Values.auth.authentication.provider "jwt" }}
+          - mountPath: "/pulsar/keys"
+            name: token-keys
+            readOnly: true
+          - mountPath: "/pulsar/tokens"
+            name: broker-token
+            readOnly: true
+          {{- end }}
+          {{- end }}
+          {{- if $tlsEnabled }}
+{{- include "pulsar.broker.certs.volumeMounts" . | nindent 10 }}
+          - name: "keystore-volume"
+            mountPath: "/etc/ssl/keystores"
+          {{- end }}
+      volumes:
+      - name: "writable-volume"
+        emptyDir: {}
+      {{- if .Values.auth.authentication.enabled }}
+      {{- if eq .Values.auth.authentication.provider "jwt" }}
+      - name: token-keys
+        secret:
+          {{- if not .Values.auth.authentication.jwt.usingSecretKey }}
+          secretName: "{{ .Release.Name }}-token-asymmetric-key"
+          {{- end}}
+          {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+          secretName: {{ .Values.auth.authentication.jwt.secretKeyName }}
+          {{- end}}
+          items:
+            {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+            - key: {{ .Values.auth.authentication.jwt.secretKey }}
+              path: token/secret.key
+            {{- else }}
+            - key: PUBLICKEY
+              path: token/public.key
+            {{- end}}
+      - name: broker-token
+        secret:
+          secretName: "{{ .Release.Name }}-token-{{ .Values.auth.superUsers.broker }}"
+          items:
+            - key: TOKEN
+              path: broker/token
+      {{- end}}
+      {{- end}}
+      - name: log4j-config
+        configMap:
+          name: "{{ template "pulsar.fullname" . }}-log4j-config"
+{{- if $tlsEnabled }}
+{{ $params := dict "Release" .Release "global" .Values.global "tls" .Values.broker.tls "tlsServiceName" (printf "%s-%s" ( include "pulsar.fullname" . ) .Values.broker.component ) "keytoolUtils" .Values.keytoolUtils }}
+{{ include "fusion.tls.volumes" $params | indent 6 }}
+{{- end }}
+{{- include "pulsar.broker.certs.volumes" . | nindent 6 }}
+{{- end }}

@@ -1,0 +1,139 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- $jsonOutput := ( eq (include "fusion.loggingJSONOutput" .) "true" ) }}
+{{- $logstashHost := (include "fusion.logstashHost" .) -}}
+{{- $logPulsar := ( eq (include "fusion.loggingDisablePulsar" .) "false" ) -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fusion.sql-service.catalog-reader.fullname" .  }}
+  labels:
+    {{ include "fusion.sql-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  {{- if .Values.deploymentStrategy }}
+  strategy:
+    {{ toYaml .Values.deploymentStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "sql-service"
+      app.kubernetes.io/component-role: "reader"
+      app.kubernetes.io/part-of: "fusion"
+  template:
+    metadata:
+      name: {{ include "fusion.sql-service.catalog-reader.fullname" .  }}
+      labels:
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+        app.kubernetes.io/component: "sql-service"
+        app.kubernetes.io/component-role: "reader"
+        app.kubernetes.io/part-of: "fusion"
+    spec:
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: "workdir"
+          emptyDir: {}
+{{- if $tlsEnabled }}
+{{ $params := dict "tlsServiceName" "sql-service" "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils }}
+{{ include "fusion.tls.volumes" $params | indent 8 }}
+{{- end }}
+      serviceAccountName: "{{ .Values.rbac.serviceAccountName | default ( include "fusion.sql-service.fullname" . ) }}"
+      initContainers:
+{{- if $tlsEnabled -}}
+{{ $params := dict "tlsServiceName" "sql-service" "Release" $.Release "global" $.Values.global "tls" $.Values.tls  "keytoolUtils" $.Values.keytoolUtils "securityContext" $.Values.securityContext }}
+{{ include "fusion.tls.init-container-v2" $params | indent 8 }}
+{{- end }}
+{{- include "fusion.initContainers.checkZk-v2" . | nindent 8 }}
+{{- include "fusion.initContainers.checkPulsar-v2" . | nindent 8 }}
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 8 }}
+    {{- end }}
+    {{- if .Values.affinity }}
+      affinity:
+        {{ tpl (toYaml .Values.affinity) . | nindent 8 }}
+    {{- end }}
+      imagePullSecrets:
+{{ toYaml .Values.image.imagePullSecrets | indent 8 }}
+      {{ if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+      {{ end }}
+      {{ if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{ end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}
+      {{ if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{ end }}
+      containers:
+      - name: sql-service
+        image: "{{ .Values.image.repository }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          privileged: false
+        env:
+          - name: "SQL_JVM_OPTIONS"
+            value: "{{ .Values.jvmOptions }}
+{{- if $tlsEnabled }} -Dlogging.config=classpath:logback-spring-tls.xml {{- else }} -Dlogging.config=classpath:logback-spring.xml {{- end }}
+{{- if $tlsEnabled }} -Djavax.net.ssl.trustStore=/etc/ssl/keystores/truststore.jks -Djavax.net.ssl.trustStorePassword={{ .Values.tls.keystorePassword }} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=/etc/ssl/keystores/keystore.jks -Dzookeeper.ssl.trustStore.location=/etc/ssl/keystores/truststore.jks -Dzookeeper.ssl.keyStore.password={{ .Values.tls.keystorePassword }} -Dzookeeper.ssl.trustStore.password={{ .Values.tls.keystorePassword }}{{- end -}}
+"
+          {{ if $logstashHost }}
+          - name: LOGSTASH_HOST
+            value: "{{ $logstashHost }}"
+          {{ end }}
+          - name: "PULSAR_TENANT"
+            value: "{{ include "fusion.sql-service.kubeNamespace" . }}"
+          - name: "PULSAR_SERVICE_URL"
+            value: "{{ include "fusion.sql-service.pulsarServiceUrl" . }}"
+        args:
+          - "--spring.profiles.active=kubernetes,basic{{- if $tlsEnabled }},tls{{- end }}{{- if $jsonOutput }},logjson{{- end }}{{- if $logstashHost }},logstash{{- end }}{{- if $logPulsar }},logpulsar{{- end }}"
+          - "--spring.cloud.kubernetes.config.name={{ include "fusion.sql-service.fullname" . }}"
+          - "--spring.cloud.zookeeper.connect-string={{ include "fusion.zkConnectionString" . }}"
+          - "--fusion.sql.zkServiceId={{ template "fusion.sql-service.zkServiceId" . }}"
+          - "--fusion.sql.catalogManager=false"
+        ports:
+          - containerPort: {{ .Values.port }}
+            name: "jetty"
+        livenessProbe:
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          httpGet:
+            path: /actuator/health
+            port: jetty
+{{- if $tlsEnabled }}
+            scheme: HTTPS
+{{- end }}
+        readinessProbe:
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          httpGet:
+            path: /actuator/health
+            port: jetty
+{{- if $tlsEnabled }}
+            scheme: HTTPS
+{{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+          - mountPath: /work
+            name: workdir
+{{ if $tlsEnabled }}
+          - name: "keystore-volume"
+            mountPath: "/etc/ssl/keystores"
+{{ end }}

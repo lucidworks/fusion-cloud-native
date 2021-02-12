@@ -1,0 +1,96 @@
+affinity: {}
+config:
+  springSecurity: ""
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: sql-service
+  repository: lucidworks
+  tag: latest
+jvmOptions: -XX:+ExitOnOutOfMemoryError -XX:+UseG1GC -XX:+PrintGC -Xloggc:/work/sql-gc-%t.log
+  -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=5 -XX:GCLogFileSize=2M -Xms4g -Xmx4g
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  initialDelaySeconds: 420
+  periodSeconds: 10
+  timeoutSeconds: 10
+logLevelRoot: info
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 8085
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+rbac:
+  create: true
+readinessProbe:
+  initialDelaySeconds: 25
+  periodSeconds: 5
+  timeoutSeconds: 10
+replicaCount: 1
+resources:
+  limits:
+    cpu: 2
+    memory: 12Gi
+  requests:
+    cpu: 500m
+    memory: 8Gi
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  http:
+    annotations: {}
+    port: 8085
+    targetPort: 8085
+    type: ClusterIP
+  thrift:
+    annotations: {}
+    port: 8088
+    targetPort: 8088
+    type: LoadBalancer
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

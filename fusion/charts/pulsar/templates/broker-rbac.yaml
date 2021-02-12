@@ -1,0 +1,41 @@
+  {{- if .Values.extra.functionsAsPods }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.functions.component }}"
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - configmaps
+  - pods
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - '*'
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.functions.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.functions.component }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.functions.component }}"
+subjects:
+- kind: ServiceAccount
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.functions.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  {{- end }}

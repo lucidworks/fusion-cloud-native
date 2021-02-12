@@ -1,0 +1,13 @@
+---
+{{ if .Values.milvuspvc.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: "{{ .Values.milvus.persistence.persistentVolumeClaim.existingClaim }}"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: "{{ .Values.milvuspvc.size }}"
+{{ end }}

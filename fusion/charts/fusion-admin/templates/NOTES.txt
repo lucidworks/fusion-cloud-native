@@ -1,0 +1,5 @@
+{{- if .Values.solrAutocalingPolicyJson -}}
+WARNING:
+The value solrAutocalingPolicyJson is deprecated in favour of solrAutoscalingPolicyJson 
+and will be removed in a future release. Please updated your custom values files
+{{- end -}}

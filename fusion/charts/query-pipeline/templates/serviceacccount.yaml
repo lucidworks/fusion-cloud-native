@@ -1,0 +1,76 @@
+{{- if .Values.rbac.create }}
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+
+{{- if .Values.useAvailabilityZoneRouting }}
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: "{{.Release.Namespace}}-{{ include "fusion.query-pipeline.fullname" . }}"
+rules:
+- apiGroups: [""]
+  resources: [ "nodes" ]
+  verbs: [ "get" ]
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: "{{.Release.Namespace}}-{{ include "fusion.query-pipeline.fullname" . }}"
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+  namespace: "{{ .Release.Namespace }}"
+  apiGroup: ""
+roleRef:
+  kind: ClusterRole
+  name: "{{.Release.Namespace}}-{{ include "fusion.query-pipeline.fullname" . }}"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end }}
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+rules:
+- apiGroups: [""]
+  resources: [ "pods", "services", "configmaps", "endpoints" ]
+  verbs: [ "get", "list", "watch" ]
+{{- if $tlsEnabled }}
+- apiGroups: [ "cert-manager.io" ]
+  resources: [ "certificates" ]
+  verbs: [ "get", "create", "delete" ]
+- apiGroups: [ "" ]
+  resources: [ "secrets" ]
+  verbs: [ "get" ]
+{{- end }}
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: "{{ include "fusion.query-pipeline.fullname" . }}"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end }}

@@ -1,0 +1,26 @@
+{{- if .Values.ingress.enabled -}}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "fusion.api-gateway.fullname" . }}
+  annotations:
+    {{ toYaml .Values.ingress.annotations | nindent 4 }}
+  labels:
+    {{ include "fusion.api-gateway.labels" . | nindent 4 }}
+spec:
+{{ if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - "{{ .Values.ingress.host }}"
+      secretName: "{{ template "fusion.api-gateway.fullname" . }}-tls-secret"
+{{ end }}
+  rules:
+  - host: {{ .Values.ingress.host }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ include "fusion.api-gateway.serviceName" . }}
+          servicePort: {{ .Values.service.port }}
+        path: {{ .Values.ingress.path }}
+{{- end -}}

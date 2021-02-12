@@ -1,0 +1,16 @@
+apiVersion: v2
+appVersion: 2.6.1
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: Apache Pulsar Helm chart for Kubernetes
+home: https://pulsar.apache.org
+icon: http://pulsar.apache.org/img/pulsar.svg
+maintainers:
+- email: kiran.chitturi@lucidworks.com
+  name: Kiran Chitturi
+name: pulsar
+sources:
+- https://github.com/apache/pulsar-helm-chart
+version: 2.5.6

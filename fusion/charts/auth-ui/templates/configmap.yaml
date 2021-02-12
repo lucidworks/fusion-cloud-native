@@ -1,0 +1,36 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.auth-ui.fullname" . }}"
+  labels:
+    {{ include "fusion.auth-ui.labels" . | nindent 4 }}
+data:
+  default.conf: |
+    server {
+        listen       8080 {{ $tlsEnabled | ternary "ssl" "" }};
+        {{- if $tlsEnabled }}
+        ssl_certificate     /etc/ssl/fusion_certs/tls.crt;
+        ssl_certificate_key /etc/ssl/fusion_certs/tls.key;
+        {{- end }}
+        server_name  localhost;
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /devops/ {
+            alias   /usr/share/nginx/html/;
+            try_files $uri $uri/ /index.html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }

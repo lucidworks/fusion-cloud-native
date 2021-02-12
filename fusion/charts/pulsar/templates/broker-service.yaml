@@ -1,0 +1,36 @@
+{{- if .Values.components.broker }}
+{{- $tlsEnabled := .Values.bookkeeper.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.broker.component }}
+  annotations:
+{{ toYaml .Values.broker.service.annotations | indent 4 }}
+spec:
+  ports:
+  # prometheus needs to access /metrics endpoint
+  - name: http
+    port: {{ .Values.broker.ports.http }}
+  - name: pulsar
+    port: {{ .Values.broker.ports.pulsar }}
+  {{- if $tlsEnabled }}
+  - name: https
+    port: {{ .Values.broker.ports.https }}
+  - name: pulsarssl
+    port: {{ .Values.broker.ports.pulsarssl }}
+  {{- end }}
+  clusterIP: None
+  selector:
+    app: {{ template "pulsar.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.broker.component }}
+{{- end }}

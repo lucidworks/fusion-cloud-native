@@ -1,0 +1,122 @@
+affinity: {}
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+config:
+  audit: ""
+  resilience4j: ""
+  security: ""
+  springSecurity: ""
+datadog:
+  enabled: false
+  port: 8126
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+envVars: []
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: api-gateway
+  repository: lucidworks
+  tag: latest
+ingress:
+  annotations: {}
+  enabled: false
+  host: ingress.example.com
+  path: /
+  tls:
+    enabled: false
+javaToolOptions: -XX:+ExitOnOutOfMemoryError -Dreactor.netty.ioWorkerCount=8 -Dreactor.netty.ioSelectCount=2
+jksSetup:
+  resources: {}
+jwtExpirationSecs: 1800
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.1.0
+livenessProbe:
+  failureThreshold: 5
+  initialDelaySeconds: 40
+  periodSeconds: 10
+  timeoutSeconds: 6
+logLevelRoot: info
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port: 6764
+preStopSleepTime: 10
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+rbac:
+  create: true
+readinessProbe:
+  failureThreshold: 10
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 3
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+service:
+  annotations: {}
+  port: 6764
+  targetPort: 6764
+  type: LoadBalancer
+springProfiles: kubernetes,basic,fusion
+terminationGracePeriodSeconds: 45
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+tracing:
+  enabled: true
+  sampleProbability: 1
+useForwardHeaders: false
+zipkin:
+  enabled: false
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

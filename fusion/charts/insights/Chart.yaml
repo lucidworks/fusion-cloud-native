@@ -1,0 +1,13 @@
+apiVersion: v1
+appVersion: "5"
+description: A Helm chart to install App Insights
+keywords:
+- fusion
+- insights
+- app insights
+- appkit
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: insights
+version: 1.2.1

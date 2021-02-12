@@ -1,0 +1,64 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.fusion-indexing.fullname" . }}"
+  labels:
+    {{ include "fusion.fusion-indexing.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    logging:
+      level:
+        root: {{ .Values.logLevelRoot }}
+        org:
+            springframework:
+                cloud:
+                    client:
+                        discovery: TRACE
+    jetty:
+      server:
+        stop:
+          timeout: {{ .Values.serverStopTimeout }}
+    ribbon:
+      zookeeper:
+        enabled: false
+{{- if  $tlsEnabled  }}
+    server:
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/ssl/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/ssl/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}
+    spring:
+      cloud:
+        kubernetes:
+          enabled: true
+          ribbon:
+            enabled: true
+        zookeeper:
+          connect-string: "{{ include "fusion.zkConnectionString" . }}"
+          discovery:
+            enabled: false
+      sleuth:
+        enabled: {{ .Values.tracing.enabled }}
+        log:
+          slf4j:
+            enabled: {{ .Values.tracing.enabled }}
+      zipkin:
+        enabled: "{{ .Values.zipkin.enabled }}"
+        baseUrl: "{{ .Values.zipkin.baseUrl }}"
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: info, health, mappings, ready, prometheus
+    accesslog:
+      enabled: {{ .Values.accessLogEnabled }}
+    datadog:
+      host: "{{ template "fusion.fusion-indexing.datadogHost" . }}"
+      port: {{ .Values.datadog.port }}

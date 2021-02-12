@@ -1,0 +1,22 @@
+{{- if .Values.components.bookkeeper }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+  annotations:
+{{ toYaml .Values.bookkeeper.service.annotations | indent 4 }}
+spec:
+  ports:
+  - name: bookie
+    port: {{ .Values.bookkeeper.ports.bookie }}
+  - name: http
+    port: {{ .Values.bookkeeper.ports.http }}
+  clusterIP: None
+  selector:
+    {{- include "pulsar.matchLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+{{- end }}

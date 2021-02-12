@@ -1,0 +1,48 @@
+# solr-exporter network policy
+{{- if .Values.exporter.enabled }}
+{{- if .Values.exporter.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "{{ include "solr.exporter-name" . }}"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ include "solr.name" . }}"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "exporter"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+{{- if .Values.exporter.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.exporter.networkPolicy.additionalIngressRules | nindent 4 }}
+{{- else }}  []
+{{- end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.exporter.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      ports:
+      - protocol: TCP
+        port: 8983
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+{{ if .Values.exporter.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.exporter.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}
+{{ end }}

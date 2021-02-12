@@ -1,0 +1,37 @@
+# script to process key/cert to keystore and truststore
+{{- $tlsEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+{{- if $tlsEnabled -}}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-keytool-configmap"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: keytool
+data:
+  keytool.sh: |
+    #!/bin/bash
+    component=$1
+    isClient=$2
+
+    keyStoreDir=/etc/ssl/keystores
+    keyStoreFile="${keyStoreDir}/keystore.jks"
+    trustStoreFile="${keyStoreDir}/truststore.jks"
+
+    if [[ "x${isClient}" == "xtrue" ]]; then
+        echo $'\n' >> conf/pulsar_env.sh
+        echo "PULSAR_EXTRA_OPTS=\"${PULSAR_EXTRA_OPTS} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=${keyStoreFile} -Dzookeeper.ssl.keyStore.password=${KEYSTORE_PASSWORD} -Dzookeeper.ssl.trustStore.location=${trustStoreFile} -Dzookeeper.ssl.trustStore.password=${KEYSTORE_PASSWORD}\"" >> conf/pulsar_env.sh
+        echo $'\n' >> conf/bkenv.sh
+        echo "BOOKIE_EXTRA_OPTS=\"${BOOKIE_EXTRA_OPTS} -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty -Dzookeeper.client.secure=true -Dzookeeper.ssl.keyStore.location=${keyStoreFile} -Dzookeeper.ssl.keyStore.password=${KEYSTORE_PASSWORD} -Dzookeeper.ssl.trustStore.location=${trustStoreFile} -Dzookeeper.ssl.trustStore.password=${KEYSTORE_PASSWORD}\"" >> conf/bkenv.sh
+    else
+        echo $'\n' >> conf/pulsar_env.sh
+        echo "PULSAR_EXTRA_OPTS=\"${PULSAR_EXTRA_OPTS} -Dzookeeper.ssl.keyStore.location=${keyStoreFile} -Dzookeeper.ssl.keyStore.password=${KEYSTORE_PASSWORD} -Dzookeeper.ssl.trustStore.location=${trustStoreFile} -Dzookeeper.ssl.trustStore.password=${KEYSTORE_PASSWORD}\"" >> conf/pulsar_env.sh
+    fi
+{{- end }}

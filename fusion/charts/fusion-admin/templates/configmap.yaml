@@ -1,0 +1,63 @@
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- $jsonOutput := ( eq (include "fusion.loggingJSONOutput" .) "true" ) }}
+{{- $logstashHost := (include "fusion.logstashHost" .) -}}
+{{- $logPulsar := ( eq (include "fusion.loggingDisablePulsar" .) "false" ) -}}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fusion.fusion-admin.fullname" .  }}-logback-config
+  labels:
+    {{ include "fusion.fusion-admin.labels" . | nindent 4 }}
+data:
+  k8s-logback.xml: |
+    <configuration>
+      <property name="service" value="fusion-admin"/>
+      <include resource="logback-guice-kube-pulsar.xml" />
+      {{- if $jsonOutput }}
+      <include resource="logback-guice-kube-consolejson.xml" />
+      {{- else }}
+      <include resource="logback-guice-kube-console.xml" />
+      {{- end }}
+      {{- if $logstashHost }}
+      <include resource="logback-guice-kube-logstash.xml" />
+      {{- end }}
+      <root level="INFO">
+      {{- if $jsonOutput }}
+          <appender-ref ref="CONSOLEJSON" />
+      {{- else }}
+          <appender-ref ref="CONSOLE" />
+      {{- end }}
+      {{- if $logstashHost }}
+          <appender-ref ref="LOGSTASH" />
+      {{- end }}
+      {{- if $logPulsar }}
+          <appender-ref ref="PULSAR" />
+      {{- end }}
+      </root>
+      <logger name="org.apache.zookeeper" level="WARN"/>
+      <logger name="com.netflix.governator.guice.InternalAutoBindModule" level="WARN"/>
+      <logger name="org.apache.zookeeper.ClientCnxn" level="WARN"/>
+
+      <logger name="org.apache.pdfbox.pdmodel.font" level="ERROR"/>
+      <logger name="org.apache.pdfbox.contentstream.PDFStreamEngine" level="ERROR"/>
+
+      <logger name="org.apache.solr.core.SolrCore" level="WARN"/>
+      <logger name="com.lucidworks.apollo.component.solr.SolrAutoscalingPolicySupport" level="DEBUG"/>
+    </configuration>
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fusion.fusion-admin.fullname" .  }}-solr-autoscaling
+  labels:
+    {{ include "fusion.fusion-admin.labels" . | nindent 4 }}
+data:
+  init_solr_autoscaling_policy.json: |
+  {{- if .Values.solrAutocalingPolicyJson }}
+    {{ .Values.solrAutocalingPolicyJson | toJson }}
+  {{- else }}
+    {{ .Values.solrAutoscalingPolicyJson | toJson }}
+  {{- end }}

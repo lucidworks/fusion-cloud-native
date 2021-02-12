@@ -1,0 +1,62 @@
+backup:
+  backoffLimit: 2
+  collection_schedules:
+    '*': 0 */6 * * *
+  concurrencyPolicy: Forbid
+  executorCount: 10
+  failedJobsHistoryLimit: 1
+  fsGroup: 8983
+  networkPolicy:
+    additionalEgressRules: []
+    additionalIngressRules: []
+    dnsAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    enabled: false
+  podAnnotations: {}
+  resources: {}
+  restartPolicy: Never
+  runAsUser: 8983
+  successfulJobsHistoryLimit: 3
+image:
+  imagePullSecrets: []
+  name: solr-backup-runner
+  pullPolicy: IfNotPresent
+  repository: lucidworks
+  tag: latest
+localBackupDirectory: /mnt/solr-backups/collection-backups
+prune:
+  backoffLimit: 1
+  concurrencyPolicy: Forbid
+  enabled: true
+  executorCount: 10
+  failedJobsHistoryLimit: 1
+  fsGroup: 8983
+  networkPolicy:
+    additionalEgressRules: []
+    additionalIngressRules: []
+    dnsAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    enabled: false
+  podAnnotations: {}
+  resources: {}
+  restartPolicy: Never
+  retentionPolicyConfig:
+    retention:
+      policies:
+      - all: true
+        for: 24h
+      - for: 144h
+        keep: 6
+      - for: 504h
+        keep: 3
+      - for: 2016h
+        keep: 3
+  runAsUser: 8983
+  schedule: 0 0 * * *
+  successfulJobsHistoryLimit: 3
+solrBackupDirectory: /mnt/solr-backups/collection-backups
+solrPath: solr
+solrPort: "8983"
+solrProtocol: http

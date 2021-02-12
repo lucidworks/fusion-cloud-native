@@ -1,0 +1,86 @@
+{{- if or .Values.components.autorecovery .Values.extra.autoRecovery }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.autorecovery.component }}
+spec:
+  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+  replicas: {{ .Values.autorecovery.replicaCount }}
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  # nodeSelector:
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.autorecovery.component }}
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.autorecovery.component }}
+      annotations:
+{{- with .Values.autorecovery.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+    {{- if .Values.autorecovery.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.autorecovery.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.autorecovery.tolerations }}
+      tolerations:
+{{- with .Values.autorecovery.tolerations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    {{- end }}
+      affinity:
+{{ tpl (toYaml .Values.autorecovery.affinity) .  | indent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.autorecovery.gracePeriod }}
+      initContainers:
+      # This initContainer will wait for bookkeeper initnewcluster to complete
+      # before deploying the bookies
+      - name: pulsar-bookkeeper-verify-clusterid
+        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+        resources: {{ toYaml .Values.autorecovery.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        - >
+          {{- include "pulsar.autorecovery.init.verify_cluster_id" . | nindent 10 }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+        volumeMounts:
+        {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      containers:
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+        image: "{{ .Values.images.autorecovery.repository }}:{{ .Values.images.autorecovery.tag }}"
+        imagePullPolicy: {{ .Values.images.autorecovery.pullPolicy }}
+      {{- if .Values.autorecovery.resources }}
+        resources:
+{{ toYaml .Values.autorecovery.resources | indent 10 }}
+      {{- end }}
+        command: ["sh", "-c"]
+        args:
+        - >
+          bin/apply-config-from-env.py conf/bookkeeper.conf;
+          bin/apply-config-from-env.py conf/bkenv.sh;
+          {{- include "pulsar.autorecovery.zookeeper.tls.settings" . | nindent 10 }}
+          bin/bookkeeper autorecovery
+        ports:
+        - name: http
+          containerPort: {{ .Values.autorecovery.ports.http }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.autorecovery.component }}"
+        volumeMounts:
+        {{- include "pulsar.autorecovery.certs.volumeMounts" . | nindent 8 }}
+      volumes:
+      {{- include "pulsar.autorecovery.certs.volumes" . | nindent 6 }}
+{{- end }}
+

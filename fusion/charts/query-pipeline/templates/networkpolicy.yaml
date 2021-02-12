@@ -1,0 +1,185 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fusion.query-pipeline.fullname" .  }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "query-pipeline"
+      app.kubernetes.io/part-of: "fusion"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-admin"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "ml-service-workflow"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-indexing"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "api-gateway"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "query-pipeline"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "job-rest-server"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-jupyter"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "templating"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "config-sync"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-features"
+      - podSelector:
+          matchLabels:
+            spark-role: driver
+      - podSelector:
+          matchLabels:
+            spark-role: executor
+      ports:
+      - protocol: TCP
+        port: 8787
+{{ if .Values.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      ports:
+      - protocol: TCP
+        port: 8983
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-admin"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-indexing"
+      ports:
+      - protocol: TCP
+        port: 8765
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "query-pipeline"
+      ports:
+      - protocol: TCP
+        port: 8787
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "api-gateway"
+      ports:
+      - protocol: TCP
+        port: 6764
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "ml-model-service"
+      ports:
+      - protocol: TCP
+        port: 6565
+      - protocol: TCP
+        port: 8086
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "job-rest-server"
+      ports:
+      - protocol: TCP
+        port: 8081
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "connectors"
+      ports:
+      - protocol: TCP
+        port: 9010
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "sql-service"
+      ports:
+      - protocol: TCP
+        port: 8085
+    - to:
+      - podSelector:
+          matchLabels:
+            component: "broker"
+      ports:
+        - protocol: TCP
+          port:  6650
+        - protocol: TCP
+          port:  8080
+        - protocol: TCP
+          port:  6651
+        - protocol: TCP
+          port:  8443
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: "templating"
+      ports:
+        - protocol: TCP
+          port: 5250
+    - to: 
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "milvus"
+      ports:
+        - protocol: TCP
+          port: 19121
+        - protocol: TCP
+          port: 19530
+{{ if .Values.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

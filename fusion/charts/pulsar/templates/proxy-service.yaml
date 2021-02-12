@@ -1,0 +1,39 @@
+{{- if .Values.components.proxy }}
+{{- $tlsEnabled := or .Values.proxy.tls.enabled ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.proxy.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.proxy.component }}
+  annotations:
+  {{- with .Values.proxy.service.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.proxy.service.type }}
+  ports:
+    {{- if not $tlsEnabled }}
+    - name: http
+      port: {{ .Values.proxy.ports.http }}
+      protocol: TCP
+    - name: pulsar
+      port: {{ .Values.proxy.ports.pulsar }}
+      protocol: TCP
+    {{- end }}
+    {{- if $tlsEnabled }}
+    - name: https
+      port: {{ .Values.proxy.ports.https }}
+      protocol: TCP
+    - name: pulsarssl
+      port: {{ .Values.proxy.ports.pulsarssl }}
+      protocol: TCP
+    {{- end }}
+  selector:
+    app: {{ template "pulsar.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.proxy.component }}
+{{- end }}

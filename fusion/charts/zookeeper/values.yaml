@@ -1,0 +1,222 @@
+affinity: {}
+command:
+- /bin/bash
+- -xec
+- /config-scripts/run
+env:
+  JMXAUTH: "false"
+  JMXDISABLE: "false"
+  JMXPORT: 1099
+  JMXSSL: "false"
+  ZK_SYNC_LIMIT: 10
+  ZK_TICK_TIME: 2000
+  ZOO_AUTOPURGE_PURGEINTERVAL: 0
+  ZOO_AUTOPURGE_SNAPRETAINCOUNT: 3
+  ZOO_INIT_LIMIT: 5
+  ZOO_MAX_CLIENT_CNXNS: 60
+  ZOO_PORT: 2181
+  ZOO_STANDALONE_ENABLED: false
+  ZOO_TICK_TIME: 2000
+exporters:
+  jmx:
+    config:
+      lowercaseOutputName: false
+      rules:
+      - name: zookeeper_$2
+        pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+)><>(\w+)
+      - labels:
+          replicaId: $2
+        name: zookeeper_$3
+        pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+)><>(\w+)
+      - labels:
+          memberType: $3
+          replicaId: $2
+        name: zookeeper_$4
+        pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+),
+          name2=(\w+)><>(\w+)
+      - labels:
+          memberType: $3
+          replicaId: $2
+        name: zookeeper_$4_$5
+        pattern: org.apache.ZooKeeperService<name0=ReplicatedServer_id(\d+), name1=replica.(\d+),
+          name2=(\w+), name3=(\w+)><>(\w+)
+      startDelaySeconds: 30
+    enabled: false
+    env: {}
+    image:
+      pullPolicy: IfNotPresent
+      repository: sscaling/jmx-prometheus-exporter
+      tag: 0.3.0
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        path: /metrics
+        port: jmxxp
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 60
+    path: /metrics
+    ports:
+      jmxxp:
+        containerPort: 9404
+        protocol: TCP
+    readinessProbe:
+      failureThreshold: 8
+      httpGet:
+        path: /metrics
+        port: jmxxp
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 60
+    resources: {}
+    serviceMonitor:
+      interval: 30s
+      scheme: http
+      scrapeTimeout: 30s
+  zookeeper:
+    config:
+      logLevel: info
+      resetOnScrape: "true"
+    enabled: false
+    env: {}
+    image:
+      pullPolicy: IfNotPresent
+      repository: josdotso/zookeeper-exporter
+      tag: v1.1.2
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        path: /metrics
+        port: zookeeperxp
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 60
+    path: /metrics
+    ports:
+      zookeeperxp:
+        containerPort: 9141
+        protocol: TCP
+    readinessProbe:
+      failureThreshold: 8
+      httpGet:
+        path: /metrics
+        port: zookeeperxp
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      successThreshold: 1
+      timeoutSeconds: 60
+    resources: {}
+    serviceMonitor:
+      interval: 30s
+      scheme: http
+      scrapeTimeout: 30s
+fusion-common-utils:
+  global: {}
+global: {}
+headless:
+  annotations: {}
+image:
+  imagePullSecrets: []
+  pullPolicy: IfNotPresent
+  repository: zookeeper
+  tag: 3.5.7
+jobs:
+  chroots:
+    activeDeadlineSeconds: 300
+    backoffLimit: 5
+    completions: 1
+    config:
+      create: []
+    enabled: false
+    env: []
+    parallelism: 1
+    resources: {}
+    restartPolicy: Never
+jvmFlags: -XX:+ExitOnOutOfMemoryError
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.1.0
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+persistence:
+  accessMode: ReadWriteOnce
+  enabled: true
+  size: 5Gi
+podAnnotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+podLabels: {}
+podManagementPolicy: OrderedReady
+ports:
+  client:
+    containerPort: 2181
+    protocol: TCP
+  election:
+    containerPort: 3888
+    protocol: TCP
+  server:
+    containerPort: 2888
+    protocol: TCP
+  tlsclient:
+    containerPort: 2281
+    protocol: TCP
+priorityClassName: ""
+prometheus:
+  serviceMonitor:
+    enabled: false
+    selector: {}
+rbac:
+  create: true
+replicaCount: 3
+resources: {}
+securityContext:
+  fsGroup: 1000
+  runAsUser: 1000
+service:
+  annotations: {}
+  ports:
+    client:
+      port: 2181
+      protocol: TCP
+      targetPort: client
+    tlsclient:
+      port: 2281
+      protocol: TCP
+      targetPort: tlsclient
+  type: ClusterIP
+terminationGracePeriodSeconds: 1800
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+tolerations: []
+updateStrategy:
+  type: RollingUpdate
+zkInstallDir: /apache-zookeeper-*

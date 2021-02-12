@@ -1,0 +1,15 @@
+---
+
+apiVersion: "policy/v1beta1"
+kind: "PodDisruptionBudget"
+metadata:
+  name: {{ include "fusion.rules-ui.fullname" .  }}
+  labels:
+{{ include "fusion.rules-ui.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: "rules-ui"
+      app.kubernetes.io/part-of: "fusion"
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}

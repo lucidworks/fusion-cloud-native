@@ -1,0 +1,73 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.api-gateway.fullname" . }}"
+  labels:
+    {{ include "fusion.api-gateway.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    logging:
+      level:
+        root: {{ .Values.logLevelRoot }}
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: info, health, mappings, ready, prometheus
+    jwt:
+      token:
+        expirationSecs: {{ .Values.jwtExpirationSecs }}
+        keystore: /etc/ssl/keystores/api-gateway.jks
+        key: jwt-signer
+        pass: password123
+{{- if  $tlsEnabled  }}
+    server:
+      use-forward-headers: {{ .Values.useForwardHeaders }}
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/fusion/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/fusion/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}
+ {{- if .Values.config.security }}
+    security:
+{{ tpl .Values.config.security . | indent 6 }}
+{{- end }}
+    spring:
+{{- if .Values.config.springSecurity }}
+      security:
+{{ tpl .Values.config.springSecurity . | indent 8 }}
+{{- end }}
+      cloud:
+        kubernetes:
+          enabled: true
+        zookeeper:
+          connect-string: "{{ template "fusion.zkConnectionString" . }}"
+          discovery:
+            enabled: false
+      sleuth:
+        enabled: {{ .Values.tracing.enabled }}
+        sampler:
+          probability: {{ .Values.tracing.sampleProbability }}
+        log:
+          slf4j:
+            enabled: {{ .Values.tracing.enabled }}
+      zipkin:
+        enabled: "{{ .Values.zipkin.enabled }}"
+        baseUrl: "{{ template "fusion.api-gateway.zipkinUrl" . }}"
+    datadog:
+      host: "{{ template "fusion.api-gateway.datadogHost" . }}"
+      port: {{ .Values.datadog.port }}
+
+{{- if .Values.config.resilience4j }}
+    resilience4j:
+{{ tpl .Values.config.resilience4j . | indent 6 }}
+{{- end }}
+{{- if .Values.config.audit }}
+    audit:
+{{ tpl .Values.config.audit . | indent 6 }}
+{{- end }}

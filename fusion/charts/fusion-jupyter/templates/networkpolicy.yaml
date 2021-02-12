@@ -1,0 +1,101 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fusion-jupyter.fullname" .  }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "fusion-jupyter.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "api-gateway"
+      ports:
+      - protocol: TCP
+        port: 8888
+{{ if .Values.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "logstash"
+      ports:
+      - protocol: TCP
+        port: 9600
+      - protocol: TCP
+        port: 4560
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      ports:
+      - protocol: TCP
+        port: 8983
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "query-pipeline"
+      ports:
+      - protocol: TCP
+        port: 8787
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "api-gateway"
+      ports:
+      - protocol: TCP
+        port: 6764
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-admin"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-indexing"
+      ports:
+      - protocol: TCP
+        port: 8765
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "ml-model-service"
+      ports:
+      - protocol: TCP
+        port: 8086
+{{ if .Values.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

@@ -1,0 +1,15 @@
+---
+
+apiVersion: "policy/v1beta1"
+kind: "PodDisruptionBudget"
+metadata:
+  name: "{{ template "fusion.query-pipeline.fullname" . }}"
+  labels:
+    {{ include "fusion.query-pipeline.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "query-pipeline"
+      app.kubernetes.io/part-of: "fusion"
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}

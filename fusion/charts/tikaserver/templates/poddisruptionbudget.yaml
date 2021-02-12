@@ -1,0 +1,15 @@
+---
+
+apiVersion: "policy/v1beta1"
+kind: "PodDisruptionBudget"
+metadata:
+  name: "{{ template "fusion.tikaserver.fullname" . }}"
+  labels:
+    {{ include "fusion.tikaserver.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ include "fusion.tikaserver.name" . }}"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "tikaserver"
+{{ toYaml .Values.podDisruptionBudget | indent 2 }}

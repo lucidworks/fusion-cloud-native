@@ -1,0 +1,52 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.rules-ui.fullname" . }}"
+  labels:
+    {{ include "fusion.rules-ui.labels" . | nindent 4 }}
+data:
+  default.conf: |
+    server {
+        gzip on;
+        gzip_types    text/plain application/javascript application/x-javascript text/javascript text/xml text/css;
+        listen       8080 {{ $tlsEnabled | ternary "ssl" "" }};
+        {{- if $tlsEnabled }}
+        ssl_certificate     /etc/ssl/fusion_certs/tls.crt;
+        ssl_certificate_key /etc/ssl/fusion_certs/tls.key;
+        {{- end }}
+        server_name  localhost;
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Uncomment when running locally
+        # location ^~ /api/ {
+        #   proxy_pass http://host.docker.internal:6764/api/;
+        # }
+
+        location =/rules {
+            root /usr/share/nginx/html/rules/;
+            try_files /index.html /rules/index.html;
+        }
+
+        location /rules/ {
+            location ~* p\-.*\.(js)$ {
+              expires 365d;
+              add_header Cache-Control "public";
+            }
+            alias   /usr/share/nginx/html/rules/;
+            try_files $uri $uri/ /rules/index.html;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+    }

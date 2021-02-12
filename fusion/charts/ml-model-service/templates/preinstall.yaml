@@ -1,0 +1,86 @@
+{{- if .Values.runLabelNamespaceJob }}
+{{- if .Values.rbac.create }}
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-hook"
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "2"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  namespace: {{ .Release.Namespace }}
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-hook"
+rules:
+- apiGroups: [ "" ]
+  resources: [ "namespaces" ]
+  verbs: [ "get", "list", "update", "patch" ]
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "3"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-hook"
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-hook"
+  apiGroup: ""
+roleRef:
+  kind: ClusterRole
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-hook"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end }}
+---
+
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "fusion.ml-model-service.fullname" . }}-namespace-hook"
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    "helm.sh/hook-weight": "4"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+spec:
+  template:
+    spec:
+      {{- if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      serviceAccountName: "{{ .Values.rbac.hookServiceAccountName | default ( printf "%s-hook" ( include "fusion.ml-model-service.fullname" . )) }}"
+      containers:
+        - name: kubectl-runner
+          image: bitnami/kubectl
+          command: ["sh", "-c", "kubectl label ns {{ .Release.Namespace }} seldon.io/controller-id={{ .Release.Namespace }} --overwrite=true"]
+          resources: {{ toYaml  .Values.preinstall.resources | nindent 12 }}
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+      restartPolicy: Never
+
+{{- end }}

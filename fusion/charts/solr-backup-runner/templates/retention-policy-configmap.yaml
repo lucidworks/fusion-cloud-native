@@ -1,0 +1,11 @@
+{{- if .Values.prune.enabled -}}
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "fusion.solr-backup-runner.fullname" . }}-policies"
+
+data:
+  policies.json: | {{ toJson .Values.prune.retentionPolicyConfig | nindent 4 }}
+{{- end }}

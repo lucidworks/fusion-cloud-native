@@ -1,0 +1,49 @@
+{{- if .Values.components.broker }}
+{{- if .Values.rbac.create }}
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-rolebinding"
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-role"
+subjects:
+- kind: ServiceAccount
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-acct"
+  namespace: {{ template "pulsar.namespace" . }}
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}-role"
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+rules:
+- apiGroups: [""]
+  resources:
+  - configmap
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["", "extensions", "apps"]
+  resources:
+    - pods
+    - services
+    - deployments
+    - secrets
+    - statefulsets
+  verbs:
+    - list
+    - watch
+    - get
+    - update
+    - create
+    - delete
+    - patch
+---
+
+{{- end }}
+{{- end }}

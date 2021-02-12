@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: "5"
+description: A helm chart to install details for the item recommender service
+keywords:
+- fusion
+- ml
+- recommender
+maintainers:
+- email: binoy.dalal1@lucidworks.com
+  name: Binoy Dalal
+name: recommender
+type: application
+version: 0.12.3

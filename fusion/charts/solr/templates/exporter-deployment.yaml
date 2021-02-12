@@ -1,0 +1,143 @@
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- if .Values.exporter.enabled }}
+---
+
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "{{ include "solr.exporter-name" . }}"
+  labels:
+{{ include "solr.common.labels" . | indent 4 }}
+    component: "exporter"
+  annotations:
+{{ toYaml .Values.exporter.service.annotations | indent 4}}
+spec:
+  type: "{{ .Values.exporter.service.type }}"
+  ports:
+  - port: {{ .Values.exporter.port }}
+    name: "solr-client"
+  selector:
+    app.kubernetes.io/name: "{{ include "solr.name" . }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "exporter"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "solr.exporter-name" . }}
+  labels:
+{{ include "solr.common.labels" . | indent 4 }}
+    component: "exporter"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ include "solr.name" . }}"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "exporter"
+  replicas: 1
+  strategy:
+    {{ toYaml .Values.exporter.updateStrategy | indent 4}}
+  template:
+    metadata:
+      labels:
+{{ include "solr.common.labels" . | indent 8 }}
+        app.kubernetes.io/component: "exporter"
+      annotations:
+{{ toYaml .Values.exporter.podAnnotations | indent 8 }}
+    spec:
+    {{- if .Values.exporter.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.exporter.nodeSelector | nindent 8 }}
+    {{- end }}
+      imagePullSecrets: {{ .Values.image.imagePullSecrets | toYaml | nindent 12 }}
+      {{- if .Values.exporter.priorityClassName }}
+      priorityClassName: "{{ .Values.exporter.priorityClassName }}"
+      {{- end }}
+      {{- if .Values.exporter.tolerations }}
+      tolerations: {{ .Values.exporter.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.exporter.schedulerName }}
+      schedulerName: {{ .Values.exporter.schedulerName | quote }}
+      {{- end }}
+      affinity:
+{{ tpl (toYaml .Values.exporter.affinity) .  | indent 8 }}
+      containers:
+        - name: exporter
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+{{ toYaml .Values.exporter.resources | indent 12 }}
+          ports:
+          - containerPort: {{ .Values.exporter.port }}
+            name: solr-client
+          command:
+          - "/opt/solr/contrib/prometheus-exporter/bin/solr-exporter"
+          - "-p"
+          - "{{ .Values.exporter.port }}"
+          - "-z"
+          - "{{ template "solr.zookeeper-connection-string" . }}"
+          - "-n"
+          - "{{ .Values.exporter.threads }}"
+          - "-f"
+          - "{{ .Values.exporter.configDir }}/{{ .Values.exporter.configFile }}"
+          env:
+{{- if not ( eq .Values.exporter.javaMem "") }}
+          - name: JAVA_MEM
+            value: {{ .Values.exporter.javaMem }}
+{{- end }}
+          livenessProbe:
+            initialDelaySeconds: {{ .Values.exporter.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.exporter.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.exporter.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.exporter.livenessProbe.failureThreshold }}
+            httpGet:
+              path: "/metrics"
+              port: {{ .Values.exporter.port }}
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.exporter.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.exporter.readinessProbe.periodSeconds }}
+            timeoutSeconds:  {{ .Values.exporter.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.exporter.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.exporter.readinessProbe.failureThreshold }}
+            httpGet:
+              path: "/metrics"
+              port: {{ .Values.exporter.port }}
+          {{- if .Values.exporter.configXml }}
+          volumeMounts:
+            - name: exporter-config
+              readOnly: true
+              mountPath: "{{ .Values.exporter.configDir }}/{{ .Values.exporter.configFile }}"
+              subPath: "{{ .Values.exporter.configFile }}"
+          {{- end }}
+      {{- if .Values.exporter.configXml }}
+      volumes:
+        - name: exporter-config
+          configMap:
+            name: {{ include "solr.exporter-configmap-name" . }}
+            items:
+            - key: solr-exporter.xml
+              path: {{ .Values.exporter.configFile }}
+      {{- end }}
+      initContainers:
+        - name: solr-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - 'sh'
+            - '-c'
+            - |
+              {{- if $tlsEnabled }}
+              PROTOCOL="https://"
+              {{ else }}
+              PROTOCOL="http://"
+              {{- end }}
+              COUNTER=0;
+              while [  $COUNTER -lt 30 ]; do
+                curl -k -s --connect-timeout 10 "${PROTOCOL}{{ include "solr.service-name" . }}:{{ .Values.port }}/solr/admin/info/system" && exit 0
+                sleep 2
+              done;
+              echo "Did NOT see a Running Solr instance after 60 secs!";
+              exit 1;
+{{ end }}

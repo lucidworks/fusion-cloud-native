@@ -1,0 +1,268 @@
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "argo-deploy-model-workflow"
+data:
+  application.yaml: |-
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: deploy-model-
+      labels:
+        workflows.argoproj.io/controller-instanceid: "{{`{{INSTANCEID}}`}}"
+        jobRunId: "{{`{{JOB_RUN_ID}}`}}"
+        jobConfigId: "{{`{{JOB_CONFIG_ID}}`}}"
+    spec:
+      serviceAccountName: "{{`{{SERVICE_ACCOUNT}}`}}"
+      activeDeadlineSeconds: 600
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+      imagePullSecrets:
+      {{ if .Values.image.imagePullSecrets }}
+        {{ .Values.image.imagePullSecrets| toYaml | nindent 8 }}
+      {{ end }}
+        - name: "{{`{{MODEL_DOCKER_SECRET}}`}}"
+
+      volumeClaimTemplates:
+        - metadata:
+            name: workspace
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 10Mi
+      volumes:
+      #This secret is set by Fusion cluster installation scripts / cluster administrator
+{{- if $tlsEnabled }}
+      - name: fusion-truststore
+        secret:
+          secretName: fusion-truststore
+{{- end }}
+      - name: secrets
+        secret:
+          secretName: service-account-key
+          items:
+          - key: sa
+            path: service-account-key
+      arguments:
+        parameters:
+        - name: model_name
+          value: "{{`{{MODEL_NAME}}`}}"
+        - name: seldon_num_replicas
+          value: "{{`{{MODEL_REPLICAS}}`}}"
+        - name: ambassador
+          value: "{{`{{AMBASSADOR}}`}}"
+        - name: ml_model_service_host
+          value: "{{`{{ML_MODEL_SERVICE}}`}}"
+        - name: namespace
+          value: "{{ .Release.Namespace }}"
+        - name: column_names
+          value: "{{`{{COLUMN_NAMES}}`}}"
+        - name: model_docker_repo
+          value: "{{`{{MODEL_DOCKER_REPO}}`}}"
+        - name: model_docker_image
+          value: "{{`{{MODEL_DOCKER_IMAGE}}`}}"
+        - name: model_docker_secret
+          value: "{{`{{MODEL_DOCKER_SECRET}}`}}"
+        - name: fusion_docker_repo
+          value: "{{ .Values.image.repository }}"
+        - name: fusion_docker_secret
+          value: "{{`{{FUSION_DOCKER_SECRET}}`}}"
+        - name: image_pull_policy
+          value: "IfNotPresent"
+        - name: utilities_tag
+          value: "{{`{{workflowUtilitiesTag}}`}}"
+        - name: version
+          value: "{{`{{VERSION}}`}}"
+        - name: debug
+          value: "{{ .Values.image.debug }}"
+      entrypoint: workflow
+
+      templates:
+      - name: workflow
+        steps:
+        - - name: check-model-image
+            template: check-model-image
+            when: "{{`{{workflow.parameters.debug}} == true`}}"
+        - - name: apply-seldon-deployment
+            template: apply-seldon-deployment
+        - - name: generate-ml-config
+            template: generate-ml-config
+        - - name: post-to-ml-service
+            template: post-to-ml-service
+
+      # This pulls the image down as a check to make sure that the image can be pulled.
+      # Note: this is only here because of a bug in Argo < 2.5.0 where activeDeadlineSeconds
+      # is not honoured at the workflow level (but it does honour container level)
+
+      - name: check-model-image
+        activeDeadlineSeconds: 360
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.model_docker_repo}}/{{workflow.parameters.model_docker_image}}`}}"
+          command:
+            - "ls -lR"
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "test-delete-ml-model-service"
+
+      - name: apply-seldon-deployment
+        resource:
+          action: apply
+          successCondition: status.state == Available
+          failureCondition: status.failed > 3
+          manifest: |
+            apiVersion: machinelearning.seldon.io/v1
+            kind: SeldonDeployment
+            metadata:
+              name: "{{`{{workflow.parameters.model_name}}`}}"
+            spec:
+              name: "{{`{{workflow.parameters.model_name}}`}}"
+              annotations:
+                seldon.io/headless-svc: 'true'
+              predictors:
+              - componentSpecs:
+                - spec:
+                    nodeSelector:
+                      {{ .Values.nodeSelector.deploy.seldon | default .Values.nodeSelector.default | toYaml | nindent 22  }}
+                    tolerations:
+                      {{ .Values.tolerations.deploy.seldon | default .Values.tolerations.default | toYaml | nindent 22  }}
+                    imagePullSecrets:
+                      - name: "{{`{{workflow.parameters.model_docker_secret}}`}}"
+                    containers:
+                    - name: "{{`{{workflow.parameters.model_name}}`}}"
+                      image: "{{`{{workflow.parameters.model_docker_repo}}`}}/{{`{{workflow.parameters.model_docker_image}}`}}"
+                      imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+                      resources:
+                        {{ .Values.resources.deploy.seldon | default .Values.resources.default  | toYaml | nindent 24  }}
+                      volumeMounts:
+                      - name: my-secret
+                        mountPath: "/etc/secrets"
+                        readOnly: true
+                    volumes:
+{{- if $tlsEnabled }}
+                    - name: fusion-truststore
+                      secret:
+                        secretName: fusion-truststore
+{{- end }}
+                    - name: my-secret
+                      secret:
+                        secretName: service-account-key
+                        items:
+                        - key: sa
+                          path: service-account-key
+
+                graph:
+                  endpoint:
+                    type: GRPC
+                  name: "{{`{{workflow.parameters.model_name}}`}}"
+                  type: MODEL
+                labels:
+                  version: "{{`{{workflow.parameters.version}}`}}"
+                  app.kubernetes.io/component: ml-service-workflow
+                  app.kubernetes.io/part-of: fusion
+                  app.kubernetes.io/name: seldon
+                  app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+                name: "{{`{{workflow.parameters.model_name}}`}}"
+                replicas: {{`{{workflow.parameters.seldon_num_replicas}}`}}
+
+      - name: generate-ml-config
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.fusion_docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+            readOnly: true
+{{ end }}
+          env:
+            - name: "FUSION_PROTOCOL"
+              value: "{{ $tlsEnabled | ternary "https" "http"  }}"
+{{- if $tlsEnabled }}
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          command: [tini, --, python, transfer_blobs.py]
+          args: ["create_metadata",
+                     "{{`{{workflow.parameters.model_name}}`}}",
+                     "{{`{{workflow.parameters.ambassador}}`}}",
+                     "{{`{{workflow.parameters.namespace}}`}}",
+                     "/workspace",
+                     "{{`{{workflow.parameters.column_names}}`}}",
+                     "/workspace/{{`{{workflow.parameters.model_name}}`}}-bundle"
+                   ]
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: post-to-ml-service
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.fusion_docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+          volumeMounts:
+          - name: secrets
+            mountPath: "/etc/secrets"
+            readOnly: true
+          - name: workspace
+            mountPath: /workspace
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+            readOnly: true
+{{ end }}
+          env:
+            - name: "FUSION_PROTOCOL"
+              value: "{{ $tlsEnabled | ternary "https" "http"  }}"
+{{- if $tlsEnabled }}
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          command: [tini, --, python, transfer_blobs.py]
+          args: ["upload",
+                 {{ ternary "https" "http" $tlsEnabled | quote }},
+                 "{{`{{workflow.parameters.ml_model_service_host}}`}}",
+                 "8086",
+                 "ml-models?modelId={{`{{workflow.parameters.model_name}}`}}&type=seldon",
+                 "/etc/secrets/service-account-key",
+                 "{{- ternary "https" "http" $tlsEnabled -}}://proxy:6764/api/internal",
+                 "/workspace/{{`{{workflow.parameters.model_name}}`}}-bundle.zip"
+                ]
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"

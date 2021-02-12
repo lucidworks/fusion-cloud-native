@@ -1,0 +1,238 @@
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+{{- if $tlsEnabled }}
+---
+
+{{- $tlsIssuerRef:="" -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsIssuerRef -}}
+{{- $tlsIssuerRef = .Values.global.tlsIssuerRef -}}
+{{- else -}}
+{{- $tlsIssuerRef = .Values.tls.issuerRef.name -}}
+{{- end -}}
+{{- else -}}
+{{- $tlsIssuerRef = .Values.tls.issuerRef.name -}}
+{{ end }}
+
+{{- $tlsIssuerKind:="" -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsIssuerKind -}}
+{{- $tlsIssuerKind = .Values.global.tlsIssuerKind -}}
+{{- else -}}
+{{- $tlsIssuerKind = .Values.tls.issuerRef.kind -}}
+{{- end -}}
+{{- else -}}
+{{- $tlsIssuerKind = .Values.tls.issuerRef.kind -}}
+{{ end }}
+
+{{- if .Values.rbac.create -}}
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "2"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  namespace: {{ .Release.Namespace }}
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+rules:
+- apiGroups: [ "cert-manager.io" ]
+  resources: [ "certificates" ]
+  verbs: [ "get", "create", "delete" ]
+- apiGroups: [ "" ]
+  resources: [ "secrets" ]
+  verbs: [ "get", "create" ]
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    helm.sh/hook-weight: "3"
+    "helm.sh/hook-delete-policy": "hook-succeeded,hook-failed"
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end }}
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ include "fusion.fusion-resources.fullname" . }}-secret-hook"
+  annotations:
+    "helm.sh/hook": pre-install, pre-upgrade
+    "helm.sh/hook-weight": "4"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+spec:
+  template:
+    spec:
+      {{- if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+      serviceAccountName: "{{ .Values.rbac.serviceAccountName | default ( printf "%s-secret-hook" ( include "fusion.fusion-resources.fullname" . )) }}"
+      volumes:
+        - name: keystore-volume
+          emptyDir: {}
+        - name: workspace
+          emptyDir: {}
+        {{- if not (eq .Values.tls.certSecret.name  "") }}
+        - name: "tls-secret"
+          secret:
+            secretName: {{ .Values.tls.certSecret.name }}
+        {{- end }}
+        {{- if not (eq .Values.tls.caSecret.name  "") }}
+        - name: "tls-ca"
+          secret:
+            secretName: {{ .Values.tls.caSecret.name }}
+        {{- end }}
+      imagePullSecrets: {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+      containers:
+      - name: "setup-keystore-and-properties"
+        image: "{{ .Values.keytoolUtils.image.repository }}/{{ .Values.keytoolUtils.image.name }}:{{ .Values.keytoolUtils.image.tag }}"
+        imagePullPolicy: "{{ .Values.keytoolUtils.image.imagePullPolicy }}"
+        command:
+          - "/bin/bash"
+          - "-c"
+          - |
+            set -e
+
+            WORKSPACE="/workspace"
+            CA_PATH="${WORKSPACE}"
+            CA_FILE_NAME="ca.crt"
+            KEY_NAME="tls.key"
+            CERT_NAME="tls.crt"
+            SECRET_NAME="fusion-truststore"
+            CERTIFICATE_NAME="${SECRET_NAME}-cert"
+
+            if kubectl --namespace "{{ .Release.Namespace }}" get secret "${SECRET_NAME}"; then
+              # We already have the secret in the namespace, no need to do anything else
+              exit 0
+            fi
+            # Remove the certificate if it already exists, it could be that we
+            # crashed between generating the certificate and the JKS
+            if kubectl --namespace "{{ .Release.Namespace }}" get certificate "${CERTIFICATE_NAME}"; then
+              kubectl --namespace "{{ .Release.Namespace }}" delete certificate "${CERTIFICATE_NAME}"
+            fi
+
+            # Create certificate
+            cat <<EOF | kubectl apply --namespace "{{ .Release.Namespace }}" -f -
+            apiVersion: cert-manager.io/v1alpha2
+            kind: Certificate
+            metadata:
+              name: "${CERTIFICATE_NAME}"
+            spec:
+              # Secret names are always required.
+              secretName: "${CERTIFICATE_NAME}"
+              duration: {{ .Values.tls.tlsDuration }}
+              renewBefore: {{ .Values.tls.tlsRenewBefore }}
+              organization:
+                - lucidworks
+              # At least one of a DNS Name, USI SAN, or IP address is required.
+              dnsNames:
+                - "${CERTIFICATE_NAME}"
+
+              issuerRef:
+                name: {{ $tlsIssuerRef }}
+                # We can reference ClusterIssuers by changing the kind here.
+                # The default value is Issuer (i.e. a locally namespaced Issuer)
+                kind: {{ $tlsIssuerKind }}
+                # This is optional since cert-manager will default to this value however
+                # if you are using an external issuer, change this to that issuer group.
+                group: cert-manager.io
+            EOF
+
+            # Wait for certificate to become ready
+            while ! [[ $(kubectl --namespace "{{ .Release.Namespace }}" get certificate "${CERTIFICATE_NAME}" -o "jsonpath={.status.conditions[0].status}") == "True" ]]; do
+              echo "Waiting for certificate to become ready"
+              sleep 5
+            done
+
+            kubectl --namespace "{{ .Release.Namespace }}" get secret "${CERTIFICATE_NAME}" -o jsonpath={.data.ca\\.crt} | base64 -d > "${WORKSPACE}/${CA_FILE_NAME}"
+            kubectl --namespace "{{ .Release.Namespace }}" get secret "${CERTIFICATE_NAME}" -o jsonpath={.data.tls\\.crt} | base64 -d > "${WORKSPACE}/${CERT_NAME}"
+            kubectl --namespace "{{ .Release.Namespace }}" get secret "${CERTIFICATE_NAME}" -o jsonpath={.data.tls\\.key} | base64 -d > "${WORKSPACE}/${KEY_NAME}"
+
+            PKCS12_OUTPUT=/tmp/keystore.pkcs12
+            DEST_KEYSTORE="/tmp/keystore/keystore.jks"
+            DEST_TRUSTSTORE="/tmp/keystore/truststore.jks"
+            PASSWORD={{ .Values.tls.keystorePassword }}
+
+            cd "${WORKSPACE}"
+
+            if [ -f "${DEST_TRUSTSTORE}" ]; then
+              rm "${DEST_TRUSTSTORE}"
+            fi
+
+            ls ${WORKSPACE}
+
+            openssl "pkcs12" -export -inkey "${WORKSPACE}/${KEY_NAME}" \
+              -in "${WORKSPACE}/${CERT_NAME}" -out "${PKCS12_OUTPUT}" \
+              -password "pass:${PASSWORD}"
+
+            keytool -importkeystore -noprompt -srckeystore "${PKCS12_OUTPUT}" \
+              -srcstoretype "pkcs12" -destkeystore "${DEST_KEYSTORE}" \
+              -storepass "${PASSWORD}" -srcstorepass "${PASSWORD}"
+
+            keytool -importkeystore -noprompt -srckeystore "/usr/local/openjdk-11/lib/security/cacerts" \
+              -destkeystore "${DEST_TRUSTSTORE}" -storepass "${PASSWORD}"
+
+            csplit -z -f crt- /var/run/secrets/kubernetes.io/serviceaccount/ca.crt '/-----BEGIN CERTIFICATE-----/' '{*}'
+            for file in crt-*; do
+              keytool -import -noprompt -keystore "${DEST_TRUSTSTORE}" -file "${file}" -storepass "${PASSWORD}" -alias kubernetes-$file;
+            done
+            rm crt-*
+
+            if [ -f "${CA_PATH}/${CA_FILE_NAME}" ]; then
+              csplit -z -f crt- "${CA_PATH}/${CA_FILE_NAME}" '/-----BEGIN CERTIFICATE-----/' '{*}'
+              for file in crt-*; do
+                keytool -importcert -noprompt -deststoretype "pkcs12" -keystore "${DEST_TRUSTSTORE}" -file "${file}" -storepass "${PASSWORD}" -alias ca-$file;
+              done
+            fi
+            kubectl create secret generic "${SECRET_NAME}" --from-file=truststore.jks=${DEST_TRUSTSTORE} --from-file=keystore.jks=${DEST_KEYSTORE} --from-file=ca.pem=${WORKSPACE}/${CA_FILE_NAME}
+            rm *
+        volumeMounts:
+          - name: "keystore-volume"
+            mountPath: "/tmp/keystore"
+          - name: "workspace"
+            mountPath: "/workspace"
+      {{- if not (eq .Values.tls.certSecret.name "") }}
+          - name: "tls-secret"
+            mountPath: "/tmp/tls_certificate"
+            readOnly: true
+      {{- end }}
+      {{- if not (eq .Values.tls.caSecret.name "") }}
+          - name: "tls-ca"
+            mountPath: "/tmp/tls_ca"
+            readOnly: true
+      {{- end }}
+      restartPolicy: Never
+{{- end -}}

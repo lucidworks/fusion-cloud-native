@@ -1,0 +1,24 @@
+{{- if .Values.extra.dashboard }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.dashboard.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    app: {{ template "pulsar.name" . }}
+    chart: {{ template "pulsar.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ .Values.dashboard.component }}
+    cluster: {{ template "pulsar.fullname" . }}
+  annotations:
+{{ toYaml .Values.dashboard.service.annotations | indent 4 }}
+spec:
+  ports:
+{{ toYaml .Values.dashboard.service.ports | indent 2 }}
+  clusterIP: None
+  selector:
+    app: {{ template "pulsar.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ .Values.dashboard.component }}
+{{- end }}

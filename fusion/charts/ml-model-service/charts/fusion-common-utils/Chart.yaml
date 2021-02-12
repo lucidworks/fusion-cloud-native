@@ -1,0 +1,9 @@
+apiVersion: v2
+description: A helm containing common utility function for fusion charts
+keywords:
+- fusion
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: fusion-common-utils
+version: 1.5.1

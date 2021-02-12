@@ -1,0 +1,101 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.bookkeeper.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.bookkeeper.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+spec:
+  podSelector:
+    matchLabels:
+      app: {{ template "pulsar.name" . }}
+      release: {{ .Release.Name }}
+      component: {{ .Values.bookkeeper.component }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.broker.component }}
+      ports:
+      - protocol: TCP
+        port: {{ .Values.bookkeeper.ports.http }}
+      - protocol: TCP
+        port: {{ .Values.bookkeeper.ports.bookie }}
+    - from:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.bookkeeper.component }}
+      ports:
+      - protocol: TCP
+        port: {{ .Values.bookkeeper.ports.http }}
+      - protocol: TCP
+        port: {{ .Values.bookkeeper.ports.bookie }}
+
+{{ if .Values.bookkeeper.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.bookkeeper.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+ # Define egress for DNS lookups
+    - to: {{ .Values.bookkeeper.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.bookkeeper.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - to:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.broker.component }}
+      ports:
+        - protocol: TCP
+          port:  {{ .Values.broker.ports.http }}
+        - protocol: TCP
+          port:  {{ .Values.broker.ports.pulsar }}
+    - to:
+      - podSelector:
+          matchLabels:
+            app: {{ template "pulsar.name" . }}
+            release: {{ .Release.Name }}
+            component: {{ .Values.bookkeeper.component }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.bookkeeper.ports.http }}
+        - protocol: TCP
+          port: {{ .Values.bookkeeper.ports.bookie }}
+
+{{ if .Values.bookkeeper.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.bookkeeper.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

@@ -1,0 +1,28 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fusion.api-gateway.serviceName" . }}
+  labels:
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.api-gateway.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4 }}
+spec:
+  ports:
+  - protocol: "TCP"
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "api-gateway"
+    app.kubernetes.io/part-of: "fusion"
+  {{- if .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+  type: {{ .Values.service.type }}

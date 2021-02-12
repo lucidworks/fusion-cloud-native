@@ -1,0 +1,58 @@
+image:
+  debug: false
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  repository: lucidworks
+  tag: latest
+nodeSelector:
+  coldstart:
+    seldon: null
+    sparkSolrEtl: null
+    train: null
+  default: {}
+  deploy:
+    seldon: null
+  evaluation:
+    sparkSolrEtl: null
+    train: null
+  supervised:
+    seldon: null
+    sparkSolrEtl: null
+    train: null
+rbac:
+  create: true
+resources:
+  coldstart:
+    seldon: {}
+    sparkSolrEtl: {}
+    train: {}
+  default: {}
+  deploy:
+    seldon: {}
+  evaluation:
+    seldon: {}
+    sparkSolrEtl: {}
+    train: {}
+  supervised:
+    seldon: {}
+    sparkSolrEtl: {}
+    train: {}
+securityContext:
+  fsGroup: 8764
+tls:
+  enabled: false
+  keystorePassword: changeit
+tolerations:
+  coldstart:
+    seldon: null
+    sparkSolrEtl: null
+    train: null
+  default: []
+  evaluation:
+    seldon: null
+    sparkSolrEtl: null
+    train: null
+  supervised:
+    seldon: null
+    sparkSolrEtl: null
+    train: null

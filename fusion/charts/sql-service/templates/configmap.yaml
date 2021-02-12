@@ -1,0 +1,45 @@
+---
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.sql-service.fullname" . }}"
+  labels:
+    app.kubernetes.io/component: "sql-service"
+    {{ include "fusion.sql-service.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    ribbon:
+      zookeeper:
+        enabled: false
+    spring:
+      cloud:
+        kubernetes:
+          enabled: true
+          discovery:
+            primaryPortName: {{ ternary "tlsclient" "client" $tlsEnabled }}
+          ribbon:
+            enabled: true
+          secrets:
+            enabled: true
+          config:
+            enabled: true
+        zookeeper:
+          connect-string: "{{ include "fusion.zkConnectionString" . }}"
+          discovery:
+            enabled: false
+{{- if  $tlsEnabled  }}
+    server:
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/ssl/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/ssl/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}

@@ -1,0 +1,146 @@
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "argo-milvus-maintenance-workflow"
+data:
+  application.yaml: |-
+    apiVersion: argoproj.io/v1alpha1
+    kind: Workflow
+    metadata:
+      generateName: milvus-maintenance-
+      labels:
+        workflows.argoproj.io/controller-instanceid: "{{`{{INSTANCEID}}`}}"
+        jobRunId: "{{`{{JOB_RUN_ID}}`}}"
+        jobConfigId: "{{`{{JOB_CONFIG_ID}}`}}"
+    spec:
+      serviceAccountName: "{{`{{SERVICE_ACCOUNT}}`}}"
+      entrypoint: workflow
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+      imagePullSecrets:
+      {{ .Values.image.imagePullSecrets| toYaml | nindent 8 }}
+
+      volumeClaimTemplates:
+        - metadata:
+            name: workspace
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 10Mi
+      volumes:
+      #This secret is set by Fusion cluster installation scripts / cluster administrator
+{{- if $tlsEnabled }}
+      - name: fusion-truststore
+        secret:
+          secretName: fusion-truststore
+{{- end }}
+      - name: secrets
+        secret:
+          secretName: service-account-key
+          items:
+          - key: sa
+            path: service-account-key
+      arguments:
+        parameters:
+        - name: action_type
+          value: "{{`{{ACTION_TYPE}}`}}"
+
+        - name: config_json
+          value: |-
+           {{`{{CONFIG_JSON}}`}}
+
+        - name: utilities_tag
+          value: "{{`{{workflowUtilitiesTag}}`}}"
+
+        - name: docker_repo
+          value: "{{ .Values.image.repository }}"
+
+        - name: image_pull_policy
+          value: "{{ .Values.image.imagePullPolicy }}"
+      entrypoint: workflow
+
+      templates:
+      - name: workflow
+        steps:
+        - - name: write-configs
+            template: write-configs
+        - - name: milvus-maintenance
+            template: milvus-maintenance
+
+      - name: write-configs
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          env:
+            - name: "FUSION_PROTOCOL"
+              value: "{{ $tlsEnabled | ternary "https" "http"  }}"
+{{- if $tlsEnabled }}
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+          command: [sh, -c]
+          args: ["echo '{{`{{workflow.parameters.config_json}}`}}' > /workspace/config.json; cat /workspace/config.json; ls -lr /workspace"]
+
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+            readOnly: true
+{{ end }}
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"
+
+      - name: milvus-maintenance
+        nodeSelector:
+          {{ .Values.nodeSelector.default | toYaml | nindent 10  }}
+        tolerations:
+          {{ .Values.tolerations.default | toYaml | nindent 10  }}
+        container:
+          image: "{{`{{workflow.parameters.docker_repo}}`}}/fusion-workflow-utilities:{{`{{workflow.parameters.utilities_tag}}`}}"
+          imagePullPolicy: "{{`{{workflow.parameters.image_pull_policy}}`}}"
+          env:
+            - name: "FUSION_PROTOCOL"
+              value: "{{ $tlsEnabled | ternary "https" "http"  }}"
+{{- if $tlsEnabled }}
+            - name: "REQUESTS_CA_BUNDLE"
+              value: "/etc/ssl/truststore/ca.pem"
+{{- end }}
+          resources:
+            {{ .Values.resources.default | toYaml | nindent 12  }}
+          volumeMounts:
+          - name: workspace
+            mountPath: /workspace
+{{ if $tlsEnabled }}
+          - name: "fusion-truststore"
+            mountPath: "/etc/ssl/truststore"
+            readOnly: true
+{{ end }}
+          command: [ tini, --, python, milvus_maintenance.py ]
+          args: ["milvus_maintenance", "{{`{{workflow.parameters.action_type}}`}}", "/workspace/config.json"]
+
+        metadata:
+          labels:
+            app.kubernetes.io/component: ml-service-workflow
+            app.kubernetes.io/part-of: fusion
+            app.kubernetes.io/instance: "{{ .Release.Name }}"

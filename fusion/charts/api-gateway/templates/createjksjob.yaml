@@ -1,0 +1,103 @@
+{{- if .Values.rbac.create -}}
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: hook-succeeded
+  name: "{{ include "fusion.api-gateway.fullname" . }}-jks-create"
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-weight: "1"
+    helm.sh/hook-delete-policy: hook-succeeded
+  namespace: {{ .Release.Namespace }}
+  name: "{{ include "fusion.api-gateway.fullname" . }}-jks-create"
+rules:
+- apiGroups: [""]
+  resources: [ "secrets" ]
+  verbs: [ "create", "get" ]
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  annotations:
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-weight: "2"
+    helm.sh/hook-delete-policy: hook-succeeded
+  name: "{{ include "fusion.api-gateway.fullname" . }}-jks-create"
+  namespace: {{ .Release.Namespace }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ include "fusion.api-gateway.fullname" . }}-jks-create"
+  apiGroup: ""
+roleRef:
+  kind: Role
+  name: "{{ include "fusion.api-gateway.fullname" . }}-jks-create"
+  apiGroup: rbac.authorization.k8s.io
+
+{{- end }}
+---
+
+apiVersion: "batch/v1"
+kind: "Job"
+metadata:
+  name: "{{ template "fusion.api-gateway.fullname" . }}"
+  annotations:
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-weight: "3"
+    helm.sh/hook-delete-policy: hook-succeeded
+  labels:
+    {{ include "fusion.api-gateway.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+{{- if .Values.securityContext }}
+      securityContext:
+{{- .Values.securityContext | toYaml | nindent 8 }}
+{{- end }}
+      volumes:
+        - name: workdir
+          emptyDir: {}
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        {{ toYaml .Values.image.imagePullSecrets | nindent 8 }}
+      serviceAccountName: "{{ .Values.rbac.serviceAccountName  | default ( printf "%s-jks-create" (include "fusion.api-gateway.fullname" .)) }}"
+      {{- if .Values.tolerations }}
+      tolerations: {{ .Values.tolerations | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{ toYaml .Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: "generate-jks"
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            privileged: false
+          resources: {{ toYaml  .Values.jksSetup.resources | nindent 12 }}
+          image: "{{ template "fusion.api-gateway.keytoolUtilsRepository" . }}/{{ .Values.keytoolUtils.image.name }}:{{ .Values.keytoolUtils.image.tag }}"
+          imagePullPolicy: "{{ .Values.keytoolUtils.image.imagePullPolicy }}"
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              if ! kubectl get secret {{ include "fusion.api-gateway.fullname" . }}-jks ; then
+                keytool -genkeypair -keyalg rsa -keysize 2048 -validity 3650  -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, S=Unknown, C=Unknown"  -storetype jks -keystore api-gateway.jks -keypass password123 -storepass password123 -alias jwt-signer
+                kubectl create secret generic {{ include "fusion.api-gateway.fullname" . }}-jks --from-file api-gateway.jks
+              fi
+          volumeMounts:
+            - name: workdir
+              mountPath: "/mnt/work"

@@ -1,0 +1,72 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.ml-model-service.fullname" . }}"
+  labels:
+    {{ include "fusion.ml-model-service.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    modelRepository:
+      impl: {{ .Values.modelRepoImpl }}
+      gcs:
+        bucketName: {{ .Values.gcsBucketName }}
+        baseDirectoryName: {{ .Values.gcsBaseDirectoryName }}
+        pretrained:
+          enabled: {{ .Values.gcs.pretrained.enabled }}
+        {{- if .Values.gcs.pretrained.enabled}}
+          bucketName: {{ .Values.gcs.pretrained.gcsPretrainedBucket }}
+          keyPath: {{ .Values.gcs.pretrained.gcsSecret.path }}/{{ .Values.gcs.pretrained.gcsSecret.key }}
+          projectName: {{ .Values.gcs.pretrained.gcsProjectName }}
+        {{- end}}
+      fs:
+        enabled: {{ .Values.fs.enabled }}
+      {{- if .Values.fs.enabled }}
+        workingDir: {{ .Values.fs.workingDir }}
+      {{- end}}
+    logging:
+      level:
+        root: {{ .Values.logLevelRoot }}
+    ribbon:
+        zookeeper:
+            enabled: false
+{{- if  $tlsEnabled  }}
+    server:
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/ssl/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/ssl/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}
+    spring:
+        cloud:
+            kubernetes:
+                secrets:
+                    enabled: true
+                config:
+                    enabled: true
+                discovery:
+                    order: 0
+                enabled: true
+                ribbon:
+                    enabled: true
+            zookeeper:
+                connect-string: "{{ include "fusion.zkConnectionString" . }}"
+                discovery:
+                    enabled: false
+    accesslog:
+      enabled: {{ .Values.accessLogEnabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "ml-service-details"
+data:
+  argoNamespace: "{{ .Release.Namespace }}"
+  mlModelServiceName: "{{ template "fusion.ml-model-service.fullname" . }}"
+  ambassadorServiceName: "{{ .Values.ambassadorServiceOverride | default ( printf "%s-ambassador" .Release.Name ) }}"
+  ambassadorServicePort: "80"
+  argoInstanceID: "{{ .Values.argoInstanceID | default .Release.Name }}"

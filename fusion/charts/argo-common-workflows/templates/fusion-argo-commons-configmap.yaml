@@ -1,0 +1,14 @@
+{{- $tlsEnabled := .Values.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{ $tlsEnabled = true }}
+{{- end }}
+{{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "fusion-argo-commons"
+data:
+  sparkSolrEtl: "{{ .Values.image.sparkSolrEtlTag | default .Values.image.tag }}"
+  workflowUtilitiesTag: "{{ .Values.image.utilitiesTag | default .Values.image.tag }}"

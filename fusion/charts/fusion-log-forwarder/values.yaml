@@ -1,0 +1,84 @@
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 70
+    type: Resource
+  minReplicas: 1
+batchSize: 2000
+fusion-common-utils:
+  global: {}
+image:
+  imagePullSecrets: []
+  name: fusion-log-forwarder
+  pullPolicy: Always
+  repository: lucidworks
+  tag: latest
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets:
+    - name: artifactory
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.1.0
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 5
+  periodSeconds: 15
+  timeoutSeconds: 1
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+processorCount: 10
+pulsarBacklogLimit: 1073741824
+pulsarBacklogPolicy: consumer_backlog_eviction
+pulsarNamespace: _logs
+pulsarNamespaceSizeRetention: 0
+pulsarNamespaceTimeRetention: 0
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+pulsarTopic: system_logs
+rbac:
+  create: true
+replicaCount: 1
+resources: {}
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+solrPath: solr
+solrPort: "8983"
+solrProtocol: http
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+zkPort: 2181
+zkReplicaCount: 3

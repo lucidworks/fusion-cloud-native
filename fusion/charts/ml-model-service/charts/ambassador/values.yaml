@@ -1,0 +1,111 @@
+adminService:
+  annotations: {}
+  create: true
+  port: 8877
+  type: ClusterIP
+affinity: {}
+ambassadorConfig: ""
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  metrics:
+  - resource:
+      name: cpu
+      targetAverageUtilization: 60
+    type: Resource
+  - resource:
+      name: memory
+      targetAverageUtilization: 60
+    type: Resource
+  minReplicas: 2
+crds:
+  create: true
+  enabled: true
+  keep: true
+daemonSet: false
+deploymentAnnotations: {}
+dnsPolicy: ClusterFirst
+env: {}
+fullnameOverride: ""
+hostNetwork: false
+image:
+  pullPolicy: IfNotPresent
+  repository: quay.io/datawire/ambassador
+  tag: 0.86.1
+imagePullSecrets: []
+initContainers: []
+livenessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 3
+nameOverride: ""
+nodeSelector: {}
+podAnnotations: {}
+podDisruptionBudget: {}
+podLabels: {}
+priorityClassName: ""
+pro:
+  authService:
+    enabled: true
+    optional_configurations: null
+  devPortal:
+    enabled: false
+  enabled: false
+  env: {}
+  image:
+    customBuildTag: null
+    repository: quay.io/datawire/ambassador_pro
+    tag: 0.11.0
+  licenseKey:
+    secret:
+      create: true
+      enabled: true
+    value: '{{INSERT LICENSE KEY HERE}}'
+  logLevel: info
+  ports:
+    auth: 8500
+    ratelimit: 8500
+  rateLimit:
+    enabled: true
+    redis:
+      annotations:
+        deployment: {}
+        service: {}
+      resources: {}
+  resources: {}
+prometheusExporter:
+  enabled: false
+  pullPolicy: IfNotPresent
+  repository: prom/statsd-exporter
+  resources: {}
+  tag: v0.8.1
+rbac:
+  create: true
+  podSecurityPolicies: {}
+readinessProbe:
+  failureThreshold: 3
+  initialDelaySeconds: 30
+  periodSeconds: 3
+replicaCount: 3
+resources: {}
+scope:
+  singleNamespace: false
+securityContext:
+  runAsUser: 8888
+service:
+  annotations: null
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: https
+    port: 443
+    targetPort: 8443
+  type: LoadBalancer
+serviceAccount:
+  create: true
+  name: null
+sidecarContainers: []
+tolerations: []
+volumeMounts: []
+volumes: []

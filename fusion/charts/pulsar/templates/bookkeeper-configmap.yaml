@@ -1,0 +1,40 @@
+{{- if .Values.components.bookkeeper }}
+{{- $tlsEnabled := .Values.bookkeeper.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+data:
+  # common config
+  {{- include "pulsar.bookkeeper.config.common" . | nindent 2 }}
+  {{- if .Values.components.autorecovery }}
+  # disable auto recovery on bookies since we will start AutoRecovery in separated pods
+  autoRecoveryDaemonEnabled: "false"
+  {{- end }}
+{{- if $tlsEnabled }}
+  PULSAR_PREFIX_tlsProvider: "JDK"
+  PULSAR_PREFIX_tlsKeyStoreType: "PKCS12"
+  PULSAR_PREFIX_tlsKeyStore: "/etc/ssl/keystores/keystore.jks"
+  PULSAR_PREFIX_tlsKeyStorePasswordPath: "/etc/ssl/keystores/keystore.jks.passwd"
+
+  # trust store
+  PULSAR_PREFIX_tlsTrustStoreType: "PKCS12"
+  PULSAR_PREFIX_tlsTrustStore: "/etc/ssl/keystores/truststore.jks"
+  PULSAR_PREFIX_tlsTrustStorePasswordPath: "/etc/ssl/keystores/truststore.jks.passwd"
+  PULSAR_PREFIX_tlsProviderFactoryClass: "org.apache.bookkeeper.tls.TLSContextFactory"
+  PULSAR_PREFIX_tlsEnabledProtocols: "TLSv1.2"
+{{- end }}
+  # Do not retain journal files as it increase the disk utilization
+  journalMaxBackups: "0"
+{{ toYaml .Values.bookkeeper.configData | indent 2 }}
+{{- end }}

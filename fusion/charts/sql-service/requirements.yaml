@@ -1,0 +1,6 @@
+---
+
+dependencies:
+  - name: fusion-common-utils
+    version: 1.5.1
+    repository: "https://charts.lucidworks.com/"

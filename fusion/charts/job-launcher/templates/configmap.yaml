@@ -1,0 +1,93 @@
+---
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "fusion.job-launcher.fullname" . }}"
+  labels:
+    {{ include "fusion.job-launcher.labels" . | nindent 4 }}
+data:
+  application.yaml: |
+    jetty:
+      server:
+        stop:
+          timeout: {{ .Values.serverStopTimeout }}
+    management:
+      health:
+        solr:
+          enabled: false
+{{- if  $tlsEnabled  }}
+    dc:
+      launcher:
+        tlsEnabled: true
+        tlsTrustStore: /etc/ssl/keystores/truststore.jks
+        tlsTrustStorePassword: {{ .Values.tls.keystorePassword | quote }}
+    server:
+      ssl:
+        key-store-type: pkcs12
+        key-store: /etc/ssl/keystores/keystore.jks
+        key-store-password: {{ .Values.tls.keystorePassword }}
+        trust-store: /etc/ssl/keystores/truststore.jks
+        trust-store-password: {{ .Values.tls.keystorePassword }}
+{{- end }}
+    spark:
+      executor:
+        instances: {{ .Values.executorInstances }}
+      kubernetes:
+        authenticate:
+          driver:
+            serviceAccountName: "{{ .Values.rbac.sparkServiceAccountName | default (printf "%s-spark" ( include "fusion.job-launcher.fullname" . )) }}"
+        driver:
+          container:
+            image: {{ .Values.image.repository }}/fusion-spark:{{ .Values.image.tag }}
+        executor:
+          container:
+            image: {{ .Values.image.repository }}/fusion-spark:{{ .Values.image.tag }}
+        container:
+          image:
+            pullPolicy: {{ .Values.image.imagePullPolicy }}
+            pullSecrets: "{{- range $index, $pullSecret := .Values.image.imagePullSecrets -}}
+            {{ if gt $index 0 }},{{ end }}{{- .name -}}
+            {{- end }}"
+        {{- if .Values.sparkNamespace }}
+        namespace:
+          {{ .Values.sparkNamespace }}
+        {{- end  }}
+        {{- if .Values.sparkNodeSelector }}
+        node:
+          selector:
+           {{- range $key, $value := .Values.sparkNodeSelector }}
+           {{ $key }}: {{ $value }}
+           {{- end }}
+        {{- end }}
+    spring:
+{{- if .Values.config.springSecurity }}
+      security:
+{{ tpl .Values.config.springSecurity . | indent 8 }}
+{{- end }}
+      cloud:
+        kubernetes:
+          enabled: true
+          ribbon:
+            enabled: true
+        zookeeper:
+          connect-string: "{{ include "fusion.zkConnectionString" . }}"
+          discovery:
+            enabled: false
+      sleuth:
+        enabled: false
+      zipkin:
+        enabled: false # enable if running zipkin server
+        # baseUrl: http://localhost:9411/
+    logging:
+      level:
+        root: {{ .Values.logLevelRoot }}
+    ribbon:
+      zookeeper:
+        enabled: false
+    accesslog:
+      enabled: {{ .Values.accessLogEnabled }}
+    prometheus:
+      enabled: {{ .Values.prometheus.enabled }}
+      endpoint: {{ .Values.prometheus.endpoint }}

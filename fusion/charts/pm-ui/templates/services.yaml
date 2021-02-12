@@ -1,0 +1,26 @@
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ include "fusion.pm-ui.serviceName" . }}"
+  labels:
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+{{ include "fusion.pm-ui.labels" . | indent 4 }}
+  annotations:
+{{ toYaml .Values.service.annotations | indent 4}}
+spec:
+  ports:
+  - name: "http"
+    protocol: "TCP"
+    port: {{ .Values.service.http.port }}
+    targetPort: {{ .Values.service.http.targetPort }}
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: "pm-ui"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.http.type }}

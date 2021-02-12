@@ -1,0 +1,26 @@
+---
+
+{{- $tlsEnabled := ( eq (include "fusion.tls.enabled" .) "true" ) -}}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ template "fusion.fusion-indexing.serviceName" . }}"
+  labels:
+{{- if $tlsEnabled }}
+    secured: "true"
+{{- end }}
+    app.kubernetes.io/target-image-tag: {{ .Values.image.tag }}
+    {{ include "fusion.fusion-indexing.labels" . | nindent 4 }}
+  annotations:
+    {{ toYaml .Values.service.annotations | nindent 4 }}
+spec:
+  ports:
+  - protocol: "TCP"
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/component: "fusion-indexing"
+    app.kubernetes.io/part-of: "fusion"
+  type: {{ .Values.service.type }}

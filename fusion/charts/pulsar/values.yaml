@@ -1,0 +1,509 @@
+auth:
+  authentication:
+    enabled: false
+    jwt:
+      secretKey: sa
+      secretKeyName: service-account-key
+      usingSecretKey: false
+    provider: jwt
+  authorization:
+    enabled: false
+  superUsers:
+    broker: broker-admin
+    client: admin
+    proxy: proxy-admin
+autorecovery:
+  affinity: {}
+  annotations: {}
+  component: recovery
+  configData:
+    BOOKIE_MEM: |
+      " -XX:+ExitOnOutOfMemoryError -Xms64m -Xmx64m "
+  gracePeriod: 30
+  initContainer:
+    resources: {}
+  ports:
+    http: 8000
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 0.05
+      memory: 64Mi
+bookkeeper:
+  affinity: {}
+  annotations: {}
+  component: bookkeeper
+  configData:
+    BOOKIE_EXTRA_OPTS: |
+      -Dvertx.cacheDirBase=/tmp/vertx-cache
+    PULSAR_GC: |
+      -XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:+ParallelRefProcEnabled -XX:+UnlockExperimentalVMOptions -XX:+DoEscapeAnalysis -XX:ParallelGCThreads=4 -XX:ConcGCThreads=4 -XX:G1NewSizePercent=50 -XX:+DisableExplicitGC -XX:-ResizePLAB -XX:+ExitOnOutOfMemoryError -XX:+PerfDisableSharedMem -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCApplicationStoppedTime -XX:+PrintHeapAtGC -verbosegc -Xloggc:/var/log/bookie-gc.log -XX:G1LogLevel=finest
+    PULSAR_MEM: |
+      -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=60.0
+    dbStorage_readAheadCacheMaxSizeMb: "256"
+    dbStorage_rocksDB_blockCacheSize: "16777216"
+    dbStorage_rocksDB_writeBufferSizeMB: "64"
+    dbStorage_writeCacheMaxSizeMb: "256"
+    journalMaxSizeMB: "2048"
+    nettyMaxFrameSizeBytes: "20981760"
+  gracePeriod: 30
+  initContainer:
+    resources: {}
+  networkPolicy:
+    additionalEgressRules: []
+    additionalIngressRules: []
+    dnsAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    enabled: false
+    kubernetesAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+  pdb:
+    maxUnavailable: 1
+    usePolicy: true
+  podManagementPolicy: OrderedReady
+  ports:
+    bookie: 3181
+    http: 8000
+  probe:
+    liveness:
+      enabled: true
+      failureThreshold: 60
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readiness:
+      enabled: true
+      failureThreshold: 60
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    startup:
+      enabled: false
+      failureThreshold: 30
+      initialDelaySeconds: 60
+      periodSeconds: 30
+  replicaCount: 3
+  resources:
+    limits:
+      memory: 5Gi
+    requests:
+      cpu: 500m
+      memory: 2Gi
+  securityContext:
+    fsGroup: 0
+    runAsUser: 0
+  service:
+    annotations:
+      publishNotReadyAddresses: "true"
+  tls:
+    caSecret:
+      name: ""
+    certSecret:
+      name: ""
+    clusterDomain: svc.cluster.local
+    duration: 8760h
+    enabled: false
+    generateCert: true
+    generateJKS: true
+    generatePasswdFile: true
+    issuerRef:
+      kind: Issuer
+      name: fusion-ca-issuer
+    keystorePassword: changeit
+    renewBefore: 8464h
+  tolerations: []
+  updateStrategy:
+    type: RollingUpdate
+  volumes:
+    journal:
+      local_storage: true
+      name: journal
+      size: 50Gi
+    ledgers:
+      local_storage: true
+      name: ledgers
+      size: 50Gi
+    persistence: true
+broker:
+  affinity: {}
+  annotations: {}
+  component: broker
+  configData:
+    PULSAR_GC: |
+      -XX:+UseG1GC -XX:MaxGCPauseMillis=10 -Dio.netty.leakDetectionLevel=disabled -Dio.netty.recycler.linkCapacity=1024 -XX:+ParallelRefProcEnabled -XX:+UnlockExperimentalVMOptions -XX:+DoEscapeAnalysis -XX:ParallelGCThreads=4 -XX:ConcGCThreads=4 -XX:G1NewSizePercent=50 -XX:+DisableExplicitGC -XX:-ResizePLAB -XX:+PerfDisableSharedMem
+    PULSAR_MEM: |
+      -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=60.0
+    backlogQuotaDefaultLimitGB: "10"
+    deduplicationEnabled: "false"
+    defaultRetentionSizeInMB: "5120"
+    defaultRetentionTimeInMinutes: "1440"
+    exposeTopicLevelMetricsInPrometheus: "true"
+    managedLedgerDefaultAckQuorum: "2"
+    managedLedgerDefaultEnsembleSize: "2"
+    managedLedgerDefaultWriteQuorum: "2"
+    maxMessageSize: "20971520"
+  gracePeriod: 30
+  initContainer:
+    resources: {}
+  networkPolicy:
+    additionalEgressRules: []
+    additionalIngressRules: []
+    dnsAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    enabled: false
+    kubernetesAccess:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+  pdb:
+    maxUnavailable: 1
+    usePolicy: true
+  ports:
+    http: 8080
+    https: 8443
+    pulsar: 6650
+    pulsarssl: 6651
+  probe:
+    liveness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      topic: _system/_signals_ingest
+    readiness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+    startup:
+      enabled: false
+      failureThreshold: 30
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+  replicaCount: 2
+  resources:
+    limits:
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 3Gi
+  securityContext:
+    fsGroup: 0
+    runAsUser: 0
+  service:
+    annotations: {}
+  tls:
+    caSecret:
+      name: ""
+    certSecret:
+      name: ""
+    clusterDomain: svc.cluster.local
+    duration: 8760h
+    enabled: false
+    generateCert: true
+    generateJKS: true
+    issuerRef:
+      kind: Issuer
+      name: fusion-ca-issuer
+    keystorePassword: changeit
+    renewBefore: 8464h
+  tolerations: []
+certs:
+  internal_issuer:
+    component: internal-cert-issuer
+    enabled: false
+    type: selfsigning
+  issuers:
+    selfsigning: null
+clusterName: pulsar-cluster
+components:
+  autorecovery: false
+  bookkeeper: true
+  broker: true
+  functions: false
+  proxy: false
+  pulsar_manager: false
+  toolset: false
+  zookeeper: false
+dashboard:
+  annotations: {}
+  component: dashboard
+  gracePeriod: 0
+  image:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-dashboard
+    tag: latest
+  ingress:
+    enabled: false
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+  service:
+    annotations: {}
+    ports:
+    - name: server
+      port: 80
+  tolerations: []
+extra:
+  autoRecovery: false
+  bastion: false
+  dashboard: false
+  functionsAsPods: false
+  proxy: false
+  pulsar_manager: false
+functions:
+  component: functions-worker
+fusion-common-utils:
+  global: {}
+image:
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+  name: fusion-pulsar-proxy
+  repository: lucidworks
+  tag: latest
+images:
+  autorecovery:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+  bookie:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+  broker:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+  functions:
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+  imagePullSecrets: []
+  pulsar_manager:
+    hasCommand: false
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-manager
+    tag: v0.1.0
+  zookeeper:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+initContainer:
+  image:
+    repository: lucidworks
+keytoolUtils:
+  image:
+    annotations: {}
+    hostname: ""
+    imagePullPolicy: IfNotPresent
+    name: keytool-utils
+    path: /
+    port: 80
+    repository: lucidworks
+    tag: v2.0.0
+    tls:
+      enabled: false
+      secretName: ""
+metadataPrefix: /pulsar
+namespace: ""
+namespaceCreate: false
+persistence: true
+proxy:
+  affinity: {}
+  annotations: {}
+  component: pulsar-proxy
+  configData:
+    PULSAR_GC: |
+      -XX:+UseG1GC -XX:MaxGCPauseMillis=10 -Dio.netty.leakDetectionLevel=disabled -Dio.netty.recycler.linkCapacity=1024 -XX:+ParallelRefProcEnabled -XX:+UnlockExperimentalVMOptions -XX:+DoEscapeAnalysis -XX:ParallelGCThreads=4 -XX:ConcGCThreads=4 -XX:G1NewSizePercent=50 -XX:+DisableExplicitGC -XX:-ResizePLAB -XX:+PerfDisableSharedMem
+    PULSAR_MEM: |
+      -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=50.0
+    authenticationEnabled: "true"
+    authenticationProviders: com.lucidworks.pulsar.security.FusionTokenAuthenticationProvider
+  gracePeriod: 30
+  initContainer:
+    resources: {}
+  pdb:
+    maxUnavailable: 1
+    usePolicy: true
+  ports:
+    http: 80
+    https: 443
+    pulsar: 6650
+    pulsarssl: 6651
+  probe:
+    liveness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+    readiness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+    startup:
+      enabled: false
+      failureThreshold: 30
+      initialDelaySeconds: 60
+      periodSeconds: 10
+      timeoutSeconds: 5
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 0.2
+      memory: 128Mi
+  service:
+    annotations: {}
+    type: LoadBalancer
+  tls:
+    caSecret:
+      name: ""
+    certSecret:
+      name: ""
+    clusterDomain: svc.cluster.local
+    duration: 8760h
+    enabled: false
+    generateCert: true
+    generateJKS: true
+    generatePasswdFile: true
+    issuerRef:
+      kind: Issuer
+      name: fusion-ca-issuer
+    keystorePassword: changeit
+    renewBefore: 8464h
+  tolerations: []
+pulsar_manager:
+  admin:
+    password: pulsar
+    user: pulsar
+  annotations: {}
+  component: pulsar-manager
+  configData:
+    DRIVER_CLASS_NAME: org.postgresql.Driver
+    LOG_LEVEL: DEBUG
+    REDIRECT_HOST: http://127.0.0.1
+    REDIRECT_PORT: "9527"
+    URL: jdbc:postgresql://127.0.0.1:5432/pulsar_manager
+  gracePeriod: 30
+  port: 9527
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 0.1
+      memory: 250Mi
+  service:
+    annotations: {}
+    type: LoadBalancer
+  tolerations: []
+pulsar_metadata:
+  component: pulsar-init
+  configurationStoreMetadataPrefix: ""
+  configurationStorePort: 2181
+  image:
+    pullPolicy: IfNotPresent
+    repository: apachepulsar/pulsar-all
+    tag: 2.6.1
+rbac:
+  create: true
+tls:
+  enabled: false
+  keystorePassword: changeit
+toolset:
+  annotations: {}
+  component: toolset
+  configData:
+    PULSAR_MEM: |
+      -XX:+UseContainerSupport -XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=50.0
+  gracePeriod: 30
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 0.1
+      memory: 256Mi
+  tolerations: []
+  useProxy: true
+volumes:
+  local_storage: false
+  persistence: true
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281
+zookeeper:
+  affinity: {}
+  annotations: {}
+  component: zookeeper
+  configData:
+    PULSAR_GC: |
+      -XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:+ParallelRefProcEnabled -XX:+UnlockExperimentalVMOptions -XX:+DoEscapeAnalysis -XX:+DisableExplicitGC -XX:+PerfDisableSharedMem
+    PULSAR_MEM: |
+      -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=50.0 -XX:MaxRAMPercentage=80.0 -Dcom.sun.management.jmxremote -Djute.maxbuffer=10485760 -Dzookeeper.forceSync=no
+  gracePeriod: 30
+  pdb:
+    maxUnavailable: 1
+    usePolicy: true
+  podManagementPolicy: OrderedReady
+  ports:
+    client: 2181
+    clientTls: 2281
+    follower: 2888
+    leaderElection: 3888
+  probe:
+    liveness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    readiness:
+      enabled: true
+      failureThreshold: 10
+      initialDelaySeconds: 10
+      periodSeconds: 30
+    startup:
+      enabled: false
+      failureThreshold: 30
+      initialDelaySeconds: 10
+      periodSeconds: 30
+  replicaCount: 3
+  resources:
+    limits:
+      memory: 512Mi
+    requests:
+      cpu: 0.2
+      memory: 512Mi
+  service:
+    annotations:
+      service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  tls:
+    caSecret:
+      name: ""
+    certSecret:
+      name: ""
+    clusterDomain: svc.cluster.local
+    duration: 8760h
+    enabled: false
+    generateCert: true
+    generateJKS: false
+    issuerRef:
+      kind: Issuer
+      name: fusion-ca-issuer
+    keystorePassword: changeit
+    renewBefore: 8464h
+  tolerations: []
+  updateStrategy:
+    type: RollingUpdate
+  volumes:
+    data:
+      local_storage: true
+      name: data
+      size: 20Gi
+    persistence: true

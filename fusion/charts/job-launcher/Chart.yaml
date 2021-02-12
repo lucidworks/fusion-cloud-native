@@ -1,0 +1,15 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: A helm chart to install the job launcher component
+keywords:
+- fusion
+- job-launcher
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: job-launcher
+version: 1.7.1

@@ -1,0 +1,95 @@
+accessLogEnabled: false
+affinity: {}
+annotations: {}
+bootstrapEnabled: true
+component: connectors-classic
+deploymentStrategy:
+  rollingUpdate:
+    maxSurge: 25%
+    maxUnavailable: 25%
+  type: RollingUpdate
+fusion-common-utils:
+  global: {}
+image:
+  imagePullSecrets: []
+  name: connectors-classic
+  pullPolicy: IfNotPresent
+  repository: lucidworks
+  tag: latest
+javaToolOptions: -XX:+ExitOnOutOfMemoryError -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=75.0
+  -Xss256k -Dhttp.maxConnections=1000
+keytoolUtils:
+  image:
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    name: keytool-utils
+    repository: lucidworks
+    tag: v2.0.0
+livenessProbe:
+  failureThreshold: 10
+  initialDelaySeconds: 155
+  periodSeconds: 30
+  timeoutSeconds: 2
+logdir: /app/logs
+name: connectors-classic
+networkPolicy:
+  additionalEgressRules: []
+  additionalIngressRules: []
+  dnsAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+  enabled: false
+  kubernetesAccess:
+  - ipBlock:
+      cidr: 0.0.0.0/0
+nodeSelector: {}
+pod:
+  annotations: {}
+podDisruptionBudget:
+  maxUnavailable: 1
+port:
+  external: 9000
+  internal: 9000
+preStopSleepTime: 15
+pulsarPort: "8080"
+pulsarServicePort: "6650"
+pulsarServiceTLSPort: "6651"
+pulsarTLSPort: "8443"
+rbac:
+  create: true
+readinessProbe:
+  failureThreshold: 8
+  initialDelaySeconds: 150
+  periodSeconds: 5
+  successThreshold: 1
+  timeoutSeconds: 2
+replicaCount: 1
+securityContext:
+  fsGroup: 8764
+  runAsNonRoot: true
+  runAsUser: 8764
+serviceName: connectors-classic
+springProfiles: k8s,jwt
+tls:
+  caSecret:
+    name: ""
+  certSecret:
+    name: ""
+  clusterDomain: svc.cluster.local
+  duration: 8760h
+  enabled: false
+  generateCert: true
+  generateJKS: true
+  issuerRef:
+    kind: Issuer
+    name: fusion-ca-issuer
+  keystorePassword: changeit
+  renewBefore: 8464h
+volume:
+  accessMode: ReadWriteOnce
+  claimName: connectors-classic-data-claim
+  name: connectors-classic-data
+  storage: 10Gi
+zkPort: 2181
+zkReplicaCount: 3
+zkTLSPort: 2281

@@ -1,0 +1,293 @@
+{{- if .Values.components.bookkeeper }}
+{{- $tlsEnabled := .Values.bookkeeper.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+spec:
+  serviceName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  replicas: {{ .Values.bookkeeper.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.bookkeeper.component }}
+  updateStrategy:
+{{ toYaml .Values.bookkeeper.updateStrategy | indent 4 }}
+  podManagementPolicy: {{ .Values.bookkeeper.podManagementPolicy }}
+  template:
+    metadata:
+      labels:
+        {{- include "pulsar.template.labels" . | nindent 8 }}
+        component: {{ .Values.bookkeeper.component }}
+      annotations:
+{{- with .Values.bookkeeper.annotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+      securityContext:
+{{- if .Values.bookkeeper.securityContext.runAsUser }}
+        runAsUser: {{ .Values.bookkeeper.securityContext.runAsUser }}
+{{- end }}
+{{- if .Values.bookkeeper.securityContext.fsGroup }}
+        fsGroup: {{ .Values.bookkeeper.securityContext.fsGroup }}
+{{- end }}
+      imagePullSecrets: {{ toYaml .Values.images.imagePullSecrets | nindent 8 }}
+{{- if $tlsEnabled }}
+      serviceAccountName: "{{ .Values.bookkeeper.serviceAccountName | default ( printf "%s-%s" (include "pulsar.fullname" .) ( .Values.bookkeeper.component )) }}"
+{{- end }}
+    {{- if .Values.bookkeeper.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.bookkeeper.nodeSelector | indent 8 }}
+    {{- end }}
+    {{- if .Values.bookkeeper.tolerations }}
+      tolerations:
+{{ toYaml .Values.bookkeeper.tolerations | indent 8 }}
+    {{- end }}
+      affinity:
+{{ tpl (toYaml .Values.bookkeeper.affinity) .  | indent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.bookkeeper.gracePeriod }}
+
+      initContainers:
+{{- if $tlsEnabled -}}
+{{ $params := dict "Release" .Release "global" .Values.global "tls" .Values.bookkeeper.tls "tlsServiceName" (printf "%s-%s" ( include "pulsar.fullname" . ) .Values.bookkeeper.component ) "keytoolUtils" .Values.keytoolUtils "securityContext" .Values.bookkeeper.securityContext }}
+{{ include "fusion.tls.init-container-v2" $params | indent 6 }}
+{{- end }}
+      - name: check-zk
+        image: {{ $.Values.initContainer.image.repository }}/check-fusion-dependency:v1.2.0
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsUser: {{ .Values.bookkeeper.securityContext.runAsUser }}
+        args:
+          - zookeeper
+        resources:
+          requests:
+            cpu: 200m
+            memory: 32Mi
+          limits:
+            cpu: 200m
+            memory: 32Mi
+        env:
+          - name: ZOOKEEPER_CONNECTION_STRING
+            value: {{ include "fusion.zkConnectionString" $ }}
+          - name: CHECK_INTERVAL
+            value: {{ $.Values.zkInitCheckInterval | default "5s" }}
+          - name: CHECK_TIMEOUT
+            value: {{ $.Values.zkInitCheckTimeout | default "2s" }}
+          - name: TIMEOUT
+            value: {{ $.Values.zkInitTimeout | default "2m" }}
+{{- if $tlsEnabled }}
+          - name: ADDITIONAL_CA_CERTIFICATE
+            value: "/tls/ca.crt"
+          - name: "TLS_ENABLED"
+            value: "true"
+        volumeMounts:
+          - name: keystore-volume
+            mountPath: /tls
+{{- end }}
+      - name: bookkeeper-cluster-initialize
+        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        resources: {{ toYaml .Values.bookkeeper.initContainer.resources | nindent 10 }}
+        command: ["sh", "-cx"]
+        args:
+        - >
+          cp conf/bookkeeper.conf "${PULSAR_BOOKKEEPER_CONF}";
+          bin/apply-config-from-env.py "${PULSAR_BOOKKEEPER_CONF}";
+          {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+          if bin/bookkeeper shell whatisinstanceid; then
+              echo "bookkeeper cluster already initialized";
+          else
+              {{- if not (eq .Values.metadataPrefix "") }}
+              echo "Initializing zk chroot {{ .Values.metadataPrefix }} on {{ template "pulsar.zookeeper.connect" . }}"
+              bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.zookeeper.connect" . }} create {{ .Values.metadataPrefix }}
+              {{- end }}
+              bin/bookkeeper shell initnewcluster;
+          fi
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        env:
+          - name: "PULSAR_BOOKKEEPER_CONF"
+            value: "/tmp/bookeeper.conf"
+          - name: "BOOKIE_CONF"
+            value: "/tmp/bookeeper.conf"
+{{ if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+        volumeMounts:
+        - name: "writable-volume"
+          mountPath: "/tmp"
+{{ if $tlsEnabled }}
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+{{ end }}
+      # This initContainer will wait for bookkeeper initnewcluster to complete
+      # before deploying the bookies
+      - name: pulsar-bookkeeper-verify-clusterid
+        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        resources: {{ toYaml .Values.bookkeeper.initContainer.resources | nindent 10 }}
+        command: ["sh", "-c"]
+        args:
+        # only reformat bookie if bookkeeper is running without persistence
+        - >
+          {{- include "pulsar.bookkeeper.init.verify_cluster_id" . | nindent 10 }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        env:
+          - name: "PULSAR_BOOKKEEPER_CONF"
+            value: "/tmp/bookeeper.conf"
+          - name: "BOOKIE_CONF"
+            value: "/tmp/bookeeper.conf"
+{{ if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+        volumeMounts:
+        - name: "writable-volume"
+          mountPath: "/tmp"
+{{- if $tlsEnabled }}
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+{{- end }}
+      containers:
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        image: "{{ .Values.images.bookie.repository }}:{{ .Values.images.bookie.tag }}"
+        imagePullPolicy: {{ .Values.images.bookie.pullPolicy }}
+        {{- if .Values.bookkeeper.probe.liveness.enabled }}
+        livenessProbe:
+          httpGet:
+            path: /api/v1/bookie/state
+            port: {{ .Values.bookkeeper.ports.http }}
+          initialDelaySeconds: {{ .Values.bookkeeper.probe.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.bookkeeper.probe.liveness.periodSeconds }}
+          failureThreshold: {{ .Values.bookkeeper.probe.liveness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.bookkeeper.probe.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: /api/v1/bookie/is_ready
+            port: {{ .Values.bookkeeper.ports.http }}
+          initialDelaySeconds: {{ .Values.bookkeeper.probe.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.bookkeeper.probe.readiness.periodSeconds }}
+          failureThreshold: {{ .Values.bookkeeper.probe.readiness.failureThreshold }}
+        {{- end }}
+        {{- if .Values.bookkeeper.probe.startup.enabled }}
+        startupProbe:
+          httpGet:
+            path: /api/v1/bookie/is_ready
+            port: {{ .Values.bookkeeper.ports.http }}
+          initialDelaySeconds: {{ .Values.bookkeeper.probe.startup.initialDelaySeconds }}
+          periodSeconds: {{ .Values.bookkeeper.probe.startup.periodSeconds }}
+          failureThreshold: {{ .Values.bookkeeper.probe.startup.failureThreshold }}
+        {{- end }}
+      {{- if .Values.bookkeeper.resources }}
+        resources:
+{{ toYaml .Values.bookkeeper.resources | indent 10 }}
+      {{- end }}
+        command: ["sh", "-c"]
+        args:
+        - >
+          cp conf/bookkeeper.conf "${PULSAR_BOOKKEEPER_CONF}";
+          bin/apply-config-from-env.py "${PULSAR_BOOKKEEPER_CONF}";
+          {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
+          bin/pulsar bookie;
+        ports:
+        - name: bookie
+          containerPort: {{ .Values.bookkeeper.ports.bookie }}
+        - name: http
+          containerPort: {{ .Values.bookkeeper.ports.http }}
+        envFrom:
+        - configMapRef:
+            name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+        volumeMounts:
+        - name: log4j-config
+          mountPath: "/pulsar/conf/log4j2.yaml"
+          subPath: "log4j2.yaml"
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
+          mountPath: /pulsar/data/bookkeeper/journal
+        - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
+          mountPath: /pulsar/data/bookkeeper/ledgers
+{{ if $tlsEnabled }}
+        - name: "keystore-volume"
+          mountPath: "/etc/ssl/keystores"
+{{ end }}
+        {{- include "pulsar.bookkeeper.certs.volumeMounts" . | nindent 8 }}
+        env:
+          - name: "PULSAR_BOOKKEEPER_CONF"
+            value: "/tmp/bookeeper.conf"
+{{- if $tlsEnabled }}
+          - name: "KEYSTORE_PASSWORD"
+            value: "{{ .Values.bookkeeper.tls.keystorePassword }}"
+{{- end }}
+      volumes:
+      - name: log4j-config
+        configMap:
+          name: "{{ template "pulsar.fullname" . }}-log4j-config"
+      {{- if not (and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence) }}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
+        emptyDir: {}
+      - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
+        emptyDir: {}
+      {{- end }}
+      - name: "writable-volume"
+        emptyDir: {}
+{{- if $tlsEnabled }}
+{{ $params := dict "Release" .Release "global" .Values.global "tls" .Values.bookkeeper.tls "tlsServiceName" (printf "%s-%s" ( include "pulsar.fullname" . ) .Values.bookkeeper.component ) "keytoolUtils" .Values.keytoolUtils }}
+{{ include "fusion.tls.volumes" $params | indent 6 }}
+{{- end }}
+{{- include "pulsar.bookkeeper.certs.volumes" . | nindent 6 }}
+{{- if and (and .Values.persistence .Values.volumes.persistence) .Values.bookkeeper.volumes.persistence}}
+  volumeClaimTemplates:
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.bookkeeper.volumes.journal.size }}
+    {{- if .Values.bookkeeper.volumes.journal.storageClassName }}
+      storageClassName: "{{ .Values.bookkeeper.volumes.journal.storageClassName }}"
+    # for backwards-compat with old fusion pulsar charts
+    {{- else if .Values.bookkeeper.volumes.journal.storageClass }}
+      storageClassName: "{{ .Values.bookkeeper.volumes.journal.storageClass }}"
+    {{- else if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage)) .Values.bookkeeper.volumes.journal.storageClass }}
+      storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.journal.name }}"
+    {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.journal.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+  - metadata:
+      name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.bookkeeper.volumes.ledgers.size }}
+    {{- if .Values.bookkeeper.volumes.ledgers.storageClassName }}
+      storageClassName: "{{ .Values.bookkeeper.volumes.ledgers.storageClassName }}"
+    # for backwards-compat with old fusion pulsar charts
+    {{- else if .Values.bookkeeper.volumes.ledgers.storageClass }}
+      storageClassName: "{{ .Values.bookkeeper.volumes.ledgers.storageClass }}"
+    {{- else if and (not (and .Values.volumes.local_storage .Values.bookkeeper.volumes.ledgers.local_storage)) .Values.bookkeeper.volumes.ledgers.storageClass }}
+      storageClassName: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-{{ .Values.bookkeeper.volumes.ledgers.name }}"
+    {{- else if and .Values.volumes.local_storage .Values.bookkeeper.volumes.ledgers.local_storage }}
+      storageClassName: "local-storage"
+    {{- end }}
+{{- end }}
+{{- end }}

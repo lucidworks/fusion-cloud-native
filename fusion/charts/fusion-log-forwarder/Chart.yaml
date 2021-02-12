@@ -1,0 +1,13 @@
+apiVersion: v2
+appVersion: "5"
+dependencies:
+- name: fusion-common-utils
+  repository: https://charts.lucidworks.com/
+  version: 1.5.1
+description: |
+  Deploys the fusion-log-forwarder
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: fusion-log-forwarder
+version: 1.5.0

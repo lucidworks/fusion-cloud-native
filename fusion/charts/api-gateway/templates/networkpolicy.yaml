@@ -1,0 +1,267 @@
+{{- $networkPoliciesEnabled := false -}}
+{{- if .Values.global -}}
+{{- if .Values.global.networkPolicyEnabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+{{- else if .Values.networkPolicy.enabled -}}
+{{- $networkPoliciesEnabled = true -}}
+{{- end -}}
+
+{{ if $networkPoliciesEnabled }}
+{{ $components:= list "api-gateway" "fusion-admin" "query-pipeline" "fusion-indexing" "fusion-features" "job-launcher" "job-rest-server" "ml-model-service" "sql-service" "connectors-classic" "connectors-backend" "connectors" "webapps" "insights" "pm-ui" "ml-service-workflow" "templating" "connector-plugin" "config-sync" }}
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "fusion.api-gateway.fullname" .  }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+      app.kubernetes.io/component: "api-gateway"
+      app.kubernetes.io/part-of: "fusion"
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+{{- range $component := $components }}
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "{{ $component }}"
+{{- end }}
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "fusion-jupyter"
+      - podSelector:
+          matchLabels:
+            spark-role: driver
+      - podSelector:
+          matchLabels:
+            spark-role: executor
+      - podSelector:
+          matchLabels:
+            component: pulsar-proxy
+      ports:
+      - protocol: TCP
+        port: 6764
+{{ if .Values.networkPolicy.additionalIngressRules }}
+{{ toYaml .Values.networkPolicy.additionalIngressRules | nindent 4 }}
+{{ end }}
+  egress:
+# Define egress for DNS lookups
+    - to: {{ .Values.networkPolicy.dnsAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+# This outbound rule is required to talk to the kubernetes API services
+    - to: {{ .Values.networkPolicy.kubernetesAccess | toYaml | nindent 8 }}
+      ports:
+      - protocol: TCP
+        port: 443
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "zookeeper"
+      ports:
+      - protocol: TCP
+        port: 2181
+      - protocol: TCP
+        port: 2281
+    - to:
+      - podSelector:
+          matchLabels:
+            app: "logstash"
+      ports:
+      - protocol: TCP
+        port: 9600
+      - protocol: TCP
+        port: 4560
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "solr"
+      ports:
+      - protocol: TCP
+        port: 8983
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "query-pipeline"
+      ports:
+      - protocol: TCP
+        port: 8787
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: "config-sync"
+      ports:
+        - protocol: TCP
+          port: 5150
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "connectors-classic"
+      ports:
+      - protocol: TCP
+        port: 9000
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "connectors-backend"
+      ports:
+      - protocol: TCP
+        port: 8771
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "connector-plugin"
+      ports:
+      - protocol: TCP
+        port: 9020
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "insights"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "connectors"
+      ports:
+      - protocol: TCP
+        port: 9010
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-admin"
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-indexing"
+      ports:
+      - protocol: TCP
+        port: 8765
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "fusion-features"
+      ports:
+      - protocol: TCP
+        port: 8769
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "admin-ui"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "auth-ui"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "devops-ui"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "rules-ui"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "job-rest-server"
+      ports:
+      - protocol: TCP
+        port: 8081
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "ml-model-service"
+      ports:
+      - protocol: TCP
+        port: 8086
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "sql-service"
+      ports:
+      - protocol: TCP
+        port: 8085
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "webapps"
+      ports:
+      - protocol: TCP
+        port: 8780
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "job-launcher"
+      ports:
+      - protocol: TCP
+        port: 8083
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: "fusion-jupyter"
+      ports:
+      - protocol: TCP
+        port: 8888
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "config-sync"
+      ports:
+      - protocol: TCP
+        port: 5150
+    - to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/component: "pm-ui"
+      ports:
+      - protocol: TCP
+        port: 8080
+    - to:
+        - podSelector:
+            matchLabels:
+              component: "broker"
+        - podSelector:
+            matchLabels:
+              component: "pulsar-proxy"
+      ports:
+        - protocol: TCP
+          port:  6650
+        - protocol: TCP
+          port:  8080
+        - protocol: TCP
+          port:  6651
+        - protocol: TCP
+          port:  8443
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: "templating"
+      ports:
+        - protocol: TCP
+          port: 5250
+{{ if .Values.networkPolicy.additionalEgressRules }}
+{{ toYaml .Values.networkPolicy.additionalEgressRules | nindent 4 }}
+{{ end }}
+{{- end }}

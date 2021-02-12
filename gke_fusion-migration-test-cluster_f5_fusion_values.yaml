@@ -1,0 +1,253 @@
+global:
+  zkReplicaCount: 3
+
+sql-service:
+  enabled: false
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 0
+  service:
+    thrift:
+      type: "ClusterIP"
+
+solr:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx2g -Dfusion_node_type=system"
+  solrGcTune: "-XX:+ExitOnOutOfMemoryError -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
+  volumeClaimTemplates:
+    storageSize: "50Gi"
+  replicaCount: 1
+  resources: {}
+  exporter:
+    enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+      prometheus.io/path: "/metrics"
+    nodeSelector:
+      cloud.google.com/gke-nodepool: default-pool
+
+zookeeper:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  replicaCount: 3
+  persistence:
+    size: 15Gi
+  resources: {}
+  env:
+    ZK_HEAP_SIZE: 1G
+    ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  image:
+    imagePullPolicy: "IfNotPresent"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  pod:
+    annotations:
+      prometheus.io/port: "8086"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+  modelRepoImpl: fusion
+  fs:
+    enabled: true
+
+fusion-admin:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 100
+
+fusion-indexing:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  readinessProbe:
+    initialDelaySeconds: 100
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+query-pipeline:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
+  livenessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  readinessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+admin-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+api-gateway:
+  service:
+    externalTrafficPolicy: "Local"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  javaToolOptions: "-Xms2g -Xmx2g -Djwt.token.user-cache-size=100 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+auth-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+classic-rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+devops-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+fusion-resources:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+insights:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+job-launcher:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  pod:
+    annotations:
+      prometheus.io/port: "8083"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+job-rest-server:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  pod:
+    annotations:
+      prometheus.io/port: "8081"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+logstash:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rest-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rpc-service:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+rules-ui:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+webapps:
+  livenessProbe:
+    initialDelaySeconds: 60
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false -XX:+ExitOnOutOfMemoryError"
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+
+fusion-jupyter:
+  enabled: false
+
+pulsar:
+  broker:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8080"
+    configData:
+      # based on container memory limit of 2300m
+      PULSAR_MEM: >
+        -XX:+ExitOnOutOfMemoryError
+        -Xms1g
+        -Xmx1g
+        -XX:MaxDirectMemorySize=1g
+
+  bookkeeper:
+    annotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "8000"
+    configData:
+      # based on container memory limit of 2300m
+      BOOKIE_MEM: >
+        -XX:+ExitOnOutOfMemoryError
+        -Xms1500m
+        -Xmx1500m
+        -XX:MaxDirectMemorySize=600m
+
+templating:
+  nodeSelector:
+    cloud.google.com/gke-nodepool: default-pool
+  pod:
+    annotations:
+      prometheus.io/port: "5250"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+# TODO: To run the config-sync service in publisher mode, provide
+# your GitHub repo URL, branch, username, and email
+# and install the GitHub OAuth token in a secret named
+# config-sync-github-oauth-token
+# for subscriber mode, enable pulsar and use the "sub" profile
+# springProfilesOverride: "kubernetes,jwt,fusion,sub", see below
+config-sync:
+  enabled: false
+  logstashEnabled: false
+  pub:
+    git:
+      repo: TODO_GITHUB_REPO_URL
+      alias: fusion-config-sync
+      branch: stage
+    github:
+      username: TODO_GITHUB_USERNAME
+      email: TODO_GITHUB_EMAIL
+  pulsar:
+    enabled: false
+  springProfilesOverride: "kubernetes,jwt,fusion,pub"
+
+# Uncomment for subscriber mode
+#config-sync:
+#  enabled: true
+#  logstashEnabled: false
+#  springProfilesOverride: "kubernetes,jwt,fusion,sub"
+#  sub:
+#    pollEnabled: false
+#    git:
+#      repo: TODO_GITHUB_REPO_URL
+#      alias: fusion-config-sync
+#      branch: prod
+#    github:
+#      username: TODO_GITHUB_USERNAME
+#      email: TODO_GITHUB_EMAIL

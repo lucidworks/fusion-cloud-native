@@ -1,0 +1,126 @@
+{{- if .Values.components.broker }}
+{{- $tlsEnabled := .Values.broker.tls.enabled -}}
+{{- if .Values.global -}}
+{{- if .Values.global.tlsEnabled -}}
+{{- $tlsEnabled = true -}}
+{{- end -}}
+{{- end -}}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.broker.component }}
+data:
+  # Metadata settings
+  zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- if .Values.pulsar_metadata.configurationStore }}
+  configurationStoreServers: "{{ .Values.pulsar_metadata.configurationStore }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
+  {{- end }}
+  {{- if not .Values.pulsar_metadata.configurationStore }}
+  configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- end }}
+
+  # Broker settings
+  clusterName: {{ .Values.clusterName }}
+  webServicePort: "{{ .Values.broker.ports.http }}"
+  brokerServicePort: "{{ .Values.broker.ports.pulsar }}"
+
+{{- if $tlsEnabled }}
+  tlsEnabled: "true"
+  tlsCertificateFilePath: /etc/ssl/keystores/tls.crt
+  tlsKeyFilePath: /etc/ssl/keystores/tls.key
+  tlsTrustCertsFilePath: /etc/ssl/keystores/ca.crt
+  webServicePortTls: "{{ .Values.broker.ports.https }}"
+  brokerServicePortTls: "{{ .Values.broker.ports.pulsarssl }}"
+{{- end }}
+
+
+  exposeTopicLevelMetricsInPrometheus: "true"
+  numHttpServerThreads: "8"
+  zooKeeperSessionTimeoutMillis: "30000"
+  statusFilePath: "/tmp/status"
+
+  # Function Worker Settings
+  # function worker configuration
+  {{- if not (or .Values.components.functions .Values.extra.functionsAsPods) }}
+  functionsWorkerEnabled: "false"
+  {{- end }}
+  {{- if or .Values.components.functions .Values.extra.functionsAsPods }}
+  functionsWorkerEnabled: "true"
+  PF_functionRuntimeFactoryClassName: "org.apache.pulsar.functions.runtime.kubernetes.KubernetesRuntimeFactory"
+  PF_pulsarFunctionsCluster: {{ template "pulsar.fullname" . }}
+  PF_connectorsDirectory: ./connectors
+  PF_containerFactory: k8s
+  PF_numFunctionPackageReplicas: "{{ .Values.broker.configData.managedLedgerDefaultEnsembleSize }}"
+  # support version >= 2.5.0
+  PF_functionRuntimeFactoryConfigs_pulsarRootDir: {{ template "pulsar.home" . }}
+  PF_kubernetesContainerFactory_pulsarRootDir: {{ template "pulsar.home" . }}
+  PF_functionRuntimeFactoryConfigs_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
+  PF_functionRuntimeFactoryConfigs_submittingInsidePod: "true"
+  PF_functionRuntimeFactoryConfigs_installUserCodeDependencies: "true"
+  PF_functionRuntimeFactoryConfigs_jobNamespace: {{ template "pulsar.namespace" . }}
+  PF_functionRuntimeFactoryConfigs_expectedMetricsCollectionInterval: "30"
+  {{- if $tlsEnabled }}
+  PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
+  PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
+  {{- else }}
+    PF_functionRuntimeFactoryConfigs_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
+    PF_functionRuntimeFactoryConfigs_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
+  {{- end }}
+  PF_functionRuntimeFactoryConfigs_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
+  PF_functionRuntimeFactoryConfigs_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
+  # support version < 2.5.0
+  PF_kubernetesContainerFactory_pulsarDockerImageName: "{{ .Values.images.functions.repository }}:{{ .Values.images.functions.tag }}"
+  PF_kubernetesContainerFactory_submittingInsidePod: "true"
+  PF_kubernetesContainerFactory_installUserCodeDependencies: "true"
+  PF_kubernetesContainerFactory_jobNamespace: {{ template "pulsar.namespace" . }}
+  PF_kubernetesContainerFactory_expectedMetricsCollectionInterval: "30"
+
+  {{- if $tlsEnabled }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "https://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.https }}/"
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar+ssl://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsarssl }}/"
+  {{- else }}
+  PF_kubernetesContainerFactory_pulsarAdminUrl: "http://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.http }}/"
+  PF_kubernetesContainerFactory_pulsarServiceUrl: "pulsar://{{ template "pulsar.fullname" . }}-{{ .Values.broker.component }}:{{ .Values.broker.ports.pulsar }}/"
+  {{- end }}
+  PF_kubernetesContainerFactory_changeConfigMap: "{{ template "pulsar.fullname" . }}-{{ .Values.functions.component }}-config"
+  PF_kubernetesContainerFactory_changeConfigMapNamespace: {{ template "pulsar.namespace" . }}
+  {{- end }}
+
+  # Authentication Settings
+  {{- if .Values.auth.authentication.enabled }}
+  authenticationEnabled: "true"
+  {{- if .Values.auth.authorization.enabled }}
+  authorizationEnabled: "true"
+  superUserRoles: {{ .Values.auth.superUsers.broker }},{{ .Values.auth.superUsers.proxy }},{{ .Values.auth.superUsers.client }}
+  {{- end }}
+  {{- if eq .Values.auth.authentication.provider "jwt" }}
+  # token authentication configuration
+  authenticationProviders: "org.apache.pulsar.broker.authentication.AuthenticationProviderToken"
+  brokerClientAuthenticationParameters: "file:///pulsar/tokens/broker/token"
+  brokerClientAuthenticationPlugin: "org.apache.pulsar.client.impl.auth.AuthenticationToken"
+  {{- if .Values.auth.authentication.jwt.usingSecretKey }}
+  tokenSecretKey: "file:///pulsar/keys/token/secret.key"
+  {{- else }}
+  tokenPublicKey: "file:///pulsar/keys/token/public.key"
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
+  {{- if $tlsEnabled }}
+  # bookkeeper tls settings
+  bookkeeperTLSClientAuthentication: "true"
+  bookkeeperTLSKeyFileType: "PEM"
+  bookkeeperTLSKeyFilePath: "/etc/ssl/keystores/tls.key"
+  bookkeeperTLSCertificateFilePath: "/etc/ssl/keystores/tls.crt"
+  bookkeeperTLSTrustCertsFilePath: "/etc/ssl/keystores/ca.crt"
+  bookkeeperTLSTrustCertTypes: "PEM"
+  # https://github.com/apache/bookkeeper/pull/2300
+  bookkeeperUseV2WireProtocol: "false"
+  {{- end }}
+{{ toYaml .Values.broker.configData | indent 2 }}
+{{- end }}

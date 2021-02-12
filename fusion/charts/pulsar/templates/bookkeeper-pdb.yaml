@@ -1,0 +1,22 @@
+{{- if .Values.components.bookkeeper }}
+{{- if .Values.bookkeeper.pdb.usePolicy }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}"
+  namespace: {{ template "pulsar.namespace" . }}
+  labels:
+    {{- include "pulsar.standardLabels" . | nindent 4 }}
+    component: {{ .Values.bookkeeper.component }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pulsar.matchLabels" . | nindent 6 }}
+      component: {{ .Values.bookkeeper.component }}
+  {{- if .Values.bookkeeper.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.bookkeeper.pdb.maxUnavailable }}
+  {{- else if .Values.bookkeeper.pdb.minAvailable }}
+  minAvailable: {{ .Values.bookkeeper.pdb.minAvailable }}
+  {{- end }}
+{{- end }}
+{{- end }}

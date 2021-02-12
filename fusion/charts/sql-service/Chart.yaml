@@ -1,0 +1,11 @@
+apiVersion: v1
+appVersion: "5"
+description: A helm chart to install the sql service component
+keywords:
+- fusion
+- sql-service
+maintainers:
+- email: ian.thebridge@lucidworks.com
+  name: Ian Thebridge
+name: sql-service
+version: 1.6.4
