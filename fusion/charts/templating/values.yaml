@@ -21,7 +21,8 @@ fusion-common-utils:
   global: {}
 image:
   imagePullPolicy: IfNotPresent
-  imagePullSecrets: []
+  imagePullSecrets:
+    - name: artifactory
   name: templating
   repository: lucidworks
   tag: latest
