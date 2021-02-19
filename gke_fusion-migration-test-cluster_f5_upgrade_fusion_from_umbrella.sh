@@ -12,8 +12,8 @@ CHART_VERSION=5.3.3
 MY_VALUES=""
 MY_VALUES="$MY_VALUES --values gke_fusion-migration-test-cluster_f5_fusion_values.yaml"
 
-
-
+# fusion-dev-helm-local secret
+kubectl apply -f artifactory-secret.yaml
 
 # TODO: append more --values <file> args here as needed for your installation
 #MY_VALUES="${MY_VALUES} --values ${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_affinity.yaml"

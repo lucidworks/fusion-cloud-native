@@ -7,6 +7,33 @@ The latest version of Fusion 5 is 5.3.0. The migration process varies depending 
 
 // tag::body[]
 
+== Migrating from Fusion 5.3.3 to 5.4.0
+// tag::533-to-540[]
+
+In Fusion 5.4.0 we introduced name changes to some services related to connectors.
+
+```
+connector-plugin-service -> connector-plugin
+rest-service -> connectors
+rpc-service -> connectors-backend
+classic-rest-service -> connectors-classic
+```
+
+Make sure to update your `*_values.yaml` replacing old names.
+
+If you want to retain classic connector plugins state and thus avoid the full recrawl you will need to perform this procedure:
+
+- Before the migration, identify the PVCs and PVs used by `classic-rest-service`.
+```
+k get pvc,pv -l app.kubernetes.io/component=classic-rest-service -o yaml
+```
+
+Edit PVs and set their ReclaimPolicy to 'Retain' to make sure you won't lose them.
+
+- Perform Fusion migration. Scale up new `connectors-classic` service to match previous state.
+
+- Rebind old PVs to new pods. This will require you to delete old PVCs to make them available again. In the orphaned PVs set their claim names to new PVCs to prevent other services form claiming them. Now delete current `connectors-classic` PVCs and recreate them
+
 == Migrating from Fusion 5.2.1 to 5.3.0
 // tag::521-to-530[]
 

@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-provisioner: kubernetes.io/gce-pd
+  creationTimestamp: "2021-02-18T18:41:13Z"
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app.kubernetes.io/component: connectors-classic
+    app.kubernetes.io/instance: f5
+    app.kubernetes.io/part-of: fusion
+  name: connectors-classic-data-claim-f5-connectors-classic-0
+  namespace: default
+  resourceVersion: "14958"
+  selfLink: /api/v1/namespaces/default/persistentvolumeclaims/connectors-classic-data-claim-f5-connectors-classic-0
+  uid: cba47102-2f5d-452e-93fd-edf253933c59
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+  volumeMode: Filesystem
+  volumeName: pvc-463f5105-12eb-41e0-87c6-ef52c767c53a
+status:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 10Gi
+  phase: Bound
