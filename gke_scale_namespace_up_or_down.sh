@@ -168,7 +168,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME
 kubectl config current-context
 kubectl config set-context --current --namespace=${NAMESPACE}
 
-declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "solr-exporter" "webapps" "ambassador" "pulsar-broker" "workflow-controller" "ui" "sql-service-cm" "sql-service-cr")
+declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "connectors" "connectors-backend" "rules-ui" "solr-exporter" "webapps" "ambassador" "pulsar-broker" "workflow-controller" "ui" "sql-service-cm" "sql-service-cr")
 
 if [ "$ACTION" == "down" ]; then
 

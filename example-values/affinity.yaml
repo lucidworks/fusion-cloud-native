@@ -155,7 +155,7 @@ classic-rest-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - classic-rest-service
+              - connectors-classic
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:
@@ -467,7 +467,7 @@ query-pipeline:
               - fusion
           topologyKey: kubernetes.io/hostname
 
-rest-service:
+connectors:
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -482,7 +482,7 @@ rest-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - rest-service
+              - connectors
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:
@@ -498,14 +498,14 @@ rest-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - rest-service
+              - connectors
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:
               - fusion
           topologyKey: kubernetes.io/hostname
 
-rpc-service:
+connectors-backend:
   affinity:
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
@@ -520,7 +520,7 @@ rpc-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - rpc-service
+              - connectors-backend
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:
@@ -536,7 +536,7 @@ rpc-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - rpc-service
+              - connectors-backend
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:

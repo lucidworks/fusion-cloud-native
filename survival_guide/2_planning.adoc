@@ -359,8 +359,8 @@ lucidworks/ml-model-service:5.1.0
 lucidworks/ml-python-image:5.1.0
 lucidworks/pm-ui:5.1.0
 lucidworks/query-pipeline:5.1.1
-lucidworks/rest-service:5.1.1
-lucidworks/rpc-service:5.1.1
+lucidworks/connectors:5.1.1
+lucidworks/connectors-backend:5.1.1
 lucidworks/rules-ui:5.1.0
 lucidworks/webapps:5.1.0
 prom/prometheus:v2.16.0
@@ -441,7 +441,7 @@ kubectl patch sa default -n $NAMESPACE \
   -p '"imagePullSecrets": [{"name": "<internal-private-registry>" }]'
 ```
 +
-IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step g above.
+IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step above.
 
 This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
 

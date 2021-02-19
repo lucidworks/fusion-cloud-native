@@ -7,6 +7,19 @@ The latest version of Fusion 5 is 5.3.0. The migration process varies depending 
 
 // tag::body[]
 
+
+== Migrating from Fusion 5.3.3 to 5.4.0
+// tag::533-to-540[]
+
+In Fusion 5.4.0 we introduced name changes to some services related to connectors.
+```
+connector-plugin-service -> connector-plugin
+rest-service -> connectors
+rpc-service -> connectors-backend
+```
+
+Make sure to update your `*_values.yaml` replacing old names.
+
 == Migrating from Fusion 5.2.1 to 5.3.0
 // tag::521-to-530[]
 
@@ -241,7 +254,7 @@ helm install --namespace tmp-crd-install tmp-crd lucidworks/fusion --version 5.1
   --set "api-gateway.enabled=false" --set "classic-rest-service.enabled=false" \
   --set "sql-service.enabled=false" --set "zookeeper.enabled=false" \
   --set "job-launcher.enabled=false" --set "job-rest-service.enabled=false" \
-  --set "rest-service.enabled=false" --set "rpc-service.enabled=false" \
+  --set "connectors.enabled=false" --set "connectors-backend.enabled=false" \
   --set "logstash.enabled=false" --set "webapps.enabled=false"
 helm delete --namespace tmp-crd-install tmp-crd
 kubectl delete namespace tmp-crd-install

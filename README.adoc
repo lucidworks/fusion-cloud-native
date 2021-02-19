@@ -823,8 +823,8 @@ f5-pm-ui-86cbc5bb65-nd2n8                                   1/1     Running   0 
 f5-pulsar-bookkeeper-0                                      1/1     Running   0          8m45s
 f5-pulsar-broker-b56cc776f-56msx                            1/1     Running   0          8m45s
 f5-query-pipeline-5d75d7d5f4-l2mdf                          1/1     Running   0          8m43s
-f5-rest-service-7bb6cfc65f-7wfs2                            1/1     Running   0          8m42s
-f5-rpc-service-987fdc648-dldwv                              1/1     Running   0          8m45s
+f5-connectors-7bb6cfc65f-7wfs2                              1/1     Running   0          8m42s
+f5-connectors-backend-987fdc648-dldwv                       1/1     Running   0          8m45s
 f5-rules-ui-6b9d55b78f-9hzzj                                1/1     Running   0          8m43s
 f5-solr-0                                                   1/1     Running   0          8m44s
 f5-solr-exporter-c4687c785-jsm7x                            1/1     Running   0          8m45s
