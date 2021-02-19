@@ -7,7 +7,7 @@ The latest version of Fusion 5 is 5.3.x. The migration process varies depending 
 
 // tag::body[]
 
-== Migrating from Fusion 5.2.x to 5.3.0
+== Migrating from Fusion 5.2.x to 5.3.x
 // tag::52x-to-53x[]
 
 Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
@@ -104,7 +104,7 @@ kubectl delete po prepare-upgrade-solr863
 kubectl delete po restore-upgrade-solr863
 ```
 
-// end::52x-to-53x[]
+// end::521-to-530[]
 
 == Migrating from Fusion 5.1.4 to 5.2.0
 
