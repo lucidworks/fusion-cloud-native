@@ -359,8 +359,8 @@ lucidworks/ml-model-service:5.1.0
 lucidworks/ml-python-image:5.1.0
 lucidworks/pm-ui:5.1.0
 lucidworks/query-pipeline:5.1.1
-lucidworks/connectors:5.1.1
-lucidworks/connectors-backend:5.1.1
+lucidworks/rest-service:5.1.1
+lucidworks/rpc-service:5.1.1
 lucidworks/rules-ui:5.1.0
 lucidworks/webapps:5.1.0
 prom/prometheus:v2.16.0
