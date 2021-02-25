@@ -201,6 +201,8 @@ fi
 # Openshift cli uses --request-timeout instead of --timeout for deploys
 if [ "$PROVIDER" == "oc" ]; then
   KUBECTL_TIMEOUT_PARAM="--request-timeout"
+  # Openshift does not have concept of a "Cluster name" so we just set it to the namespace for placeholder.
+  CLUSTER_NAME="${NAMESPACE}"
 fi
 
 
@@ -286,21 +288,23 @@ fi
 if [ "${UPGRADE}" == "1" ]; then
   # Make sure the namespace exists
   if ! ${KUBECTL} get namespace "${NAMESPACE}" > /dev/null 2>&1; then
-    echo -e "\nNamespace ${NAMESPACE} not found, if this is a new cluster please run an install first"
-    exit 1
+    if [ "$PROVIDER" != "oc" ]; then
+      echo -e "\nNamespace ${NAMESPACE} not found, if this is a new cluster please run an install first"
+      exit 1
+    fi
   fi
 
   # Check if the owner label on the namespace is the same as we are, so we cannot
   # accidentally upgrade a release from someone elses namespace
   namespace_owner=$(${KUBECTL} get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
-  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ] && [ "$PROVIDER" != "oc" ]; then
     echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to upgrade this namespace"
     exit 1
   fi
 elif [ "$PURGE" == "1" ]; then
   ${KUBECTL} get namespace "${NAMESPACE}"
   namespace_exists=$?
-  if [ "$namespace_exists" != "0" ]; then
+  if [ "$namespace_exists" != "0"] && [ "$PROVIDER" != "oc" ]; then
     echo -e "\nNamespace ${NAMESPACE} not found so assuming ${RELEASE_NAME} has already been purged"
     exit 1
   fi
@@ -308,7 +312,7 @@ elif [ "$PURGE" == "1" ]; then
   # Check if the owner label on the namespace is the same as we are, so we cannot
   # accidentally purge someone elses release
   namespace_owner=$(${KUBECTL} get namespace "${NAMESPACE}" -o 'jsonpath={.metadata.labels.owner}')
-  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ]; then
+  if [ "${namespace_owner}" != "${OWNER_LABEL}" ] && [ "${FORCE}" != "1" ] && [ "$PROVIDER" != "oc" ]; then
     echo -e "Namespace ${NAMESPACE} is owned by: ${namespace_owner}, by we are: ${OWNER_LABEL} please provide the --force parameter if you are sure you wish to purge this namespace"
     exit 1
   fi
@@ -344,22 +348,26 @@ else
   if [ "${is_helm_v3}" == "" ]; then
     if helm status "${RELEASE}" > /dev/null 2>&1 ; then
       echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in the cluster, please choose a different release name or upgrade the release\n"
-      exit 1
+      #exit 1
     fi
   else
      if helm status --namespace "${NAMESPACE}" "${RELEASE}" > /dev/null 2>&1 ; then
-       echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in namespace: ${NAMESPACE} in the cluster, please choose a different release name or upgrade the release\n"
-       exit 1
+       if [ "$PROVIDER" != "oc" ]; then
+        echo -e "\nERROR: There is already a release with name: ${RELEASE} installed in namespace: ${NAMESPACE} in the cluster, please choose a different release name or upgrade the release\n"
+        exit 1
+       fi
      fi
   fi
 
   # There isn't let's check if there is a fusion deployment in the namespace already
   if ! ${KUBECTL} get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" 2>&1 | grep -q "No resources"; then
-    # There is a fusion deployed into this namespace, try and protect against two releases being installed into
-    # The same namespace
-    instance=$(${KUBECTL} get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
-    echo -e "\nERROR: There is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace\n"
-    exit 1
+    if [ "$PROVIDER" != "oc" ]; then
+      # There is a fusion deployed into this namespace, try and protect against two releases being installed into
+      # The same namespace
+      instance=$(${KUBECTL} get deployment -n "${NAMESPACE}" -l "app.kubernetes.io/component=query-pipeline,app.kubernetes.io/part-of=fusion" -o "jsonpath={.items[0].metadata.labels['app\.kubernetes\.io/instance']}")
+      echo -e "\nERROR: There is already a fusion deployment in namespace: ${NAMESPACE} with release name: ${instance}, please choose a new namespace\n"
+      exit 1
+    fi
   fi
   # We should be good to install now
 fi

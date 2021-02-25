@@ -56,7 +56,16 @@ if ! helm repo list | grep -q "https://charts.lucidworks.com"; then
   helm repo add ${lw_helm_repo} https://charts.lucidworks.com
 fi
 
-helm repo update
+helm_chart_to_use="${lw_helm_repo}/fusion"
+
+if [ "$LOCAL_HELM_CHART" != "" ]; then
+  helm_chart_to_use="${LOCAL_HELM_CHART}"
+  echo "LOCAL_HELM_CHART variable was specified. Will use ${LOCAL_HELM_CHART} as the helm chart."
+fi
+
+if [ "$LOCAL_HELM_CHART" == "" ]; then
+  helm repo update
+fi
 
 if [ "$PROVIDER" == "gke" ]; then
   # Make sure that the metric server is running
@@ -65,20 +74,23 @@ if [ "$PROVIDER" == "gke" ]; then
   echo ""
 fi
 
-echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
+echo -e "Upgrading the '$RELEASE' release (Fusion chart: ${helm_chart_to_use}, version: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
 echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:\n${MY_VALUES//--values}\n"
+echo "helm upgrade ${DRY_RUN} ${RELEASE} ${helm_chart_to_use} --install --namespace ${NAMESPACE} --version ${CHART_VERSION} ${MY_VALUES}" --skip-crds
+helm upgrade ${DRY_RUN} ${RELEASE} ${helm_chart_to_use} --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES} --skip-crds
 
-helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
+if [ "$DRY_RUN" != "--dry-run"]; then
+   echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
+   ${KUBECTL} rollout status deployment/${RELEASE}-api-gateway ${KUBECTL_TIMEOUT_PARAM}=600s --namespace "${NAMESPACE}"
+   echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
+   ${KUBECTL} rollout status deployment/${RELEASE}-fusion-indexing ${KUBECTL_TIMEOUT_PARAM}=300s --namespace "${NAMESPACE}"
 
-echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
-${KUBECTL} rollout status deployment/${RELEASE}-api-gateway ${KUBECTL_TIMEOUT_PARAM}=600s --namespace "${NAMESPACE}"
-echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
-${KUBECTL} rollout status deployment/${RELEASE}-fusion-indexing ${KUBECTL_TIMEOUT_PARAM}=300s --namespace "${NAMESPACE}"
-
-current_ns=$(${KUBECTL} config view --minify --output 'jsonpath={..namespace}')
-if [ "$NAMESPACE" != "$current_ns" ]; then
-  ${KUBECTL} config set-context --current --namespace=${NAMESPACE}
+   current_ns=$(${KUBECTL} config view --minify --output 'jsonpath={..namespace}')
+   if [ "$NAMESPACE" != "$current_ns" ]; then
+     ${KUBECTL} config set-context --current --namespace=${NAMESPACE}
+   fi
 fi
+
 echo ""
 helm ls
 echo ""
