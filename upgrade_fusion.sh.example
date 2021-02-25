@@ -80,7 +80,7 @@ echo -e "\nNOTE: If this will be a long-running cluster for production purposes,
 echo "helm upgrade ${DRY_RUN} ${RELEASE} ${helm_chart_to_use} --install --namespace ${NAMESPACE} --version ${CHART_VERSION} ${MY_VALUES}" ${SKIP_CRDS}
 helm upgrade ${DRY_RUN} ${RELEASE} ${helm_chart_to_use} --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES} ${SKIP_CRDS}
 
-if [ "$DRY_RUN" != "--dry-run"]; then
+if [ "$DRY_RUN" != "--dry-run" ]; then
    echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
    ${KUBECTL} rollout status deployment/${RELEASE}-api-gateway ${KUBECTL_TIMEOUT_PARAM}=600s --namespace "${NAMESPACE}"
    echo -e "\nWaiting up to 5 minutes to see the Fusion Indexing deployment come online ...\n"
