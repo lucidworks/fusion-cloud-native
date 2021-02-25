@@ -15,6 +15,7 @@ OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
 KUBECTL="kubectl"
 KUBECTL_TIMEOUT_PARAM="--timeout"
+SKIP_CRDS=""
 
 function print_usage() {
   CMD="$1"
@@ -41,6 +42,7 @@ function print_usage() {
   echo -e "  --with-replicas         Flag to enable replicas yaml, defaults to off\n"
   echo -e "  --additional-values     Additional values files to add to the upgrade script, may be specified multiple times\n"
   echo -e "  --output-script         The name of the generated upgrade script, defaults to <provider>_<cluster_name>_<release>_upgrade_fusion.sh \n"
+  echo -e "  --skip-crds             Set the --skip-crds flag on the helm upgrade. Use this in situations where you do no have permissions to make Custom Resource Definitions.\n"
   echo -e "\nIf you omit the <yaml-file-to-create> arg, then the script will create it using the naming convention:\n       <provider>_<cluster>_<release>_fusion_values.yaml\n"
 }
 
@@ -111,6 +113,9 @@ if [ $# -gt 1 ]; then
             fi
             PROVIDER="$2"
             shift 2
+        ;;
+        --skip-crds)
+            SKIP_CRDS="--skip-crds"
         ;;
         --prometheus)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
@@ -364,5 +369,6 @@ fi
 
 sed -i -e "s|<KUBECTL>|${KUBECTL}|g" "$OUTPUT_SCRIPT"
 sed -i -e "s|<KUBECTL_TIMEOUT_PARAM>|${KUBECTL_TIMEOUT_PARAM}|g" "$OUTPUT_SCRIPT"
+sed -i -e "s|<SKIP_CRDS>|${SKIP_CRDS}|g" "$OUTPUT_SCRIPT"
 
 echo -e "\nCreate $OUTPUT_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"

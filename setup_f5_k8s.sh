@@ -23,6 +23,7 @@ SOLR_REPLICAS=1
 NODE_POOL="{}"
 KUBECTL="kubectl"
 KUBECTL_TIMEOUT_PARAM="--timeout"
+SKIP_CRDS=""
 
 function print_usage() {
   CMD="$1"
@@ -56,6 +57,7 @@ function print_usage() {
   echo -e "  --force           Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
   echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
   echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
+  echo -e "  --skip-crds       Set the --skip-crds flag on the helm upgrade. Use this in situations where you do no have permissions to make Custom Resource Definitions.\n"
 }
 
 if [ $# -gt 0 ]; then
@@ -177,6 +179,9 @@ if [ $# -gt 0 ]; then
         --force)
             FORCE=1
             shift 1
+        ;;
+        --skip-crds)
+            SKIP_CRDS="--skip-crds"
         ;;
         -help|-usage|--help|--usage)
             print_usage "$SCRIPT_CMD"
@@ -485,7 +490,7 @@ if [ "$UPGRADE" != "1" ]; then
     fi
 
      ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -k "${KUBECTL}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --version "${CHART_VERSION}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --version "${CHART_VERSION}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} ${SKIP_CRDS} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi
