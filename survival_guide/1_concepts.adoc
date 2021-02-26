@@ -33,8 +33,6 @@ For more information, see:
 * link:https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html#kubernetes-release-calendar[Amazon EKS Kubernetes release calendar]
 * link:https://docs.microsoft.com/en-us/azure/aks/supported-kubernetes-versions#aks-kubernetes-release-calendar[AKS Kubernetes Release Calendar]
 
-//Very little code in Fusion has any awareness of Kubernetes or Docker. The Kubernetes ecosystem can change quickly and infrastructure providers offer some flavor of Kubernetes. However, Kubernetes is structured so applications like Fusion do not need to care about the underlying infrastructure. 
-
 Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, but it may be possible to use other flavors of Kubernetes as well. In general, as long as Kubernetes is running, Fusion 5 can run on it.
 
 //end::which[]
