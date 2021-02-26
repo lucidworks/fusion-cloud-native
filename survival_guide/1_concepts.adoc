@@ -33,7 +33,7 @@ For more information, see:
 * link:https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html#kubernetes-release-calendar[Amazon EKS Kubernetes release calendar]
 * link:https://docs.microsoft.com/en-us/azure/aks/supported-kubernetes-versions#aks-kubernetes-release-calendar[AKS Kubernetes Release Calendar]
 
-Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, but it may be possible to use other flavors of Kubernetes as well. In general, as long as Kubernetes is running, Fusion 5 can run on it.
+Lucidworks provides setup scripts for GKE, EKS, and AKS to help users get started with Fusion 5, but it may be possible to use other flavors of Kubernetes as well.
 
 //end::which[]
 
@@ -187,7 +187,7 @@ items:
       - ip: <SOME_IP>
 ```
 
-If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer your specific Kubernetes provider's documentation on creating an Ingress and TLS certificate.
+If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer to your specific Kubernetes provider's documentation on creating an Ingress and TLS certificate.
 
 //end::ingress[]
 
