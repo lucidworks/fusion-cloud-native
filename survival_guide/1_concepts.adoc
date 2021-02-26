@@ -25,7 +25,7 @@ This topic covers some of the most important concepts of the Fusion cluster depi
 
 Figure 1 above depicts Fusion running in Google Kubernetes Engine (GKE). To run Fusion 5, use your cloud provider's stable release channel.
 
-NOTE: GKE refers to the version as *stable release channel*. Other providers may use a different term for the version on which to run Fusion 5. 
+NOTE: GKE refers to the version as *stable release channel*. Your cloud provider may use different terminology to indicate the latest stable version of Kubernetes that is available on their platform. 
 
 For more information, see:
 
