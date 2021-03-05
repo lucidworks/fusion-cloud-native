@@ -3,12 +3,11 @@
 :toclevels: 5
 :toc-title:
 
-The latest version of Fusion 5 is 5.3.0. The migration process varies depending on your current version of Fusion.
+The latest version of Fusion 5 is 5.3.x. The migration process varies depending on your current version of Fusion.
 
 // tag::body[]
 
-
-== Migrating from Fusion 5.3.3 to 5.4.0
+== Migrating from Fusion 5.3.x to 5.4.0
 // tag::533-to-540[]
 
 In Fusion 5.4.0 we introduced name changes to some services related to connectors.
@@ -20,8 +19,8 @@ rpc-service -> connectors-backend
 
 Make sure to update your `*_values.yaml` replacing old names.
 
-== Migrating from Fusion 5.2.1 to 5.3.0
-// tag::521-to-530[]
+== Migrating from Fusion 5.2.x to 5.3.x
+// tag::52x-to-53x[]
 
 Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
 For additional background on the Solr text tagger and the `FST50` postings format, see: https://lucene.apache.org/solr/guide/8_3/the-tagger-handler.html[the Solr documentation^].
