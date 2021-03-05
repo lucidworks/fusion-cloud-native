@@ -155,7 +155,7 @@ classic-rest-service:
             - key: "app.kubernetes.io/component"
               operator: In
               values:
-              - connectors-classic
+              - classic-rest-service
             - key: "app.kubernetes.io/part-of"
               operator: In
               values:
