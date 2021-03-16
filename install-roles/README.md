@@ -6,11 +6,11 @@ a user in order to install fusion 5 with helm v3.
 First, use the `customize_fusion_values.sh` script for creating your fusion values yaml file.
 
 To use these role in a cluster, as an admin user first create the namespace that you wish to
-install fusion and label it into:
+install fusion into and label it for seldon's use:
 
 ```
-kubectl create namespace fusion-namespace
-kubectl label namespace fusion-namespace seldon.io/controller-id=fusion-namespace
+k create namespace fusion-namespace
+k label namespace fusion-namespace seldon.io/controller-id=fusion-namespace
 ```
 
 Install the required CRDs as an admin user, for this we are going to download the fusion chart:
@@ -23,15 +23,15 @@ find . -iname crds -type d -exec kubectl apply -f {} \;
 Apply the `role.yaml` and `cluster-role.yaml` files to that namespace
 
 ```
-kubectl apply -f cluster-role.yaml
-kubectl apply -f --namespace fusion-namespace role.yaml
+k apply -f cluster-role.yaml
+k apply -f --namespace fusion-namespace role.yaml
 ```
 
 Then bind the rolebinding and clusterolebinding to the install user:
 
 ```
-kubectl create --namespace fusion-namespace rolebinding fusion-install-rolebinding --role fusion-installer --user <install_user>
-kubectl create clusterrolebinding fusion-install-rolebinding --clusterrole fusion-installer --user <install_user>
+k create --namespace fusion-namespace rolebinding fusion-install-rolebinding --role fusion-installer --user <install_user>
+k create clusterrolebinding fusion-install-rolebinding --clusterrole fusion-installer --user <install_user>
 ```
 
 After this changes are applied, some extra steps need to be performed:
