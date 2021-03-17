@@ -886,6 +886,8 @@ This will log you into the application. It is recommended that you create anothe
 
 The dashboards and datasoure will be setup for you in grafana, simply navigate to `Dashboards` -> `Manage` to view the vailable dashboards
 
+In order for the Solr Metrics Dashboard to show the replication metrics, the replication_exporter_values.yaml file has to be passed to the helm install command to export extra metrics from solr.
+
 // end::verify[]
 
 
