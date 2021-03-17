@@ -31,7 +31,7 @@ function print_usage() {
   echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
   echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke, oc; defaults to 'gke'\n"
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
-  echo -e "  --skip-crds             Add skip CRDs options to helm chart?\n"
+  echo -e "  --skip-crds             Add skip CRDs option to the helm upgrade command\n"
   echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
   echo -e "  --solr-disk-gb          Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --node-pool             Node pool label to assign pods to specific nodes, this option is only useful for existing\n                          clusters where you defined a custom node pool; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
