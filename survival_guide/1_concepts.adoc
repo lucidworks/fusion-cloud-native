@@ -197,7 +197,9 @@ If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo pr
 
 //tag::jwt[]
 
-The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in
+The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. 
+
+// We show an example of this in
 ifdef::env-github[]
 link:3_operations.adoc#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling^],
 endif::[]
