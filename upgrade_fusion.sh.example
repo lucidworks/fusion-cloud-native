@@ -7,6 +7,7 @@ CLUSTER_NAME=<CLUSTER>
 RELEASE=<RELEASE>
 NAMESPACE=<NAMESPACE>
 CHART_VERSION=<CHART_VERSION>
+SKIP_CRDS=<SKIP_CRDS>
 
 MY_VALUES=""
 <BASE_CUSTOM_VALUES>
@@ -66,7 +67,7 @@ fi
 echo -e "Upgrading the '$RELEASE' release (Fusion chart: $CHART_VERSION) in the '$NAMESPACE' namespace in the '$CLUSTER_NAME' cluster using values:\n    ${MY_VALUES//--values}"
 echo -e "\nNOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:\n${MY_VALUES//--values}\n"
 
-helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES}
+helm upgrade ${DRY_RUN} ${RELEASE} "${lw_helm_repo}/fusion" --install --namespace "${NAMESPACE}" --version "${CHART_VERSION}" ${MY_VALUES} ${SKIP_CRDS}
 
 echo -e "\nWaiting up to 10 minutes to see the Fusion API Gateway deployment come online ...\n"
 kubectl rollout status deployment/${RELEASE}-api-gateway --timeout=600s --namespace "${NAMESPACE}"

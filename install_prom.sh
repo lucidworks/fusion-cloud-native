@@ -117,7 +117,7 @@ fi
 
 if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
   echo -e "\nAdding the stable chart repo to helm repo list"
-  helm repo add stable https://kubernetes-charts.storage.googleapis.com
+  helm repo add stable https://charts.helm.sh/stable
 fi
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then

@@ -1,0 +1,16 @@
+query-pipeline:
+  useAvailabilityZoneRouting: false
+
+solr:
+  setAvailabilityZone: false
+
+rpc-service:
+  plugins:
+    crd:
+      create: false
+
+argo:
+  createAggregateRoles: false
+
+ml-model-service:
+  runLabelNamespaceJob: false

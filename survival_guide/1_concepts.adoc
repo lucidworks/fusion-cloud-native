@@ -23,7 +23,17 @@ This topic covers some of the most important concepts of the Fusion cluster depi
 
 //tag::which[]
 
-Although Figure 1 above depicts running in Google Kubernetes Engine (GKE), Fusion 5 runs on any modern version of Kuberentes (v 1.14 or newer). In fact, very little code in Fusion has any awareness of Kubernetes or Docker. The K8s ecosystem is moving very fast and infrastructure providers are quickly offering some flavor of Kubernetes. However, the beauty of Kubernetes is that applications like Fusion do not need to care about the underlying infrastructure. Although Lucidworks provides setup scripts for GKE, AKS, and EKS to help users get started with Fusion 5, do not take this to mean Fusion only runs on those flavors of Kubernetes. In general, as long as K8s is running, Fusion 5 can run on it.
+Figure 1 above depicts Fusion running in Google Kubernetes Engine (GKE). To run Fusion 5, use your cloud provider's stable release channel.
+
+NOTE: GKE refers to the version as *stable release channel*. Your cloud provider may use different terminology to indicate the latest stable version of Kubernetes that is available on their platform. 
+
+For more information, see:
+
+* link:https://cloud.google.com/kubernetes-engine/docs/concepts/release-channels[GKE Release channels]
+* link:https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html#kubernetes-release-calendar[Amazon EKS Kubernetes release calendar]
+* link:https://docs.microsoft.com/en-us/azure/aks/supported-kubernetes-versions#aks-kubernetes-release-calendar[AKS Kubernetes Release Calendar]
+
+Lucidworks provides setup scripts for GKE, EKS, and AKS to help users get started with Fusion 5, but it may be possible to use other flavors of Kubernetes as well.
 
 //end::which[]
 
@@ -48,7 +58,7 @@ endif::[]
 ifndef::env-github[]
 link:/how-to/deploy-fusion-at-scale.html#7-solr-auto-scaling-policy[Solr Auto-scaling Policy]
 endif::[]
-section. Setting the `solr_zone` property for Solr pods requires the Solr service account to have a ClusterRoleBinding that allows it to get node metadata from the K8s API service.
+section. Setting the `solr_zone` property for Solr pods requires the Solr service account to have a ClusterRoleBinding that allows it to get node metadata from the Kubernetes API service.
 
 //end::ha[]
 
@@ -79,6 +89,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`connectors-rest` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Routes REST API requests to connectors-classic and connectors-rpc.
 
 |`connectors-rpc` |gRPC |Deployment |`analytics` or `system` |Yes (CPU or custom metric) |gRPC service for managing SDK-based connector plugins.
+
+|`connector-plugin-service-<connector_plugin>` | HTTP/TCP |Deployment |`analytics` or `system` |Yes (CPU or custom metric) | Deployment for each connector plugin type. *Note:* There is a base deployment, `connector-plugin-service` with 0 replicas. This is used as a deployment template for each connector plugin type. It should not be deleted or scaled.
 
 |`devops-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the DevOps UI.
 
@@ -130,6 +142,8 @@ Exposes a JDBC endpoint for the SQL service.
 
 |`templating` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Retrieves and renders Predictive Merchandiser templates.
 
+|`tikaserver` |HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Is responsible for text extraction using Tika Server Parser
+
 |`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
 
 |`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
@@ -142,7 +156,7 @@ Exposes a JDBC endpoint for the SQL service.
 
 //tag::ingress[]
 
-All external access to Fusion services should be routed through the Fusion proxy service, which serves as an API gateway and provides authentication and authorization. The most common approach is to set up a link:https://kubernetes.io/docs/concepts/services-networking/ingress/[Kubernetes Ingress^] that routes requests to Fusion services to the proxy service as shown in the example ingress definition below. Moreover, it is also common to do link:https://cloud.google.com/load-balancing/docs/https/#tls_support[TLS termination^] at the Ingress so that all traffic to/from the K8s cluster is encrypted but internal requests happen over unencrypted HTTP.
+All external access to Fusion services should be routed through the Fusion proxy service, which serves as an API gateway and provides authentication and authorization. The most common approach is to set up a link:https://kubernetes.io/docs/concepts/services-networking/ingress/[Kubernetes Ingress^] that routes requests to Fusion services to the proxy service as shown in the example ingress definition below. Moreover, it is also common to do link:https://cloud.google.com/load-balancing/docs/https/#tls_support[TLS termination^] at the Ingress so that all traffic to/from the Kubernetes cluster is encrypted but internal requests happen over unencrypted HTTP.
 
 ```
 apiVersion: v1
@@ -175,7 +189,7 @@ items:
       - ip: <SOME_IP>
 ```
 
-If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer your specific K8s provider's documentation on creating an Ingress and TLS certificate.
+If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo provide the option to create the link:https://github.com/lucidworks/fusion-cloud-native#gke-ingress-and-tls[Ingress and TLS cert^] (using Let's Encrypt). Otherwise, refer to your specific Kubernetes provider's documentation on creating an Ingress and TLS certificate.
 
 //end::ingress[]
 
@@ -238,7 +252,7 @@ section.
 
 The *system* partition hosts all other Fusion services, such as the various stateless UI services (e.g. rules-ui), Prometheus/Grafana, as well as Solr pods hosting system collections like `system_blobs`. Lucidworks recommends running your Zookeeper ensemble in the system partition.
 
-The analytics, search, and system partitions are simply a recommended starting point--you can extend upon this model to refine your pod allocation by adding more Node Pools as needed. For instance, running Spark jobs on a dedicated pool of preemptible nodes is a pattern we've had great success with in our own K8s clusters at Lucidworks.
+The analytics, search, and system partitions are simply a recommended starting point--you can extend upon this model to refine your pod allocation by adding more Node Pools as needed. For instance, running Spark jobs on a dedicated pool of preemptible nodes is a pattern we've had great success with in our own Kubernetes clusters at Lucidworks.
 
 //end::workload-isolation[]
 
@@ -252,7 +266,7 @@ To further illustrate key concepts about the Fusion 5 architecture, let's walk t
 .Figure 2: Fusion query execution
 
 image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/query-execution.png?raw=true[]
-At point A (far right), background Spark jobs aggregate signals to power the signal boosting stage and analyze signals for query rewriting (head/tail, synonym detection, and so on). At point B, Fusion uses a link:https://lucene.apache.org/solr/guide/8_3/solrcloud-autoscaling-overview.html[Solr auto-scaling policy^] in conjunction with K8s node pools to govern replica placement for various Fusion collections. For instance, to support high performance query traffic, we typically place the primary collection together with sidecar collections for query rewriting, signal boosting, and rules matching. Solr pods supporting high volume, low-latency reads are backed by a HPA linked to CPU or custom metrics in Prometheus. Fusion services store configuration, such as query pipeline definitions, in Zookeeper (point C lower left).
+At point A (far right), background Spark jobs aggregate signals to power the signal boosting stage and analyze signals for query rewriting (head/tail, synonym detection, and so on). At point B, Fusion uses a link:https://lucene.apache.org/solr/guide/8_3/solrcloud-autoscaling-overview.html[Solr auto-scaling policy^] in conjunction with Kubernetes node pools to govern replica placement for various Fusion collections. For instance, to support high performance query traffic, we typically place the primary collection together with sidecar collections for query rewriting, signal boosting, and rules matching. Solr pods supporting high volume, low-latency reads are backed by a HPA linked to CPU or custom metrics in Prometheus. Fusion services store configuration, such as query pipeline definitions, in Zookeeper (point C lower left).
 
 At point 1, (far left), a query request comes into the cluster via a link:https://cloud.google.com/kubernetes-engine/docs/concepts/ingress[Kubernetes Ingress^]. The Ingress is configured to route requests to the Fusion API Gateway service. The gateway performs authentication and authorization to ensure the user has the correct permissions to execute the query. The Fusion API Gateway load-balances requests across multiple query pipeline services using native Kubernetes service discovery (point 2).
 

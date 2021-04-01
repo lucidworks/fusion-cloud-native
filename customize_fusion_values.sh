@@ -9,10 +9,11 @@ PROVIDER=gke
 RESOURCES=false
 AFFINITY=false
 REPLICAS=false
-CHART_VERSION="5.3.0"
+CHART_VERSION="5.3.5"
 NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
+SKIP_CRDS=""
 
 function print_usage() {
   CMD="$1"
@@ -30,6 +31,7 @@ function print_usage() {
   echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
   echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke, oc; defaults to 'gke'\n"
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
+  echo -e "  --skip-crds             Add skip CRDs option to the helm upgrade command\n"
   echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
   echo -e "  --solr-disk-gb          Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --node-pool             Node pool label to assign pods to specific nodes, this option is only useful for existing\n                          clusters where you defined a custom node pool; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
@@ -111,6 +113,10 @@ if [ $# -gt 1 ]; then
         ;;
         --with-resource-limits)
             RESOURCES="true"
+            shift 1
+        ;;
+        --skip-crds)
+            SKIP_CRDS="--skip-crds"
             shift 1
         ;;
         --with-affinity-rules)
@@ -242,6 +248,7 @@ else
   sed -i '' -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
 fi
+
 echo -e "\nCreated Fusion custom values yaml: ${MY_VALUES}\n"
 BASE_CUSTOM_VALUES_REPLACE="MY_VALUES=\"\$MY_VALUES --values ${MY_VALUES}\""
 
@@ -269,6 +276,7 @@ if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|<NAMESPACE>|${NAMESPACE}|g" "$OUTPUT_SCRIPT"
   sed -i -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$OUTPUT_SCRIPT"
   sed -i -e "s|<BASE_CUSTOM_VALUES>|${BASE_CUSTOM_VALUES_REPLACE}|g" "${OUTPUT_SCRIPT}"
+  sed -i -e "s|<SKIP_CRDS>|${SKIP_CRDS}|g" "$OUTPUT_SCRIPT"
 
 else
   sed -i '' -e "s|<PROVIDER>|${PROVIDER}|g" "$OUTPUT_SCRIPT"
@@ -277,7 +285,10 @@ else
   sed -i '' -e "s|<NAMESPACE>|${NAMESPACE}|g" "$OUTPUT_SCRIPT"
   sed -i '' -e "s|<CHART_VERSION>|${CHART_VERSION}|g" "$OUTPUT_SCRIPT"
   sed -i '' -e "s|<BASE_CUSTOM_VALUES>|${BASE_CUSTOM_VALUES_REPLACE}|g" "${OUTPUT_SCRIPT}"
+  sed -i '' -e "s|<SKIP_CRDS>|${SKIP_CRDS}|g" "$OUTPUT_SCRIPT"
 fi
+
+
 
 if [ "$RESOURCES" == "true" ]; then
   resyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_resources.yaml"

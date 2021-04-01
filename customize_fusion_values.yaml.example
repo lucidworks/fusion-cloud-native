@@ -187,10 +187,25 @@ pulsar:
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8080"
+    configData:
+      # based on container memory limit of 2300m
+      PULSAR_MEM: >
+        -XX:+ExitOnOutOfMemoryError
+        -Xms1g
+        -Xmx1g
+        -XX:MaxDirectMemorySize=1g
+
   bookkeeper:
     annotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "8000"
+    configData:
+      # based on container memory limit of 2300m
+      BOOKIE_MEM: >
+        -XX:+ExitOnOutOfMemoryError
+        -Xms1500m
+        -Xmx1500m
+        -XX:MaxDirectMemorySize=600m
 
 templating:
   nodeSelector:
@@ -236,3 +251,8 @@ config-sync:
 #    github:
 #      username: TODO_GITHUB_USERNAME
 #      email: TODO_GITHUB_EMAIL
+
+tikaserver:
+  extractInlineImages: true
+  replicaCount: 1
+  resources: {}

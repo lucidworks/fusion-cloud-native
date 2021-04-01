@@ -967,7 +967,7 @@ You can now access the Spark History Server at `\http://localhost:18080`. Run a 
 
 // tag::gpu-support[]
 
-In Fusion 5.3 and above, our jobs that involve training deep learning-based models (e.g. Smart Answers, Classification, and BPR Recommender) will automatically use GPU resources for training if deployed on a GPU-enabled node. Your cloud provider will likely have a custom set of nodeSelectors and tolerations that will be required to map our jobs onto their GPU compute, but in the following section we will work through an example using Smart Answers and GKE.
+In Fusion 5.3 and above, our jobs that involve training deep learning-based models (e.g. Smart Answers, Data Augmentation) will automatically use GPU resources for training if deployed on a GPU-enabled node. Your cloud provider will likely have a custom set of nodeSelectors and tolerations that will be required to map our jobs onto their GPU compute, but in the following section we will work through an example using Smart Answers and GKE.
 
 ==== Training Smart Answers on GPU with GKE
 
@@ -979,44 +979,37 @@ In your custom values YAML file, add:
 ----
 question-answering:
   nodeSelector:
-    coldstart:
-      default:
-        node_role: gpu
-      seldon:
-        node_role: deploy
+    default:
+      cloud.google.com/gke-nodepool: gpu-nodepool
     supervised:
-      default:
-        node_role: gpu
       seldon:
-        node_role: deploy
+        cloud.google.com/gke-nodepool: cpu-nodepool
+    coldstart:
+      seldon:
+        cloud.google.com/gke-nodepool: cpu-nodepool
   tolerations:
-    coldstart:
-      default:
-        - key: "nvidia.com/gpu"
-          operator: "Equal"
-          value: "present"
-          effect: "NoSchedule"
-      seldon:
-        []
+    default:
+      - key: "nvidia.com/gpu"
+        operator: "Equal"
+        value: "present"
+        effect: "NoSchedule"
     supervised:
-      default:
-        - key: "nvidia.com/gpu"
-          operator: "Equal"
-          value: "present"
-          effect: "NoSchedule"
-      seldon: 
-        []
+      seldon: []
+    coldstart:
+      seldon: []
   resources:
-    coldstart:
-      default:
-        limits:
-          nvidia.com/gpu: 1
-      seldon: {}
     supervised:
-      default:
+      train:
+        requests:
+          nvidia.com/gpu: 1
         limits:
           nvidia.com/gpu: 1
-      seldon: {}
+    coldstart:
+      train:
+        requests:
+          nvidia.com/gpu: 1
+        limits:
+          nvidia.com/gpu: 1
 ----
 
 Note that this setup deploys all workflow steps onto the GPU node _except_ for the Seldon Core deployment. As the deployment will live on after the workflow has completed, if it assigned to the GPU node it would prevent GKE from spinning the GPU node down, increasing operating expense. 
