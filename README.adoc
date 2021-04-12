@@ -61,11 +61,11 @@ Helm is a package manager for Kubernetes that helps you install and manage appli
 Regardless of which Kubernetes platform you're using, you need to install *`helm`* as it is required to install Fusion for any K8s platform.
 On MacOS, you can do:
 ```
-brew install kubernetes-helm
+brew install helm
 ```
 If you already have helm installed, make sure you're using the latest version:
 ```
-brew upgrade kubernetes-helm
+brew upgrade helm
 ```
 For other OS, please refer to the Helm installation docs: https://helm.sh/docs/using_helm/
 
