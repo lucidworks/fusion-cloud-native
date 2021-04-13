@@ -331,46 +331,8 @@ Here's a rough outline of the process we recommend, but you may need to adapt th
 
 . Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
 
-. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
-+
-```
-apachepulsar/pulsar-all:2.5.0
-argoproj/argoui:v2.4.3
-argoproj/workflow-controller:v2.4.3
-bitnami/kubectl:1.15-debian-9
-busybox:1.31.1
-busybox:latest
-curlimages/curl:7.68.0
-docker.io/seldonio/seldon-core-operator:1.0.1
-grafana/grafana:6.6.2
-jimmidyson/configmap-reload:v0.3.0
-lucidworks/admin-ui:5.1.1
-lucidworks/api-gateway:5.1.1
-lucidworks/auth-ui:5.1.0
-lucidworks/classic-rest-service:5.1.1
-lucidworks/devops-ui:5.1.0
-lucidworks/fusion-api:5.1.1
-lucidworks/fusion-indexing:5.1.1
-lucidworks/fusion-logstash:5.1.0
-lucidworks/insights:5.1.0
-lucidworks/job-launcher:5.1.1
-lucidworks/job-rest-server:5.1.1
-lucidworks/ml-model-service:5.1.0
-lucidworks/ml-python-image:5.1.0
-lucidworks/pm-ui:5.1.0
-lucidworks/query-pipeline:5.1.1
-lucidworks/rest-service:5.1.1
-lucidworks/rpc-service:5.1.1
-lucidworks/rules-ui:5.1.0
-lucidworks/webapps:5.1.0
-prom/prometheus:v2.16.0
-prom/pushgateway:v1.0.1
-quay.io/coreos/kube-state-metrics:v1.9.5
-quay.io/datawire/ambassador:0.86.1
-seldonio/seldon-core-operator:1.0.1
-solr:8.4.1
-zookeeper:3.5.6
-```
+. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). You can find a list of the images that need to be pulled in the corresponding version file in the images directory.
+
 +
 For example, to pull the query pipeline image, you would do:
 +
@@ -416,20 +378,15 @@ kubectl create secret docker-registry "${SECRET_NAME}" \
   --docker-email=${REPO_USER}
 ```
 
-. Update the custom values yaml for your cluster to point to your private registry and secret for Kubernetes to pull images.
+. Generate a values file for services to pull from this private repository
 +
 For instance:
 +
-[source,yaml]
 ```
-query-pipeline:
-  image:
-    imagePullSecrets:
-      - name: <internal-private-registry>
-    repository: <internal-private-registry>
+./images/generate_values_file.sh values.yaml my-repository docker-registry
 ```
 +
-Do this for all Fusion services.
+Then pass the outputted file as a new values file to `customize_fusion_values.sh` 
 
 . Customize Helm Chart
 +
