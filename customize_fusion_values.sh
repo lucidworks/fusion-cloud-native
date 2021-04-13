@@ -116,6 +116,7 @@ if [ $# -gt 1 ]; then
         ;;
         --skip-crds)
             SKIP_CRDS="--skip-crds"
+            shift 1
         ;;
         --prometheus)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
