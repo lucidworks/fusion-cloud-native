@@ -16,7 +16,6 @@ solr:
       cpu: 800m
       memory: 6Gi
     limits:
-      cpu: 1500m
       memory: 6Gi
 
 pulsar:
@@ -34,7 +33,6 @@ pulsar:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 300m
         memory: 2300Mi
 
   bookkeeper:
@@ -51,7 +49,6 @@ pulsar:
         cpu: 300m
         memory: 2300Mi
       limits:
-        cpu: 1
         memory: 2300Mi
 
 argo:
@@ -59,17 +56,15 @@ argo:
     resources:
       requests:
         memory: "128Mi"
-        cpu: "100m"
+        cpu: "50m"
       limits:
-        cpu: "550m"
         memory: "256Mi"
   controller:
     resources:
       requests:
         memory: "128Mi"
-        cpu: "100m"
+        cpu: "50m"
       limits:
-        cpu: "300m"
         memory: "256Mi"
 
 seldon-core-operator:
@@ -83,11 +78,10 @@ seldon-core-operator:
 admin-ui:
   resources:
     requests:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "8Mi"
     limits:
-      cpu: "300m"
-      memory: "50Mi"
+      memory: "32Mi"
 
 api-gateway:
   jksSetup:
@@ -103,17 +97,15 @@ api-gateway:
       cpu: "500m"
       memory: "2300Mi"
     limits:
-      cpu: "700m"
       memory: "2300Mi"
 
 auth-ui:
   resources:
     requests:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "8Mi"
     limits:
-      cpu: "400m"
-      memory: "50Mi"
+      memory: "32Mi"
 
 classic-rest-service:
   resources:
@@ -121,17 +113,15 @@ classic-rest-service:
       cpu: "300m"
       memory: "2300Mi"
     limits:
-      cpu: "1"
       memory: "2300Mi"
 
 devops-ui:
   resources:
     requests:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "8Mi"
     limits:
-      cpu: "300m"
-      memory: "50Mi"
+      memory: "32Mi"
 
 fusion-admin:
   resources:
@@ -139,7 +129,6 @@ fusion-admin:
       cpu: "400m"
       memory: "2300Mi"
     limits:
-      cpu: "600m"
       memory: "2300Mi"
 
 fusion-indexing:
@@ -148,7 +137,6 @@ fusion-indexing:
       cpu: "500m"
       memory: "800Mi"
     limits:
-      cpu: "500m"
       memory: "1600Mi"
 
 fusion-log-forwarder:
@@ -158,22 +146,20 @@ fusion-log-forwarder:
       memory: "64Mi"
     limits:
       memory: "128Mi"
-      cpu: "100m"
 
 insights:
   resources:
     requests:
-      cpu: "100m"
+      cpu: "50m"
       memory: "500Mi"
     limits:
       memory: "1Gi"
-      cpu: "100m"
 
 job-launcher:
   sparkCleanup:
     resources:
       requests:
-        cpu: "100m"
+        cpu: "50m"
         memory: "128Mi"
       limits:
         cpu: "200m"
@@ -181,7 +167,7 @@ job-launcher:
   argoCleanup:
     resources:
       requests:
-        cpu: "100m"
+        cpu: "50m"
         memory: "128Mi"
       limits:
         cpu: "200m"
@@ -192,7 +178,6 @@ job-launcher:
       cpu: 200m
     limits:
       memory: 3Gi
-      cpu: 200m
 
 job-rest-server:
   resources:
@@ -201,7 +186,6 @@ job-rest-server:
       cpu: 200m
     limits:
       memory: 1Gi
-      cpu: 200m
 
 ml-model-service:
   preinstall:
@@ -219,7 +203,6 @@ ml-model-service:
         cpu: 800m
       limits:
         memory: 3Gi
-        cpu: 800m
   milvus:
     image:
       resources:
@@ -237,7 +220,6 @@ query-pipeline:
       memory: "2300Mi"
     limits:
       memory: "3300Mi"
-      cpu: "700m"
 
 # if PM templating feature is being used (similar needs as query-pipeline):
 templating:
@@ -247,7 +229,6 @@ templating:
       memory: "2300Mi"
     limits:
       memory: "3300Mi"
-      cpu: "700m"
 
 # if PM templating feature is not being used
 # the service is still needed but only for minimal PM functionality,
@@ -267,7 +248,6 @@ rest-service:
       memory: "1500Mi"
     limits:
       memory: "2300Mi"
-      cpu: "200m"
 
 rpc-service:
   resources:
@@ -276,33 +256,30 @@ rpc-service:
       memory: "1500Mi"
     limits:
       memory: "2300Mi"
-      cpu: "300m"
 
 pm-ui:
   resources:
     requests:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "8Mi"
     limits:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "32Mi"
 
 rules-ui:
   resources:
     requests:
-      cpu: "100m"
-      memory: "50Mi"
+      cpu: "50m"
+      memory: "8Mi"
     limits:
-      cpu: "100m"
-      memory: "50Mi"
+      memory: "32Mi"
 
 zookeeper:
   resources:
     requests:
       memory: 1Gi
-      cpu: "1"
+      cpu: 400m
     limits:
-      cpu: "100m"
       memory: 1500Mi
 
 sql-service:
@@ -311,7 +288,6 @@ sql-service:
       cpu: "500m"
       memory: 2Gi
     limits:
-      cpu: "100m"
       memory: 2Gi
 
 webapps:
@@ -320,7 +296,6 @@ webapps:
       cpu: "300m"
       memory: "800Mi"
     limits:
-      cpu: "100m"
       memory: "1300Mi"
 
 logstash:
@@ -335,7 +310,7 @@ logstash:
     resources:
       requests:
         cpu: "100m"
-        memory: "50Mi"
+        memory: "32Mi"
       limits:
         cpu: "150m"
         memory: "64Mi"
@@ -346,7 +321,6 @@ config-sync:
         cpu: 200m
         memory: 1Gi
       limits:
-        cpu: 200m
         memory: 2Gi
 
 connector-plugin-service:
@@ -355,5 +329,4 @@ connector-plugin-service:
       cpu: "200m"
       memory: "1500Mi"
     limits:
-      cpu: "200m"
       memory: "2300Mi"

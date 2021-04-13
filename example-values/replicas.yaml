@@ -6,12 +6,13 @@
 # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-custom-metrics
 
 admin-ui:
-  replicaCount: 0
+  replicaCount: 1
 
 api-gateway:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: true
+    minReplicas: 2
     maxReplicas: 4
     metrics:
     - type: Resource
@@ -20,21 +21,22 @@ api-gateway:
         targetAverageUtilization: 70
 
 auth-ui:
-  replicaCount: 0
+  replicaCount: 1
 
 classic-rest-service:
-  replicaCount: 0
+  replicaCount: 1
 
 devops-ui:
-  replicaCount: 0
+  replicaCount: 1
 
 fusion-admin:
-  replicaCount: 0
+  replicaCount: 2
 
 fusion-indexing:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: true
+    minReplicas: 2
     maxReplicas: 4
     metrics:
       - type: Resource
@@ -43,9 +45,10 @@ fusion-indexing:
           targetAverageUtilization: 70
 
 insights:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: false
+    minReplicas: 2
     maxReplicas: 3
     metrics:
       - type: Resource
@@ -54,12 +57,13 @@ insights:
           targetAverageUtilization: 70
 
 job-launcher:
-  replicaCount: 0
+  replicaCount: 1
 
 job-rest-server:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: false
+    minReplicas: 2
     maxReplicas: 3
     metrics:
       - type: Resource
@@ -68,9 +72,10 @@ job-rest-server:
           targetAverageUtilization: 70
 
 ml-model-service:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: true
+    minReplicas: 2
     maxReplicas: 6
     metrics:
       - type: Resource
@@ -79,9 +84,10 @@ ml-model-service:
           targetAverageUtilization: 70
 
 query-pipeline:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: true
+    minReplicas: 2
     maxReplicas: 6
     metrics:
       - type: Resource
@@ -90,9 +96,10 @@ query-pipeline:
           targetAverageUtilization: 60
 
 rest-service:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: false
+    minReplicas: 2
     maxReplicas: 3
     metrics:
       - type: Resource
@@ -101,16 +108,17 @@ rest-service:
           targetAverageUtilization: 70
 
 rpc-service:
-  replicaCount: 0
+  replicaCount: 2
   plugins:
     # Number of replicas of each plugin service.
     # WARN this setting is global and will affect all plugins.
     # This setting only affect new plugins deployments.
     # Scale them up/down manually if needed.
     # The replicas for plugins can be modified by modifying plugin.replicas in values.yaml file for rpc-connectors
-    replicas: 0
+    replicas: 1
   autoscaling:
     enabled: true
+    minReplicas: 2
     maxReplicas: 4
     metrics:
       - type: Resource
@@ -119,18 +127,19 @@ rpc-service:
           targetAverageUtilization: 70
 
 rules-ui:
-  replicaCount: 0
+  replicaCount: 1
 
 solr:
-  replicaCount: 4
+  replicaCount: 3
 
 sql-service:
   replicaCount: 0
 
 webapps:
-  replicaCount: 0
+  replicaCount: 2
   autoscaling:
     enabled: false
+    minReplicas: 2
     maxReplicas: 3
     metrics:
       - type: Resource
@@ -141,46 +150,9 @@ webapps:
 zookeeper:
   replicaCount: 3
 
-fusion-ambassador:
-  replicaCount: 0
-
-milvus-writable:
-  replicaCount: 0
 
 connector-plugin-service:
   # the base connector-plugin-service deployment must be 0
   replicaCount: 0
 
-argo:
-  replicaCount: 0
 
-argo-common-workflows:
-  replicaCount: 0
-
-classification:
-  replicaCount: 0
-config-sync:
-  replicaCount: 0
-fusion-jupyter:
-  replicaCount: 0
-fusion-log-forwarder:
-  replicaCount: 0
-fusion-resources:
-  replicaCount: 0
-pm-ui:
-  replicaCount: 0
-pulsar:
-  bookkeeper:
-    replicaCount: 0
-  broker:
-    replicaCount: 0
-question-answering:
-  replicaCount: 0
-recommender:
-  replicaCount: 0
-seldon-core-operator:
-  replicaCount: 0
-solr-backup-runner:
-  replicaCount: 0
-templating:
-  replicaCount: 0
