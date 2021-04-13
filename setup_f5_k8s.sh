@@ -182,6 +182,7 @@ if [ $# -gt 0 ]; then
         ;;
         --skip-crds)
             SKIP_CRDS="--skip-crds"
+            shift 1
         ;;
         -help|-usage|--help|--usage)
             print_usage "$SCRIPT_CMD"
