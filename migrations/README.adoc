@@ -3,11 +3,40 @@
 :toclevels: 5
 :toc-title:
 
-The latest version of Fusion 5 is 5.3.0. The migration process varies depending on your current version of Fusion.
+The latest version of Fusion 5 is 5.3.x. The migration process varies depending on your current version of Fusion.
 
 // tag::body[]
 
-== Migrating from Fusion 5.2.1 to 5.3.0
+== Migration from Fusion 5.3.x to 5.4.0
+
+==== Prerequisites
+
+Make sure you're fusion admin is running and all collections are healthy
+
+You *should not* be actively making changes to the `signals` collections (via Rules UI) during the upgrade process.
+
+For production systems, this upgrade process should be performed during a maintenance window.
+
+===== Update signal collections solr config
+
+Lucidworks recommends taking a backup of your signal collections just in case something goes wrong with the upgrade, especially for production environments.
+
+Depending on your Ingress config, the export may take too long and timeout. Consequently, we recommend opening a `kubectl` port-forward to the Fusion Gateway pod:
+```
+kubectl port-forward <POD> 6764
+```
+
+Run the below commands in the terminal or update the creds in the update_signal_collection.sh and run ./update_signal_collection.sh
+```
+PROXY="http://localhost:6764"
+APP="YOUR_FUSION_APP_ID"
+curl -u $CREDS -X POST "$PROXY/api/update/all/signalCollection"
+```
+__Replace `$CREDS` with your Fusion admin username and password__, for example `-u admin:somepassword`
+
+Once the script is executed, verify all collections are healthy. Check fusion-admin pod logs for any errors.
+
+== Migrating from Fusion 5.2.x to 5.3.x
 // tag::521-to-530[]
 
 Lucene 8.4.1 introduced an incompatible change to the underlying `postingsFormat` for the `tagger` field type in the schema for query_rewrite collections.
