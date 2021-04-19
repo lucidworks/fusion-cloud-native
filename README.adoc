@@ -332,6 +332,31 @@ kubectl get po -o jsonpath='{..image}'  | tr -s '[[:space:]]' '\n' | sort | uniq
 
 // end::upgrade-gke[]
 
+=== ML Model Service Permissions
+
+// tag::ml-gke-permissions[]
+
+A user must grant permissions to the Google service account so the ML Model Service can use Google Cloud Storage. This way you can always reference your model even if nodes are created or destroyed as part of cluster scaling.
+
+Grant the default service account read/write access to a GCS bucket by upgrading with these changes: 
+
+To get the service account, do:
+
+```
+gcloud iam service-accounts list | grep 'default service' | grep compute
+```
+
+In the values.yaml, provide:
+
+```
+ml-model-service:
+  modelRepoImpl: gcs
+  gcsBucketName: <GCS_BUCKET_NAME>
+  gcsBaseDirectoryName: dev
+```
+
+// end::ml-gke-permissions[]
+
 == Amazon Elastic Kubernetes Service (EKS)
 
 // tag::eks[]
