@@ -152,6 +152,45 @@ Exposes a JDBC endpoint for the SQL service.
 
 //end::microservices[]
 
+
+// tag::ports[]
+== Ports used by Fusion
+
+[cols="1,1",options="header",width="50%"]
+|===
+|Service |Port
+|admin-ui | 8080
+|api-gateway | 6764
+|auth-ui | 8080
+|classic-rest-service | 9000
+|config-sync | 5150
+|connector-plugin-service | 9020
+|devops-ui | 8080
+|fusion-admin | 8765
+|fusion-indexing | 8765
+|fusion-jupyter | 8888
+|insights | 8080
+|job-launcher | 8083
+|job-rest-server | 8081
+|ml-model-service | 8086
+|ml-model-service ambassador | 8877
+|ml-model-service milvus | 3000
+|ml-model-service mysql | 3306
+|pm-ui | 8080
+|pulsar | 8080, 8443, 6650, 6651, 9527
+|query-pipeline | 8787
+|rest-service | 9010
+|rpc-service | 8771, 8772
+|rules-ui | 8080
+|solr | 8983, 9983
+|solr-backup-runner | 8983
+|sql-service | 5250
+|templating | 5250
+|webapps | 8780
+|zookeeper | 2181, 2888, 3888, 2281, 9141
+|===
+
+// end::ports[]
 == Ingress, TLS termination, API gateway
 
 //tag::ingress[]
