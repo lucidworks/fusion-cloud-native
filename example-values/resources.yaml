@@ -241,7 +241,7 @@ templating:
 #    limits:
 #      memory: "2Gi"
 
-rest-service:
+connectors:
   resources:
     requests:
       cpu: "200m"
@@ -249,7 +249,7 @@ rest-service:
     limits:
       memory: "2300Mi"
 
-rpc-service:
+connectors-backend:
   resources:
     requests:
       cpu: "300m"
@@ -323,7 +323,7 @@ config-sync:
       limits:
         memory: 2Gi
 
-connector-plugin-service:
+connector-plugin:
   resources:
     requests:
       cpu: "200m"

@@ -441,7 +441,7 @@ kubectl patch sa default -n $NAMESPACE \
   -p '"imagePullSecrets": [{"name": "<internal-private-registry>" }]'
 ```
 +
-IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step g above.
+IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step above.
 
 This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
 

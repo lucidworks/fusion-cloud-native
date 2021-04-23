@@ -95,7 +95,7 @@ query-pipeline:
           name: cpu
           targetAverageUtilization: 60
 
-rest-service:
+connectors:
   replicaCount: 2
   autoscaling:
     enabled: false
@@ -107,7 +107,7 @@ rest-service:
           name: cpu
           targetAverageUtilization: 70
 
-rpc-service:
+connectors-backend:
   replicaCount: 2
   plugins:
     # Number of replicas of each plugin service.
@@ -151,8 +151,8 @@ zookeeper:
   replicaCount: 3
 
 
-connector-plugin-service:
-  # the base connector-plugin-service deployment must be 0
+connector-plugin:
+  # the base connector-plugin deployment must be 0
   replicaCount: 0
 
 
