@@ -36,6 +36,17 @@ __Replace `$CREDS` with your Fusion admin username and password__, for example `
 
 Once the script is executed, verify all collections are healthy. Check fusion-admin pod logs for any errors.
 
+===== Update Connectors services names
+
+In Fusion 5.4.0 we introduced name changes to some services related to connectors.
+```
+connector-plugin-service -> connector-plugin
+rest-service -> connectors
+rpc-service -> connectors-backend
+```
+
+Make sure to update your `*_values.yaml` replacing old names.
+
 == Migrating from Fusion 5.2.x to 5.3.x
 // tag::521-to-530[]
 

@@ -160,11 +160,11 @@ logstash:
   nodeSelector:
     {NODE_POOL}
 
-rest-service:
+connectors:
   nodeSelector:
     {NODE_POOL}
 
-rpc-service:
+connectors-backend:
   nodeSelector:
     {NODE_POOL}
 
