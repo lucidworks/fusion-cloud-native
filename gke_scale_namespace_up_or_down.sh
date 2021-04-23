@@ -168,7 +168,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME
 kubectl config current-context
 kubectl config set-context --current --namespace=${NAMESPACE}
 
-declare -a deployments=("admin-ui" "api-gateway" "argo-argo-ui" "argo-workflow-controller" "auth-ui" "config-sync" "connector-plugin-service" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "fusion-log-forwarder" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "ml-model-service-ambassador" "ml-model-service-mysql" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "rest-service" "rpc-service" "rules-ui" "sql-service-cm" "sql-service-cr" "templating" "webapps")
+declare -a deployments=("admin-ui" "api-gateway" "argo-argo-ui" "argo-workflow-controller" "auth-ui" "connectors" "connectors-backend" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "fusion-log-forwarder" "fusion-superset" "fusion-superset-proxy" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "ml-model-service-ambassador" "ml-model-service-mysql" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "rules-ui" "sql-service-cm" "sql-service-cr" "templating" "tikaserver" "webapps")
 
 if [ "$ACTION" == "down" ]; then
 
