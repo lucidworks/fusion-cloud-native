@@ -98,7 +98,7 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`insights` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves the App Insights UI
 
-|`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and aunches the Spark driver pod for running Spark jobs
+|`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and launches the Spark driver pod for running Spark jobs
 
 |`job-rest-server` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and running Spark jobs.
 
@@ -116,9 +116,9 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
 
-|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | Atleast 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
+|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | At least 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
 
-|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | Atleast 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
+|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | At least 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
 
 |`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
 
