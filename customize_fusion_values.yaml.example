@@ -251,3 +251,8 @@ config-sync:
 #    github:
 #      username: TODO_GITHUB_USERNAME
 #      email: TODO_GITHUB_EMAIL
+
+tikaserver:
+  extractInlineImages: true
+  replicaCount: 1
+  resources: {}

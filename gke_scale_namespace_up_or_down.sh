@@ -168,7 +168,7 @@ gcloud container clusters get-credentials $CLUSTER_NAME
 kubectl config current-context
 kubectl config set-context --current --namespace=${NAMESPACE}
 
-declare -a deployments=("admin-ui" "api-gateway" "auth-ui" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "connectors" "connectors-backend" "rules-ui" "solr-exporter" "webapps" "ambassador" "pulsar-broker" "workflow-controller" "ui" "sql-service-cm" "sql-service-cr")
+declare -a deployments=("admin-ui" "api-gateway" "argo-argo-ui" "argo-workflow-controller" "auth-ui" "connectors" "connectors-backend" "devops-ui" "fusion-admin" "fusion-indexing" "fusion-jupyter" "fusion-log-forwarder" "fusion-superset" "fusion-superset-proxy" "monitoring-grafana" "insights" "job-launcher" "job-rest-server" "ml-model-service" "ml-model-service-ambassador" "ml-model-service-mysql" "pm-ui" "monitoring-prometheus-kube-state-metrics" "monitoring-prometheus-pushgateway" "query-pipeline" "rules-ui" "sql-service-cm" "sql-service-cr" "templating" "tikaserver" "webapps")
 
 if [ "$ACTION" == "down" ]; then
 
@@ -183,13 +183,14 @@ if [ "$ACTION" == "down" ]; then
   done
 
   kubectl scale deployments/seldon-controller-manager --replicas=0 -n ${NAMESPACE}
+  kubectl scale deployments/milvus-writable --replicas=0 -n ${NAMESPACE}
 
   # scale down the seldon deployments. When updating to Seldon Core beyond 1.1.0, instead of delete use:
   #  kubectl scale seldondeployments --replicas=0 --all -n ${NAMESPACE}
 
   kubectl delete seldondeployments -n ${NAMESPACE} --all 
 
-  declare -a stateful=("classic-rest-service" "logstash" "solr" "pulsar-bookkeeper" "monitoring-prometheus-server")
+  declare -a stateful=("classic-rest-service" "solr" "pulsar-bookkeeper" "pulsar-broker" "monitoring-prometheus-server")
   for i in "${stateful[@]}"
   do
      next="${RELEASE}-$i"

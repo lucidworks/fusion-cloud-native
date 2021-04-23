@@ -142,6 +142,8 @@ Exposes a JDBC endpoint for the SQL service.
 
 |`templating` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Retrieves and renders Predictive Merchandiser templates.
 
+|`tikaserver` |HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Is responsible for text extraction using Tika Server Parser
+
 |`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
 
 |`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
@@ -195,7 +197,9 @@ If running on GKE or AKS, the setup scripts in the `fusion-cloud-native` repo pr
 
 //tag::jwt[]
 
-The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. We show an example of this in
+The Fusion API gateway requires incoming requests to be authenticated. The gateway supports a number of authentication mechanisms, including SAML, OIDC, basic auth, and Kerberos. Once authenticated, the gateway issues a JWT and returns it in the `id` cookie. Client applications will get the best performance by using the `id` cookie (or JWT Authorization header) instead of using Basic Auth for every query request because hashing a password is CPU intensive and slow by design (we use link:https://en.wikipedia.org/wiki/Bcrypt[bcrypt^]), whereas verifying a JWT is fast and safe to cache. 
+
+// We show an example of this in
 ifdef::env-github[]
 link:3_operations.adoc#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling^],
 endif::[]
