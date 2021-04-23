@@ -156,7 +156,7 @@ Exposes a JDBC endpoint for the SQL service.
 // tag::ports[]
 == Ports used by Fusion
 
-Below you will find teh list of ports required to access Fusion services.  
+Below you will find the list of ports required to access Fusion services.  
 
 [cols="1,1",options="header",width="50%"]
 |===
