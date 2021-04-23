@@ -445,6 +445,49 @@ IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the
 
 This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
 
+[[custom-certs]]
+=== Add custom certificates (optional)
+
+You can add arbitrary certificates to connectors. This may be helpful if you need to crawl a datasource which for some reason is using a self-signed certificate.
+
+[source,yaml]
+----
+# Additional certificates to be imported into truststore used by the classic connectors
+classic-rest-service:
+  trustedCertificates:
+    enabled: true
+    files:
+      some.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE-----
+      other.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE---------
+# And v2 connector plugins
+connector-plugin-service:
+  trustedCertificates:
+    enabled: true
+    files:
+      some.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE-----
+      other.cert: |-
+        -----BEGIN CERTIFICATE-----
+        MIIDeTCCAmGgAwIBAgIJAPziuikCTox4MA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
+        (...)
+        EVA0pmzIzgBg+JIe3PdRy27T0asgQW/F4TY61Yk=
+        -----END CERTIFICATE---------
+----
+
 [[install]]
 === Install Fusion 5 on Kubernetes
 
