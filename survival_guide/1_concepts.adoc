@@ -98,7 +98,7 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`insights` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves the App Insights UI
 
-|`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and aunches the Spark driver pod for running Spark jobs
+|`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and launches the Spark driver pod for running Spark jobs
 
 |`job-rest-server` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and running Spark jobs.
 
@@ -116,9 +116,9 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
 
-|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | Atleast 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
+|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | At least 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
 
-|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | Atleast 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
+|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | At least 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
 
 |`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
 
@@ -149,6 +149,45 @@ Exposes a JDBC endpoint for the SQL service.
 |`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
 
 |===
+
+== Ports used by Fusion
+
+Below you will find the list of ports required to access Fusion services.  
+
+[cols="1,1",options="header",width="50%"]
+|===
+|Service |Port
+|`admin-ui` | 8080
+|`api-gateway` | 6764
+|`auth-ui` | 8080
+|`classic-rest-service` | 9000
+|`config-sync` | 5150
+|`connector-plugin-service` | 9020
+|`devops-ui` | 8080
+|`fusion-admin` | 8765
+|`fusion-indexing` | 8765
+|`fusion-jupyter` | 8888
+|`insights` | 8080
+|`job-launcher` | 8083
+|`job-rest-server` | 8081
+|`ml-model-service` | 8086
+|`ml-model-service ambassador` | 8877
+|`ml-model-service milvus` | 3000
+|`ml-model-service mysql` | 3306
+|`pm-ui` | 8080
+|`pulsar` | 8080, 8443, 6650, 6651, 9527
+|`query-pipeline` | 8787
+|`rest-service` | 9010
+|`rpc-service` | 8771, 8772
+|`rules-ui` | 8080
+|`solr` | 8983, 9983
+|`solr-backup-runner` | 8983
+|`sql-service` | 5250
+|`templating` | 5250
+|`webapps` | 8780
+|`zookeeper` | 2181, 2888, 3888, 2281, 9141
+|===
+
 
 //end::microservices[]
 
