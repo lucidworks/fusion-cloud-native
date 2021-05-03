@@ -150,10 +150,6 @@ Exposes a JDBC endpoint for the SQL service.
 
 |===
 
-//end::microservices[]
-
-
-// tag::ports[]
 == Ports used by Fusion
 
 Below you will find the list of ports required to access Fusion services.  
@@ -193,7 +189,8 @@ Below you will find the list of ports required to access Fusion services.
 |===
 
 
-// end::ports[]
+//end::microservices[]
+
 == Ingress, TLS termination, API gateway
 
 //tag::ingress[]
