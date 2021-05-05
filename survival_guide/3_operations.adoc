@@ -618,7 +618,8 @@ kubectl create configmap aws-launcher --from-file=aws-launcher.properties
 +
 [source,yaml]
 ----
-configSources: aws-launcher
+configSources:
+ - aws-launcher
 ----
 
 ===== Configuring Azure Data Lake credentials for Spark jobs
