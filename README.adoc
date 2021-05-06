@@ -15,6 +15,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.4.1|2021-05-06|Fusion 5.4.1 release, see official https://doc.lucidworks.com/fusion/5.4/gzd3zh/fusion-5-4-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.4.0|2021-04-23|Fusion 5.4.0 release, see official https://doc.lucidworks.com/fusion/5.4/27f812/fusion-5-4-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.3.5|2021-03-08|Fusion 5.3.5 release, see official https://doc.lucidworks.com/fusion/5.3/11255/fusion-5-3-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.3.4|2021-02-12|Fusion 5.3.4 release, see official https://doc.lucidworks.com/fusion/5.3/11250/fusion-5-3-4-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
