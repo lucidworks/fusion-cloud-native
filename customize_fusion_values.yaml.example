@@ -189,6 +189,7 @@ pulsar:
       prometheus.io/port: "8080"
     configData:
       # based on container memory limit of 2300m
+      backlogQuotaDefaultLimitGB: "10"        
       PULSAR_MEM: >
         -XX:+ExitOnOutOfMemoryError
         -Xms1g
@@ -201,11 +202,11 @@ pulsar:
       prometheus.io/port: "8000"
     configData:
       # based on container memory limit of 2300m
-      BOOKIE_MEM: >
+      PULSAR_MEM: >
         -XX:+ExitOnOutOfMemoryError
-        -Xms1500m
-        -Xmx1500m
-        -XX:MaxDirectMemorySize=600m
+        -Xms1g
+        -Xmx1g
+        -XX:MaxDirectMemorySize=1g
 
 templating:
   nodeSelector:
