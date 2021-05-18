@@ -164,12 +164,14 @@ Below you will find the list of ports required to access Fusion services.
 |`config-sync` | 5150
 |`connector-plugin-service` | 9020
 |`devops-ui` | 8080
+|`dnsAccess` | 53
 |`fusion-admin` | 8765
 |`fusion-indexing` | 8765
 |`fusion-jupyter` | 8888
 |`insights` | 8080
 |`job-launcher` | 8083
 |`job-rest-server` | 8081
+|`kubernetesAccess` | 443
 |`ml-model-service` | 8086
 |`ml-model-service ambassador` | 8877
 |`ml-model-service milvus` | 3000
