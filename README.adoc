@@ -794,6 +794,8 @@ Here is a list of tools we found useful for improving your command-line experien
 
 === Useful kubectl commands
 
+// tag::useful-kubectl-commands[]
+
 kubectl reference: https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands
 
 Set the namespace for `kubectl` if not using the default:
@@ -828,6 +830,7 @@ Once the install script completes, you can check that all pods and services are 
 ```
 kubectl get pods
 ```
+// end::useful-kubectl-commands[]
 
 If all goes well, you should see a list of pods similar to:
 ```
