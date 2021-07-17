@@ -1,0 +1,118 @@
+admin-ui:
+  rbac:
+    create: false
+api-gateway:
+  rbac:
+    create: false
+argo:
+  rbac:
+    create: false
+  createAggregateRoles: false
+argo-common-workflows:
+  rbac:
+    create: false
+auth-ui:
+  rbac:
+    create: false
+classic-rest-service:
+  rbac:
+    create: false
+classification:
+  rbac:
+    create: false
+config-sync:
+  rbac:
+    create: false
+connector-plugin-service:
+  rbac:
+    create: false
+devops-ui:
+  rbac:
+    create: false
+fusion-admin:
+  rbac:
+    create: false
+fusion-ambassador:
+  rbac:
+    create: false
+fusion-indexing:
+  rbac:
+    create: false
+fusion-jupyter:
+  rbac:
+    create: false
+fusion-log-forwarder:
+  rbac:
+    create: false
+fusion-resources:
+  rbac:
+    create: false
+insights:
+  rbac:
+    create: false
+job-launcher:
+  rbac:
+    create: false
+job-rest-server:
+  rbac:
+    create: false
+milvus-writable:
+  rbac:
+    create: false
+ml-model-service:
+  rbac:
+    create: false
+  runLabelNamespaceJob: false
+pm-ui:
+  rbac:
+    create: false
+pulsar:
+  rbac:
+    create: false
+question-answering:
+  rbac:
+    create: false
+recommender:
+  rbac:
+    create: false
+rest-service:
+  rbac:
+    create: false
+rpc-service:
+  rbac:
+    create: false
+  plugins:
+    crd:
+      create: false
+rules-ui:
+  rbac:
+    create: false
+seldon-core-operator:
+  rbac:
+    create: false
+  disableWebhookCreation: true
+  crds:
+    enabled: false
+solr:
+  rbac:
+    create: false
+  setAvailabilityZone: false
+solr-backup-runner:
+  rbac:
+    create: false
+sql-service:
+  rbac:
+    create: false
+templating:
+  rbac:
+    create: false
+webapps:
+  rbac:
+    create: false
+zookeeper:
+  rbac:
+    create: false
+query-pipeline:
+  useAvailabilityZoneRouting: false
+  rbac:
+    create: false

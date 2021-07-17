@@ -2,6 +2,7 @@
 
 PROVIDER=gke
 NODE_POOL=""
+KUBECTL="kubectl"
 UPGRADE=0
 
 function print_usage() {
@@ -15,6 +16,7 @@ function print_usage() {
   echo -e "\nUse this script to install Prometheus and Grafana into an existing Fusion 5 cluster"
   echo -e "\nUsage: $CMD [OPTIONS] ... where OPTIONS include:\n"
   echo -e "  -c            Name of the K8s cluster (required)\n"
+  echo -e "  -k            The Kubernetes command line tool executable to use, defaults to 'kubectl'\n"
   echo -e "  -n            Kubernetes namespace to install Fusion 5 into (required)\n"
   echo -e "  -r            Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
   echo -e "  --node-pool   Node pool label to assign pods to specific nodes, this option is only useful for existing clusters"
@@ -31,6 +33,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             CLUSTER_NAME="$2"
+            shift 2
+        ;;
+        -k)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -k parameter!"
+              exit 1
+            fi
+            KUBECTL="$2"
             shift 2
         ;;
         -n)
@@ -120,8 +130,8 @@ if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"
   helm repo add stable https://charts.helm.sh/stable
 fi
 
-if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
-  kubectl create namespace "${NAMESPACE}"
+if ! ${KUBECTL} get namespace "${NAMESPACE}" > /dev/null 2>&1; then
+  ${KUBECTL} create namespace "${NAMESPACE}"
   if [ "$PROVIDER" == "gke" ]; then
     who_am_i=$(gcloud auth list --filter=status:ACTIVE --format="value(account)")
   else
@@ -129,12 +139,12 @@ if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
   fi
   OWNER_LABEL="${who_am_i//@/-}"
   if [ "${OWNER_LABEL}" != "" ]; then
-    kubectl label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
+    ${KUBECTL} label namespace "${NAMESPACE}" "owner=${OWNER_LABEL}"
   fi
   echo -e "\nCreated namespace ${NAMESPACE} with owner label ${OWNER_LABEL}\n"
 fi
 
-if kubectl get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-monitoring"; then
+if ${KUBECTL} get sts -n "${NAMESPACE}" -l "app=prometheus" -o "jsonpath={.items[0].metadata.labels['release']}" 2>&1 | grep -q "${RELEASE}-monitoring"; then
   echo -e "\nThere is already a Prometheus StatefulSet in namespace: ${NAMESPACE} with release name: ${RELEASE}-monitoring, assuming this is an upgrade\n"
   UPGRADE=1
 fi
