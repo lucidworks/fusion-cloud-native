@@ -552,13 +552,15 @@ AWS/GCS credentials can be configured per job or per cluster.
 
 ===== Configuring GCS credentials for Spark jobs
 
+For the code samples in this section, replace `solr-dev-gc-serviceaccount-key` with your key name, `--from-file path...` with the path to the key on your machine, and `solr-dev-gc-serviceaccount-key.json` with the JSON file for your key name. 
+
 . Create a secret containing the credentials JSON file.
 +
 See https://cloud.google.com/iam/docs/creating-managing-service-account-keys on how to create service account JSON files.
 +
 [source,bash]
 ----
-kubectl create secret generic solr-dev-gc-serviceaccount-key --from-file=/Users/kiranchitturi/creds/solr-dev-gc-serviceaccount-key.json
+kubectl create secret generic solr-dev-gc-serviceaccount-key --from-file=/Users/username/creds/solr-dev-gc-serviceaccount-key.json
 ----
 
 . Create an extra config map in Kubernetes setting the required properties for GCP.
