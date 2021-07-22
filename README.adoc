@@ -439,9 +439,17 @@ To create a cluster in EKS the following IAM policies are required:
 
 
 Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] to install Fusion 5.x in a EKS cluster. To create a new cluster and install Fusion, simply do:
+````
+./setup_f5_eks.sh -c <cluster_name> -p <eks_resource_group>
 ```
-./setup_f5_eks.sh -c <cluster_name> -p <aks_resource_group>
-```
+
+Where:
+* cluster_name _must_ point to an existing cluster
+* eks_resource_group should be the default if you ran the aws configure command without giving the profile a name.
+If you need the setup script to create the cluster, for example my_eks_cluster, and you have a profile of default and your namespace is cold-fusion, the script should be called as:
+````
+./setup_f5_eks.sh -}}c my-eks-cluster -p default -n cold-fusion {{--create demo
+````
 
 If you want the script to create a cluster for you (the default behavior), then you need to pass the `--create` option with either `demo` or `multi_az`.
 If you don't want the script to create a cluster, then you need to create a cluster before running the script and simply pass the name of the existing cluster using the `-c` parameter.
