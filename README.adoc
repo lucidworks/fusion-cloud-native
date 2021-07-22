@@ -444,8 +444,10 @@ Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/mast
 ````
 
 Where:
+
 * cluster_name _must_ point to an existing cluster
 * eks_resource_group should be the default if you ran the aws configure command without giving the profile a name.
+
 If you need the setup script to create the cluster, for example my_eks_cluster, and you have a profile of default and your namespace is cold-fusion, the script should be called as:
 ````
 ./setup_f5_eks.sh -}}c my-eks-cluster -p default -n cold-fusion {{--create demo
