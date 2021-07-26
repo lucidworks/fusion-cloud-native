@@ -441,7 +441,7 @@ To create a cluster in EKS the following IAM policies are required:
 Download and run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_eks.sh[`setup_f5_eks.sh` script^] to install Fusion 5.x in a EKS cluster. To create a new cluster and install Fusion, simply do:
 ````
 ./setup_f5_eks.sh -c <cluster_name> -p <eks_resource_group>
-`````
+````
 
 The `cluster_name` _must_ point to an existing cluster.
 
