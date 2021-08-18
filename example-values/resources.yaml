@@ -315,13 +315,14 @@ logstash:
         cpu: "150m"
         memory: "64Mi"
 
-config-sync:
-    resources:
-      requests:
-        cpu: 200m
-        memory: 1Gi
-      limits:
-        memory: 2Gi
+#As of July, 2021, config-sync only used internally, not for customer #documentation or use. 
+#config-sync:
+#    resources:
+#     requests:
+#        cpu: 200m
+#        memory: 1Gi
+#      limits:
+#        memory: 2Gi
 
 connector-plugin:
   resources:
