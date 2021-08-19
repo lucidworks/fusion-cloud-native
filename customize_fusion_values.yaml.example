@@ -222,20 +222,21 @@ templating:
 # config-sync-github-oauth-token
 # for subscriber mode, enable pulsar and use the "sub" profile
 # springProfilesOverride: "kubernetes,jwt,fusion,sub", see below
-config-sync:
-  enabled: false
-  logstashEnabled: false
-  pub:
-    git:
-      repo: TODO_GITHUB_REPO_URL
-      alias: fusion-config-sync
-      branch: stage
-    github:
-      username: TODO_GITHUB_USERNAME
-      email: TODO_GITHUB_EMAIL
-  pulsar:
-    enabled: false
-  springProfilesOverride: "kubernetes,jwt,fusion,pub"
+#As of July, 2021, config-sync only used internally, not for customer documentation or use.
+#config-sync:
+#  enabled: false
+#  logstashEnabled: false
+#  pub:
+#    git:
+#      repo: TODO_GITHUB_REPO_URL
+#      alias: fusion-config-sync
+#      branch: stage
+#    github:
+#      username: TODO_GITHUB_USERNAME
+#      email: TODO_GITHUB_EMAIL
+#  pulsar:
+#    enabled: false
+#  springProfilesOverride: "kubernetes,jwt,fusion,pub"
 
 # Uncomment for subscriber mode
 #config-sync:
