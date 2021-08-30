@@ -84,9 +84,9 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`classic-rest-service` |REST/HTTP |StatefulSet |`analytics` or `system` |Yes (CPU or custom metric) |REST service for supporting non-RPC connector plugins.
 
-|`connectors-rest` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Routes REST API requests to classic-rest-service and connectors-rpc.
+|`connectors` |REST/HTTP |Deployment |`analytics` or `system` |Not required; only 1 pod should be sufficient for most clusters |Routes REST API requests to classic-rest-service and connectors-rpc.
 
-|`connectors-rpc` |gRPC |Deployment |`analytics` or `system` |Yes (CPU or custom metric) |gRPC service for managing SDK-based connector plugins.
+|`connectors-backend` |gRPC |Deployment |`analytics` or `system` |Yes (CPU or custom metric) |gRPC service for managing SDK-based connector plugins.
 
 |`connector-plugin-<connector_plugin>` | HTTP/TCP |Deployment |`analytics` or `system` |Yes (CPU or custom metric) | Deployment for each connector plugin type. *Note:* There is a base deployment, `connector-plugin` with 0 replicas. This is used as a deployment template for each connector plugin type. It should not be deleted or scaled.
 
