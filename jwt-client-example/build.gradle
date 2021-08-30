@@ -25,7 +25,4 @@ dependencies {
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.1'
     //so we can get logs coming from Apache HttpClient
     compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: '1.7.5'
-
-
-
 }

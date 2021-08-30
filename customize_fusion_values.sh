@@ -288,8 +288,6 @@ else
   sed -i '' -e "s|<SKIP_CRDS>|${SKIP_CRDS}|g" "$OUTPUT_SCRIPT"
 fi
 
-
-
 if [ "$RESOURCES" == "true" ]; then
   resyaml="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_fusion_resources.yaml"
   cp example-values/resources.yaml "${resyaml}"
@@ -356,6 +354,5 @@ if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
 else
   sed -i '' -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
 fi
-
 
 echo -e "\nCreate $OUTPUT_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"

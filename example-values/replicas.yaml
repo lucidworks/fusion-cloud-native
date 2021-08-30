@@ -154,5 +154,3 @@ zookeeper:
 connector-plugin:
   # the base connector-plugin deployment must be 0
   replicaCount: 0
-
-
