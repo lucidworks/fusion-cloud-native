@@ -242,7 +242,7 @@ ifdef::env-github[]
 link:3_operations.adoc#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling^],
 endif::[]
 ifndef::env-github[]
-link:/how-to/configure-replicas-and-hpa.html#use-gatling-to-run-query-performance--load-tests[Query Load Tests with Gatling],
+link:/how-to/885/configure-replicas-and-horizontal-pod-auto-scaling#use-gatling-to-run-query-performance-load-tests[Query Load Tests with Gatling],
 endif::[]
 including how to refresh the JWT before it expires.
 
