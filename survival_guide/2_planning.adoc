@@ -331,7 +331,27 @@ Here's a rough outline of the process we recommend, but you may need to adapt th
 
 . Install Docker on `envoy`. You'll need at least 100GB of free disk for Docker.
 
-. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
+. Pull all images from DockerHub to `envoy`’s local registry (this will take a long time). 
++
+You can get a list of images from a Helm Chart with:
++
+```
+brew install python-yq
+```
++
+On a non-Mac, use python3
++
+```
+pip3 install yq
+```
++
+Then
++
+```
+helm template <repo/chart> | yq '..|.image? | select(.)' | sort | uniq
+```
++
+Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
 +
 ```
 apachepulsar/pulsar-all:2.5.0
