@@ -270,7 +270,7 @@ ifdef::env-github[]
 link:3_operations.adoc#multiple-replicas-and-horizontal-pod-auto-scaling[Multiple replicas and horizontal pod auto-scaling].
 endif::[]
 ifndef::env-github[]
-link:/how-to/configure-replicas-and-hpa.html[Configure Replicas and Horizontal Pod Auto-Scaling].
+link:/how-to/configure-replicas-and-hpa[Configure Replicas and Horizontal Pod Auto-Scaling].
 endif::[]
 
 When using multiple node pools to isolate / partition workloads, the Fusion Helm chart defines multiple StatefulSets for Solr. Each Solr StatefulSet uses the same Zookeeper connect string so are considered to be in the same Solr cluster; the partitioning of collections based on workload and zone is done with a Solr auto-scaling policy. The auto-scaling policy also ensures replicas get placed evenly between multiple availability zones (typically 3 for HA) so that your Fusion cluster can withstand the loss of one AZ and remain operational.
@@ -281,10 +281,10 @@ The *analytics* partition hosts the Spark driver & executor pods, Spark job mana
 
 TIP: When running in GKE, separating the Spark driver and executor pods into a dedicated Node Pool backed by preemptible nodes is a common pattern for reducing costs while increasing the compute capacity for running Spark jobs. You can also do this on EKS with spot instances. We'll cover this approach in more detail in the
 ifdef::env-github[]
-link:3_operations.adoc#spark-ops[Spark Ops]
+link:/3_operations#spark-ops[Spark Ops]
 endif::[]
 ifndef::env-github[]
-link:3_operations.adoc#spark-ops[Spark Ops]
+link:/3_operations#spark-ops[Spark Ops]
 endif::[]
 section.
 
