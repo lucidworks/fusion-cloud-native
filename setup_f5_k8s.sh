@@ -4,7 +4,7 @@
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-CHART_VERSION="5.4.4"
+CHART_VERSION="5.4.5"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
 TLS_ENABLED="0"
