@@ -676,7 +676,13 @@ aks_<cluster>_<release>_upgrade_fusion.sh
 
 // tag::other[]
 
-If you're not running on managed K8s platform such as GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+If you're not running on a managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster. 
+
+Fusion version 5.5 now includes support for the Rancher Kubernetes Engine (RKE) platform. Before deploying Fusion to RKE, you must download and install the link:https://rancher.com/docs/rke/latest/en/[RKE^] software. After configuring your cluster, you can proceed with the Helm v3 installation.
+
+[NOTE]
+You must have a working cluster configured before performing the Helm v3 installation. 
+
 
 [[helm-only]]
 === Use Helm v3 to Install Fusion
