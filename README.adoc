@@ -15,7 +15,8 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
-|5.4.5|2021-12-17|Fusion 5.4.4 release, see official https://doc.lucidworks.com/fusion/5.4/20lnzz/fusion-5-4-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.5.0|2022-03-18|Fusion 5.5.0 release, see official https://doc.lucidworks.com/fusion/5.5/301ya6/fusion-5-5-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
+|5.4.5|2021-12-17|Fusion 5.4.5 release, see official https://doc.lucidworks.com/fusion/5.4/20lnzz/fusion-5-4-5-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.4.4|2021-12-02|Fusion 5.4.4 release, see official https://doc.lucidworks.com/fusion/5.4/z3r8fr/fusion-5-4-4-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.4.3|2021-09-29|Fusion 5.4.3 release, see official https://doc.lucidworks.com/fusion/5.4/so9yqn/fusion-5-4-3-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.4.2|2021-06-17|Fusion 5.4.2 release, see official https://doc.lucidworks.com/fusion/5.4/xl26i1/fusion-5-4-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
@@ -682,7 +683,13 @@ aks_<cluster>_<release>_upgrade_fusion.sh
 
 // tag::other[]
 
-If you're not running on managed K8s platform such as GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster.
+If you're not running on a managed K8s platform like GKE, AKS, or EKS, you can use Helm to install the Fusion chart to an existing Kubernetes cluster. 
+
+Fusion version 5.5 now includes support for the Rancher Kubernetes Engine (RKE) platform. Before deploying Fusion to RKE, you must download and install the link:https://rancher.com/docs/rke/latest/en/[RKE^] software. After configuring your cluster, you can proceed with the Helm v3 installation.
+
+[NOTE]
+You must have a working cluster configured before performing the Helm v3 installation. 
+
 
 [[helm-only]]
 === Use Helm v3 to Install Fusion
