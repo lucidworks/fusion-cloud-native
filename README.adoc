@@ -81,6 +81,12 @@ The Fusion helm chart requires that helm is greater than version `3.0.0`; check 
 
 If you require that fusion is installed by a user with minimal permissions, instead of an admin user, then the role and cluster role that will have to be assigned to the user within the namespace that you wish to install fusion in are documented in the `install-roles` directory.
 
+[NOTE]
+When working with Kubernetes on the command-line, it's useful to create a shell alias for `kubectl`, e.g.:
+```
+alias k=kubectl
+```
+
 To use these role in a cluster, as an admin user first create the namespace that you wish to install fusion into:
 ```
 k create namespace fusion-namespace
@@ -89,7 +95,8 @@ Apply the `role.yaml` and `cluster-role.yaml` files to that namespace
 
 ```
 k apply -f cluster-role.yaml
-k apply -f --namespace fusion-namespace role.yaml
+k config set-context --current --namespace=$NAMESPACE
+k apply -f role.yaml
 ```
 
 Then bind the rolebinding and clusterolebinding to the install user:
@@ -792,11 +799,6 @@ TIP: Check if the Fusion Admin UI is available at `\https://<fusion-host>:6764/a
 Let's review some useful kubectl commands.
 
 === Enhance the K8s Command-line Experience
-
-When working with Kubernetes on the command-line, it's useful to create a shell alias for `kubectl`, e.g.:
-```
-alias k=kubectl
-```
 
 Here is a list of tools we found useful for improving your command-line experience with Kubernetes:
 
