@@ -1,0 +1,157 @@
+zookeeper:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/zookeeper"
+solr:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/solr"
+  initContainer:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+admin-ui:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+api-gateway:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+  keytoolUtils:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+argo:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+argo-common-workflows:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+auth-ui:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+classic-rest-service:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+classification:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+config-sync:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+connector-plugin-service:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+devops-ui:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-admin:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-ambassador:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-indexing:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-jupyter:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-log-forwarder:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+fusion-resources:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+insights:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+job-launcher:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+job-rest-server:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+milvus-writable:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+pm-ui:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+pulsar:
+  bookkeeper:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+  broker:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+  initContainer:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+  images:
+    autorecovery:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+    bookie:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+    broker:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+    functions:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+    pulsar_manager:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-manager"
+    zookeeper:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+  pulsar_metadata:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/apachepulsar/pulsar-all"
+question-answering:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+recommender:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+rest-service:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+rpc-service:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+rules-ui:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+seldon-core-operator:
+  image:
+    registry: "YOUR-REPOSITORY-DOMAIN:443"
+solr-backup-runner:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+sql-service:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+templating:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+webapps:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+query-pipeline:
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+ml-model-service:
+  milvus:
+    admin:
+      image:
+        repository: "YOUR-REPOSITORY-DOMAIN:443/milvusdb/milvus-em"
+    mysql:
+      image: "YOUR-REPOSITORY-DOMAIN:443/mysql"
+      busybox:
+        image: "YOUR-REPOSITORY-DOMAIN:443/busybox"
+    initContainerImage: "YOUR-REPOSITORY-DOMAIN:443/alpine:latest"
+  ambassador:
+    initContainerImage: "YOUR-REPOSITORY-DOMAIN:443/alpine:latest"
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/quay.io/datawire/ambassador"
+  initContainer:
+    image:
+      repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+  image:
+    repository: "YOUR-REPOSITORY-DOMAIN:443/lucidworks"
+  mysql:
+    image: "YOUR-REPOSITORY-DOMAIN:443/mysql"

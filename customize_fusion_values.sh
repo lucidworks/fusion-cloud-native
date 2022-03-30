@@ -13,6 +13,8 @@ CHART_VERSION="5.5.0"
 NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
+KUBECTL="kubectl"
+KUBECTL_TIMEOUT_PARAM="--timeout"
 SKIP_CRDS=""
 
 function print_usage() {
@@ -28,6 +30,7 @@ function print_usage() {
   echo -e "  -c                      Cluster name (required)\n"
   echo -e "  -n                      Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -r                      Helm release name for installing Fusion 5; defaults to the namespace, see -n option\n"
+  echo -e "  -k                      The Kubernetes command line tool executable to use, defaults to 'kubectl'\n"
   echo -e "  --version               Fusion Helm Chart version; defaults to the latest release from Lucidworks, such as ${CHART_VERSION}\n"
   echo -e "  --provider              Name of your K8s provider, e.g. eks, aks, gke, oc; defaults to 'gke'\n"
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
@@ -40,6 +43,7 @@ function print_usage() {
   echo -e "  --with-replicas         Flag to enable replicas yaml, defaults to off\n"
   echo -e "  --additional-values     Additional values files to add to the upgrade script, may be specified multiple times\n"
   echo -e "  --output-script         The name of the generated upgrade script, defaults to <provider>_<cluster_name>_<release>_upgrade_fusion.sh \n"
+  echo -e "  --skip-crds             Set the --skip-crds flag on the helm upgrade. Use this in situations where you do no have permissions to make Custom Resource Definitions.\n"
   echo -e "\nIf you omit the <yaml-file-to-create> arg, then the script will create it using the naming convention:\n       <provider>_<cluster>_<release>_fusion_values.yaml\n"
 }
 
@@ -69,6 +73,14 @@ if [ $# -gt 1 ]; then
               exit 1
             fi
             CLUSTER_NAME="$2"
+            shift 2
+        ;;
+        -k)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the -k parameter!"
+              exit 1
+            fi
+            KUBECTL="$2"
             shift 2
         ;;
         -n)
@@ -102,6 +114,10 @@ if [ $# -gt 1 ]; then
             fi
             PROVIDER="$2"
             shift 2
+        ;;
+        --skip-crds)
+            SKIP_CRDS="--skip-crds"
+            shift 1
         ;;
         --prometheus)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
@@ -185,6 +201,11 @@ if [ $# -gt 1 ]; then
         ;;
     esac
   done
+fi
+
+# Openshift cli uses --request-timeout instead of --timeout for deploys
+if [ "$PROVIDER" == "oc" ]; then
+  KUBECTL_TIMEOUT_PARAM="--request-timeout"
 fi
 
 valid="0-9a-zA-Z\-"
@@ -357,5 +378,8 @@ else
   sed -i '' -e "s|<ADDITIONAL_VALUES>|${ADDITIONAL_VALUES_STRING}|g" "$OUTPUT_SCRIPT"
 fi
 
+sed -i -e "s|<KUBECTL>|${KUBECTL}|g" "$OUTPUT_SCRIPT"
+sed -i -e "s|<KUBECTL_TIMEOUT_PARAM>|${KUBECTL_TIMEOUT_PARAM}|g" "$OUTPUT_SCRIPT"
+sed -i -e "s|<SKIP_CRDS>|${SKIP_CRDS}|g" "$OUTPUT_SCRIPT"
 
 echo -e "\nCreate $OUTPUT_SCRIPT for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.\n"
