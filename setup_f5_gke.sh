@@ -396,8 +396,8 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" \
-      --no-enable-cloud-logging \
-      --no-enable-cloud-monitoring \
+      --logging=NONE \
+      --monitoring=NONE \
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
@@ -415,10 +415,10 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       SOLR_REPLICAS=3
     fi
 
-    # make sure the compute/zone is updated
-    current_value=$(gcloud config get-value compute/zone)
+    # make sure the compute/region is updated
+    current_value=$(gcloud config get-value compute/region)
     if [ "${current_value}" != "${GCLOUD_REGION}" ]; then
-      gcloud config set compute/zone "${GCLOUD_REGION}"
+      gcloud config set compute/region "${GCLOUD_REGION}"
     fi
 
     gcloud beta container --project "${GCLOUD_PROJECT}" clusters create "${CLUSTER_NAME}" --region "${GCLOUD_REGION}" \
@@ -426,16 +426,19 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
       --image-type "COS" \
-      --disk-type "pd-standard" --disk-size "100" \
+      --disk-type "pd-standard" \
+      --disk-size "100" \
       --metadata disable-legacy-endpoints=true \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
       --num-nodes "1" \
-      --enable-stackdriver-kubernetes \
+      --monitoring=SYSTEM \
       --enable-ip-alias \
       --network "projects/${GCLOUD_PROJECT}/global/networks/default" \
       --subnetwork "projects/${GCLOUD_PROJECT}/regions/${GCLOUD_REGION}/subnetworks/default" \
       --default-max-pods-per-node "50" \
-      --enable-autoscaling --min-nodes "0" --max-nodes "3" \
+      --enable-autoscaling \
+      --min-nodes "0" \
+      --max-nodes "3" \
       --addons HorizontalPodAutoscaling,HttpLoadBalancing \
       --no-enable-autoupgrade --enable-autorepair
   else
