@@ -7,6 +7,57 @@ The latest version of Fusion 5 is 5.3.x. The migration process varies depending 
 
 // tag::body[]
 
+== Migration from Fusion 5.4.x to 5.5.x
+
+==== Prerequisites
+
+Make sure solr is running and all collections are healthy
+
+For production systems, this upgrade process should be performed during a maintenance window.
+
+Described operation is changing the solrconfig.xml of all collections in Solr instances. If there are collections not managed by Fusion system in Solr, they also can be affected.
+
+Current solr version is higher than 8.2.x.
+
+Operation can be performed before the Fusion upgrade or after it.
+
+If currently used collection are not using the default solr configuration which is shipped with Fusion it may not require an update or update may cause some malfunctions.
+It is highly advised to perform the operation first on not production environment and compare the `solrconfig.xml` before and after.
+
+==== Update cache's settings in Solr collections
+
+Lucidworks provides the utility docker image with the script to automate the required collections configuration update.
+
+```
+kubectl run --image="lucidworks/fm-upgrade-solrconfig-cache:1.0" \
+  -n<namespace> \
+  --env="HELM_RELEASE=<release_name>" \
+  --labels='app.kubernetes.io/component=solr-backup-runner'
+  --env="DRY_RUN=false" \
+  fm-upgrade-solrconfig-cache
+```
+
+Set `DRY_RUN=true` if you want to just see what will be affected without applying any changes to system. Check logs:
+```
+kubectl -n<namespace> logs -f fm-upgrade-solrconfig-cache
+```
+
+After updated is done, remove the pod:
+```
+kubectl -n<namespace> delete pod fm-upgrade-solrconfig-cache
+```
+
+Instead of providing `HELM_RELEASE` name from which scripts infers the Solr sever name, you can use direct url with `SOLR` variable: `--env="SOLR=http://server:8983"`.
+
+Second way you can use the image, is to convert exported apps. To do this you first need to export the app from existing system and place in local system, where docker is installed.
+
+Assuming that in current directory there is an `exported-app.zip`, you can run
+```
+ docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip fusion-dev-docker.ci-artifactory.lucidworks.com/fm
+```
+
+This command will produce the `exported-app-migrated.zip` in current directory.
+
 == Migration from Fusion 5.3.x to 5.4.0
 
 ==== Prerequisites
