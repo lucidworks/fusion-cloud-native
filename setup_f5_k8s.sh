@@ -303,20 +303,19 @@ elif [ "$PURGE" == "1" ]; then
 
     if [ "$is_helm_v3" != "" ]; then
       helm delete "${RELEASE}" --namespace "${NAMESPACE}"
-      helm delete "${RELEASE}-monitoring" --namespace "${NAMESPACE}"
-      helm delete "${RELEASE}-prom" --namespace "${NAMESPACE}"
-      helm delete "${RELEASE}-graf" --namespace "${NAMESPACE}"
+      monitor_chart_checker=$(helm list  | grep -o ${RELEASE}-monitoring)
+      if [ "$monitor_chart_checker" == "${RELEASE}-monitoring" ]; then
+        helm delete "${RELEASE}-monitoring" --namespace "${NAMESPACE}"
+        kubectl delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
+      fi
     else
       helm del --purge "${RELEASE}"
     fi
     kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete job "${RELEASE}-api-gateway" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=1s
     kubectl delete svc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=2s
     kubectl delete pvc -l app.kubernetes.io/part-of=fusion --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l "release=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
     kubectl delete pvc -l "app.kubernetes.io/instance=${RELEASE}" --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete pvc -l app=prometheus --namespace "${NAMESPACE}" --grace-period=0 --force --timeout=5s
-    kubectl delete serviceaccount --namespace "${NAMESPACE}" "${RELEASE}-api-gateway-jks-create"
     if [ "${NAMESPACE}" != "default" ] && [ "${NAMESPACE}" != "kube-public" ] && [ "${NAMESPACE}" != "kube-system" ]; then
       kubectl delete namespace "${NAMESPACE}" --grace-period=0 --force --timeout=10s
     fi
