@@ -19,8 +19,8 @@ gcloud beta container --project "${GCP_PROJECT}" clusters create "${CLUSTER}" \
   --metadata disable-legacy-endpoints=true \
   --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
   --num-nodes "1" \
-  --no-enable-cloud-logging \
-  --no-enable-cloud-monitoring \
+  --logging=NONE \
+  --monitoring=NONE \
   --enable-ip-alias \
   --network "projects/${GCP_PROJECT}/global/networks/default" \
   --subnetwork "projects/${GCP_PROJECT}/regions/${REGION}/subnetworks/default" \
