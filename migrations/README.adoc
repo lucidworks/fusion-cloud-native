@@ -22,7 +22,6 @@ Current solr version is higher than 8.2.x.
 Operation can be performed before the Fusion upgrade or after it.
 
 If currently used collection are not using the default solr configuration which is shipped with Fusion it may not require an update or update may cause some malfunctions.
-It is highly advised to perform the operation first on not production environment and compare the `solrconfig.xml` before and after.
 
 ==== Update cache's settings in Solr collections
 
@@ -46,8 +45,9 @@ After updated is done, remove the pod:
 ```
 kubectl -n<namespace> delete pod fm-upgrade-solrconfig-cache
 ```
+Instead of providing `HELM_RELEASE` name from which scripts infer the Solr sever name, you can use direct url with `SOLR` variable: `--env="SOLR=http://server:8983"`.
 
-Instead of providing `HELM_RELEASE` name from which scripts infers the Solr sever name, you can use direct url with `SOLR` variable: `--env="SOLR=http://server:8983"`.
+This method will create a `configoverlay.json` file in config directory with modified collection. It will contain all required changes which applied by solr on `solrconfig.xml`.
 
 Second way you can use the image, is to convert exported apps. To do this you first need to export the app from existing system and place in local system, where docker is installed.
 
@@ -56,7 +56,7 @@ Assuming that in current directory there is an `exported-app.zip`, you can run
  docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip fusion-dev-docker.ci-artifactory.lucidworks.com/fm
 ```
 
-This command will produce the `exported-app-migrated.zip` in current directory.
+This command will produce the `exported-app-migrated.zip` in current directory. This method will directly modify the `solrconfig.json` file, without creating `configoverlay.json`.
 
 == Migration from Fusion 5.3.x to 5.4.0
 
