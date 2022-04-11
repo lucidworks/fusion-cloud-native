@@ -28,7 +28,7 @@ If currently used collection are not using the default solr configuration which 
 Lucidworks provides the utility docker image with the script to automate the required collections configuration update.
 
 ```
-kubectl run --image="lucidworks/fm-upgrade-solrconfig-cache:1.0" \
+kubectl run --image="lucidworks/fm-upgrade-solrconfig-cache:1.0.0" \
   -n<namespace> \
   --env="HELM_RELEASE=<release_name>" \
   --labels='app.kubernetes.io/component=solr-backup-runner'
