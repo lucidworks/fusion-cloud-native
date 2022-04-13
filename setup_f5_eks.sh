@@ -1,9 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-KUBERNETES_VERSION="1.18"
+KUBERNETES_VERSION="1.20"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.5.0"
+CHART_VERSION="5.5.1"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
