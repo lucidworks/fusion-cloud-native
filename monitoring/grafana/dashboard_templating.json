@@ -63,7 +63,7 @@
       "pluginVersion": "6.5.2",
       "targets": [
         {
-          "expr": "sum(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",app_kubernetes_io_component=\"templating\"}[1m]))/60",
+          "expr": "sum(increase(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",app_kubernetes_io_component=\"templating\"}[1m]))/60",
           "instant": false,
           "intervalFactor": 1,
           "refId": "A"
@@ -115,7 +115,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(kubernetes_pod_name)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",app_kubernetes_io_component=\"templating\"}[1m]))/60",
+          "expr": "sum by(pod)(increase(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",app_kubernetes_io_component=\"templating\"}[1m]))/60",
           "intervalFactor": 1,
           "legendFormat": "",
           "refId": "A"
@@ -214,7 +214,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -301,7 +301,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -388,7 +388,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -475,7 +475,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{appId}}",
               "refId": "A"
             }
@@ -563,7 +563,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}}",
               "refId": "A"
@@ -652,7 +652,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}}",
               "refId": "A"
@@ -741,7 +741,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}}",
               "refId": "A"
@@ -829,7 +829,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(appId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{appId}}",
               "refId": "A"
@@ -917,7 +917,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, appId)",
+              "expr": "sum(zone_render_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, appId)",
               "legendFormat": "{{appId}} (error {{error}})",
               "refId": "A"
             }
@@ -1004,7 +1004,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum  by (error, appId)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
+              "expr": "sum  by (error, appId)(increase(zone_render_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
               "legendFormat": "{{appId}} renders per minute",
               "refId": "A"
             }
@@ -1106,7 +1106,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{templateId}}",
               "refId": "A"
             }
@@ -1193,7 +1193,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{templateId}}",
               "refId": "A"
             }
@@ -1280,7 +1280,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{templateId}}",
               "refId": "A"
             }
@@ -1367,7 +1367,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.5, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(templateId, le)(rate(template_trigger_render_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "legendFormat": "{{templateId}}",
               "refId": "A"
             }
@@ -1455,7 +1455,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(templateId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{templateId}}",
               "refId": "A"
@@ -1544,7 +1544,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(templateId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{templateId}}",
               "refId": "A"
@@ -1633,7 +1633,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(templateId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{templateId}}",
               "refId": "A"
@@ -1722,7 +1722,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum by(templateId, le)(rate(zone_render_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+              "expr": "histogram_quantile(0.50, sum by(templateId, le)(rate(zone_render_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{templateId}}",
               "refId": "A"
@@ -1810,7 +1810,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, templateId)",
+              "expr": "sum(zone_render_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}) by (error, templateId)",
               "legendFormat": "{{templateId}} (error {{error}})",
               "refId": "A"
             }
@@ -1897,7 +1897,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum  by (error, templateId)(increase(zone_render_outcome_total{kubernetes_namespace=\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
+              "expr": "sum  by (error, templateId)(increase(zone_render_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m]))",
               "legendFormat": "{{templateId}} renders per minute",
               "refId": "A"
             }
@@ -2002,7 +2002,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+          "expr": "histogram_quantile(0.99, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
           "legendFormat": "{{appId}}",
           "refId": "A"
         }
@@ -2089,7 +2089,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
           "legendFormat": "{{appId}}",
           "refId": "A"
         }
@@ -2176,7 +2176,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+          "expr": "histogram_quantile(0.75, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
           "legendFormat": "{{appId}}",
           "refId": "A"
         }
@@ -2263,7 +2263,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
+          "expr": "histogram_quantile(0.50, sum by(appId, le)(rate(template_trigger_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",appId=~\"$app\",templateId=~\"$template\"}[1m])))",
           "legendFormat": "{{appId}}",
           "refId": "A"
         }
@@ -2361,7 +2361,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by(errorCode,queryProfile)(rate(query_profile_call_total{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\",}[1m]))",
+              "expr": "sum by(errorCode,queryProfile)(rate(query_profile_call_total{namespace=~\"$namespace\",pod=~\"$pod\",}[1m]))",
               "hide": false,
               "legendFormat": "{{queryProfile}} (error={{errorCode}})",
               "refId": "B"
@@ -2453,7 +2453,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.99, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\"}[1m])))",
               "hide": false,
               "refId": "B"
             }
@@ -2540,7 +2540,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\"}[1m])))",
               "hide": false,
               "refId": "B"
             }
@@ -2627,7 +2627,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.75, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\"}[1m])))",
               "hide": false,
               "refId": "B"
             }
@@ -2714,7 +2714,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "histogram_quantile(0.50, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\"$pod\"}[1m])))",
+              "expr": "histogram_quantile(0.50, sum by(queryProfile, le)(rate(query_profile_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\"}[1m])))",
               "hide": false,
               "refId": "B"
             }
@@ -2816,7 +2816,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by (outcome, uri, kubernetes_pod)(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}[1m]))",
+              "expr": "sum by (outcome, uri, kubernetes_pod)(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}[1m]))",
               "legendFormat": "",
               "refId": "A"
             }
@@ -2903,7 +2903,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}",
+              "expr": "http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}",
               "legendFormat": "{{status}} {{method}} {{uri}}",
               "refId": "A"
             }
@@ -3005,7 +3005,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by(level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}[5m]))",
+              "expr": "sum by(level)(irate(logback_events_total{namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}[5m]))",
               "legendFormat": "{{level}} messages",
               "refId": "A"
             }
@@ -3092,7 +3092,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",app_kubernetes_io_component=\"templating\"})",
+              "expr": "sum by (level)(logback_events_total{namespace=\"$namespace\",app_kubernetes_io_component=\"templating\"})",
               "legendFormat": "{{level}} messages",
               "refId": "A"
             }
@@ -3179,8 +3179,8 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "jetty_threads_current{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}",
-              "legendFormat": "{{kubernetes_pod_name}} max threads",
+              "expr": "jetty_threads_current{namespace=~\"$namespace\",app_kubernetes_io_component=\"templating\"}",
+              "legendFormat": "{{pod}} max threads",
               "refId": "A"
             }
           ],
@@ -3244,14 +3244,14 @@
           "value": "kwh"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "definition": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
         "hide": 0,
         "includeAll": true,
         "label": "Kubernetes Namespace",
         "multi": false,
         "name": "namespace",
         "options": [],
-        "query": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "query": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -3271,14 +3271,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\".+\"},kubernetes_pod_name)",
+        "definition": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",pod=~\".+\"},pod)",
         "hide": 0,
         "includeAll": true,
         "label": "Pod",
         "multi": true,
         "name": "pod",
         "options": [],
-        "query": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",kubernetes_pod_name=~\".+\"},kubernetes_pod_name)",
+        "query": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",pod=~\".+\"},pod)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -3298,14 +3298,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",templateId=~\".+\"},templateId)",
+        "definition": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",templateId=~\".+\"},templateId)",
         "hide": 0,
         "includeAll": true,
         "label": "Template",
         "multi": true,
         "name": "template",
         "options": [],
-        "query": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",templateId=~\".+\"},templateId)",
+        "query": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",templateId=~\".+\"},templateId)",
         "refresh": 1,
         "regex": "^(?!_.*$).*",
         "skipUrlSync": false,
@@ -3325,14 +3325,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",appId=~\".+\"},appId)",
+        "definition": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",appId=~\".+\"},appId)",
         "hide": 0,
         "includeAll": true,
         "label": "App",
         "multi": true,
         "name": "app",
         "options": [],
-        "query": "label_values(zone_render_outcome_total{kubernetes_namespace=~\"$namespace\",appId=~\".+\"},appId)",
+        "query": "label_values(zone_render_outcome_total{namespace=~\"$namespace\",appId=~\".+\"},appId)",
         "refresh": 1,
         "regex": "^(?!_.*$).*",
         "skipUrlSync": false,

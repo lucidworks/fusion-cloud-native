@@ -58,8 +58,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "system_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "expr": "system_cpu_usage{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -143,8 +143,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_cpu_usage{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "expr": "process_cpu_usage{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -228,8 +228,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_gc_pause_seconds_count{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
-          "legendFormat": "{{kubernetes_pod_name}} {{action}}",
+          "expr": "jvm_gc_pause_seconds_count{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}",
+          "legendFormat": "{{pod}} {{action}}",
           "refId": "A"
         }
       ],
@@ -314,8 +314,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(jvm_classes_loaded_classes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}[5m])",
-          "legendFormat": "{{kubernetes_pod_name}}",
+          "expr": "rate(jvm_classes_loaded_classes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\"}[5m])",
+          "legendFormat": "{{pod}}",
           "refId": "A"
         }
       ],
@@ -399,8 +399,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by(kubernetes_pod_name,id)(rate(jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}[5m]))",
-          "legendFormat": "{{kubernetes_pod_name}} {{id}}",
+          "expr": "sum by(pod,id)(rate(jvm_memory_used_bytes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}[5m]))",
+          "legendFormat": "{{pod}} {{id}}",
           "refId": "A"
         }
       ],
@@ -484,8 +484,8 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_memory_used_bytes{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}",
-          "legendFormat": "{{kubernetes_pod_name}} {{id}} Memory",
+          "expr": "jvm_memory_used_bytes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\"}",
+          "legendFormat": "{{pod}} {{id}} Memory",
           "refId": "A"
         }
       ],
@@ -569,13 +569,13 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"runnable\"}",
-          "legendFormat": "{{kubernetes_pod_name}} {{state}} Threads",
+          "expr": "jvm_threads_states_threads{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"runnable\"}",
+          "legendFormat": "{{pod}} {{state}} Threads",
           "refId": "A"
         },
         {
-          "expr": "jvm_threads_states_threads{kubernetes_namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"blocked\"}",
-          "legendFormat": "{{kubernetes_pod_name}} {{state}} Threads",
+          "expr": "jvm_threads_states_threads{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"blocked\"}",
+          "legendFormat": "{{pod}} {{state}} Threads",
           "refId": "B"
         }
       ],
@@ -635,14 +635,14 @@
           "value": "default"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(system_cpu_usage{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "definition": "label_values(system_cpu_usage{namespace=~\".+\"},namespace)",
         "hide": 0,
         "includeAll": false,
         "label": "Namespace",
         "multi": false,
         "name": "namespace",
         "options": [],
-        "query": "label_values(system_cpu_usage{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "query": "label_values(system_cpu_usage{namespace=~\".+\"},namespace)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -662,14 +662,14 @@
           ]
         },
         "datasource": "Prometheus",
-        "definition": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
+        "definition": "label_values(system_cpu_usage{namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
         "hide": 0,
         "includeAll": true,
         "label": "Service",
         "multi": true,
         "name": "service",
         "options": [],
-        "query": "label_values(system_cpu_usage{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
+        "query": "label_values(system_cpu_usage{namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,

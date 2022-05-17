@@ -64,7 +64,7 @@
       "pluginVersion": "6.6.1",
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
           "instant": false,
           "intervalFactor": 1,
           "refId": "A"
@@ -116,7 +116,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
           "intervalFactor": 1,
           "legendFormat": "RPS",
           "refId": "A"
@@ -204,7 +204,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (outcome, uri)(increase(http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum by (outcome, uri)(increase(http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
           "legendFormat": "",
           "refId": "A"
         }
@@ -291,7 +291,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (routeId,httpStatusCode,httpMethod,routeUri)(rate(gateway_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
+          "expr": "sum by (routeId,httpStatusCode,httpMethod,routeUri)(rate(gateway_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[1m]))",
           "legendFormat": "{{httpStatusCode}} {{httpMethod}} {{routeId}}",
           "refId": "A"
         }
@@ -378,7 +378,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (level)(irate(logback_events_total{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[5m]))",
+          "expr": "sum by (level)(irate(logback_events_total{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}[5m]))",
           "legendFormat": "{{level}} messages",
           "refId": "A"
         }
@@ -465,7 +465,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "http_server_requests_seconds_count{kubernetes_namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}",
+          "expr": "http_server_requests_seconds_count{namespace=~\"$namespace\",app_kubernetes_io_component=\"api-gateway\"}",
           "legendFormat": "{{status}} {{method}} {{uri}}",
           "refId": "A"
         }
@@ -552,7 +552,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (level)(logback_events_total{kubernetes_namespace=\"$namespace\",app_kubernetes_io_component=\"api-gateway\"})",
+          "expr": "sum by (level)(logback_events_total{namespace=\"$namespace\",app_kubernetes_io_component=\"api-gateway\"})",
           "legendFormat": "{{level}} messages",
           "refId": "A"
         }
@@ -614,14 +614,14 @@
           "value": "iantest"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "definition": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
         "hide": 0,
         "includeAll": true,
         "label": "Kubernetes Namespace",
         "multi": false,
         "name": "namespace",
         "options": [],
-        "query": "label_values(http_server_requests_seconds_count{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "query": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
