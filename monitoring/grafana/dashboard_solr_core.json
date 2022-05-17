@@ -77,7 +77,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_requests_total{kubernetes_namespace=~\"$namespace\", base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}} {{handler}}",
@@ -167,7 +167,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_time_seconds_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_time_seconds_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}}{{handler}}",
@@ -257,7 +257,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_client_errors_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_client_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -347,7 +347,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_server_errors_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_server_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -437,7 +437,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_errors_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -617,7 +617,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_field_cache_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_field_cache_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -707,7 +707,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_cache{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_cache{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}} {{item}}",
@@ -797,7 +797,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_warmup_time_seconds{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_warmup_time_seconds{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}}",
@@ -887,7 +887,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_searcher_cumulative_cache_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_searcher_cumulative_cache_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}} {{item}}",
@@ -977,7 +977,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_fs_bytes{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_fs_bytes{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1067,7 +1067,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1158,7 +1158,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_documents{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_documents{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{item}}",
@@ -1249,7 +1249,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_adds_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_adds_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}}",
@@ -1429,7 +1429,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_deletes_by_id_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_deletes_by_id_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1519,7 +1519,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_deletes_by_query_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_deletes_by_query_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1609,7 +1609,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_expunge_deletes_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_expunge_deletes_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1699,7 +1699,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_merges_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_merges_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1789,7 +1789,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_splits_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_splits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1879,7 +1879,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_optimizes_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_optimizes_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1969,7 +1969,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_rollbacks_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_rollbacks_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2059,7 +2059,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_soft_auto_commits_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_soft_auto_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2149,7 +2149,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_auto_commits_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_auto_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2239,7 +2239,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_commits_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2330,7 +2330,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_errors_total{kubernetes_namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2393,14 +2393,14 @@
           "value": ""
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "definition": "label_values(solr_collections_shard_state{namespace=~\".+\"},namespace)",
         "hide": 0,
         "includeAll": false,
         "label": "Kube Namespace",
         "multi": false,
         "name": "namespace",
         "options": [],
-        "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "query": "label_values(solr_collections_shard_state{namespace=~\".+\"},namespace)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2418,14 +2418,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_ping{kubernetes_namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
+        "definition": "label_values(solr_ping{namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "zk_host",
         "options": [],
-        "query": "label_values(solr_ping{kubernetes_namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
+        "query": "label_values(solr_ping{namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2443,14 +2443,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$namespace\",collection=~\".+\"},collection)",
+        "definition": "label_values(solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",collection=~\".+\"},collection)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "collection",
         "options": [],
-        "query": "label_values(solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$namespace\",collection=~\".+\"},collection)",
+        "query": "label_values(solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",collection=~\".+\"},collection)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2468,14 +2468,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_collections_shard_state{kubernetes_namespace=~\"$namespace\",shard=~\".+\"},shard)",
+        "definition": "label_values(solr_collections_shard_state{namespace=~\"$namespace\",shard=~\".+\"},shard)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "shard",
         "options": [],
-        "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\"$namespace\",shard=~\".+\"},shard)",
+        "query": "label_values(solr_collections_shard_state{namespace=~\"$namespace\",shard=~\".+\"},shard)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2493,14 +2493,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_collections_replica_state{kubernetes_namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
+        "definition": "label_values(solr_collections_replica_state{namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "replica",
         "options": [],
-        "query": "label_values(solr_collections_replica_state{kubernetes_namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
+        "query": "label_values(solr_collections_replica_state{namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2518,14 +2518,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_ping{kubernetes_namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
+        "definition": "label_values(solr_ping{namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "base_url",
         "options": [],
-        "query": "label_values(solr_ping{kubernetes_namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
+        "query": "label_values(solr_ping{namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2544,14 +2544,14 @@
           "value": "$__all"
         },
         "datasource": "Prometheus",
-        "definition": "label_values(solr_metrics_core_requests_total{kubernetes_namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
+        "definition": "label_values(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "core",
         "options": [],
-        "query": "label_values(solr_metrics_core_requests_total{kubernetes_namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
+        "query": "label_values(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
@@ -2565,7 +2565,7 @@
     ]
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
