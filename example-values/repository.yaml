@@ -1,0 +1,253 @@
+# This file controls the repositories for all of Fusion the components. It is intended for use
+# when using a private image repository. Please see https://doc.lucidworks.com/how-to/cn6z36/list-all-docker-images-and-versions 
+# for the list of images. Replace ${REPOSITORY} with the name of the repository which hosts the Fusion images
+admin-ui:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+api-gateway:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+argo:
+  image:
+    repository: ${REPOSITORY}
+  minio:
+    image:
+      repository: ${REPOSITORY}/minio
+argo-common-workflows:
+  image:
+    repository: ${REPOSITORY}
+auth-ui:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+classic-rest-service:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+classification:
+  image:
+    repository: ${REPOSITORY}
+connector-plugin:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+connectors:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+connectors-backend:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+devops-ui:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+fusion-admin:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+fusion-data-augmentation:
+  image:
+    repository: ${REPOSITORY}
+fusion-indexing:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+fusion-jupyter:
+  image:
+    repository: ${REPOSITORY}
+fusion-log-forwarder:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+fusion-resources:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+fusion-superset:
+  image:
+    repository: ${REPOSITORY}
+insights:
+  image:
+    repository: ${REPOSITORY}
+job-launcher:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+  kubectlRunner:
+    image:
+      repository: ${REPOSITORY}/bitnami
+job-rest-server:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+ml-model-service:
+  ambassador:
+    image:
+      repository: ${REPOSITORY}/datawire/ambassador
+    pro:
+      image:
+        repository: ${REPOSITORY}/datawire/ambassador_pro
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+  milvus:
+    admin:
+      image:
+        repository: ${REPOSITORY}/milvus-em
+    image:
+      repository: ${REPOSITORY}/milvus
+    mishards:
+      image:
+        repository: ${REPOSITORY}/mishards
+    initContainerImage: ${REPOSITORY}/alpine:3.8
+    mysql:
+      image: ${REPOSITORY}/mysql
+      busybox:
+        image: ${REPOSITORY}/busybox        
+  preinstall:
+    image:
+      repository: ${REPOSITORY}/bitnami
+pm-ui:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+pulsar:
+  dashboard:
+    image:
+      repository: ${REPOSITORY}/pulsar-dashboard
+  image:
+    repository: ${REPOSITORY}
+  initContainer:
+    image:
+      repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+  pulsar_metadata:
+    image:
+      repository: ${REPOSITORY}/pulsar-all
+query-pipeline:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+question-answering:
+  image:
+    repository: ${REPOSITORY}
+recommender:
+  image:
+    repository: ${REPOSITORY}
+rules-ui:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+seldon-core-operator:
+  engine:
+    image:
+      repository: ${REPOSITORY}/engine
+  executor:
+    image:
+      repository: ${REPOSITORY}/seldon-core-executor
+  image:
+    repository: ${REPOSITORY}/seldon-core-operator
+solr:
+  image:
+    repository: ${REPOSITORY}/solr
+  initContainer:
+    image:
+      repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+  zookeeper:
+    exporters:
+      jmx:
+        image:
+          repository: ${REPOSITORY}/jmx-prometheus-exporter
+      zookeeper:
+        image:
+          repository: ${REPOSITORY}/zookeeper-exporter
+    image:
+      repository: ${REPOSITORY}/zookeeper
+    keytoolUtils:
+      image:
+        repository: ${REPOSITORY}
+solr-backup-runner:
+  image:
+    repository: ${REPOSITORY}
+sql-service:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+templating:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+tikaserver:
+  image:
+    repository: ${REPOSITORY}/apache
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+webapps:
+  image:
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+zookeeper:
+  exporters:
+    jmx:
+      image:
+        repository: ${REPOSITORY}/jmx-prometheus-exporter
+    zookeeper:
+      image:
+        repository: ${REPOSITORY}/zookeeper-exporter
+  image:
+    repository: ${REPOSITORY}/zookeeper
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
