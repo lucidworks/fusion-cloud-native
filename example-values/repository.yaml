@@ -1,6 +1,3 @@
-# This file controls the repositories for all of Fusion the components. It is intended for use
-# when using a private image repository. Please see https://doc.lucidworks.com/how-to/cn6z36/list-all-docker-images-and-versions 
-# for the list of images. Replace ${REPOSITORY} with the name of the repository which hosts the Fusion images
 admin-ui:
   image:
     repository: ${REPOSITORY}
@@ -103,9 +100,6 @@ job-launcher:
   keytoolUtils:
     image:
       repository: ${REPOSITORY}
-  kubectlRunner:
-    image:
-      repository: ${REPOSITORY}/bitnami
 job-rest-server:
   image:
     repository: ${REPOSITORY}
@@ -130,14 +124,14 @@ ml-model-service:
         repository: ${REPOSITORY}/milvus-em
     image:
       repository: ${REPOSITORY}/milvus
+    initContainerImage: ${REPOSITORY}/alpine:3.8
     mishards:
       image:
         repository: ${REPOSITORY}/mishards
-    initContainerImage: ${REPOSITORY}/alpine:3.8
     mysql:
-      image: ${REPOSITORY}/mysql
       busybox:
-        image: ${REPOSITORY}/busybox        
+        image: ${REPOSITORY}/busybox
+      image: ${REPOSITORY}/mysql
   preinstall:
     image:
       repository: ${REPOSITORY}/bitnami
