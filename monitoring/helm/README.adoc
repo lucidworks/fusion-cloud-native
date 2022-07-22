@@ -1,0 +1,48 @@
+= Fusion 5 Monitoring helm charts
+:toc:
+:toclevels: 3
+:toc-title:
+
+// tag::body[]
+== Monitoring for 5.5.x an earlier (deprecated).
+
+Directory fusion-monitoring contains the old chart which contains only prometheus and grafana.
+
+== Monitoring for 5.6.0 and newer.
+
+Directory fusion-monitoring-stack contains the helm chart dedicated to Fusion starting from version 5.6.0. Thought it also can be use with older Fusion version.
+
+New chart is an example how to aggregate the logs from fusion services. Starting from fusion 5.6.0 Fusion DevOps UI, logs aggregation with pulsar and logs forwarder is no longer available.
+
+All containers are logging to console output, which then is available by the variety of log aggregation tools. Anything yours organisation is using should be easily adopted. In other case Lucidworks is proposing the integrated solution based on grafana.
+
+This chart is a pack of:
+
+* grafana
+* prometheus
+* loki
+* promtail
+
+Each component can be disabled with the corresponding flag:
+
+* `grafana.enabled=false`
+* `prometheus.enabled=false`
+* `loki.enabled=false`
+* `promtail.enabled=false`
+
+Default resource configuration is aimed for small test environments.
+
+For production environments it may be required adjust the service replications and storage size.
+
+For the complete list of possible configuration values please refer to particular charts:
+
+* https://github.com/grafana/helm-charts/blob/main/charts/grafana
+* https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus
+* https://github.com/grafana/helm-charts/tree/main/charts/loki
+* https://github.com/grafana/helm-charts/tree/main/charts/promtail
+
+Each option from the above documentations can be used after prefixed with the component name. For example to change prometheus service replication factor to 3 add to command line: `--set prometheus.server.replicaCount=3`
+
+=== Loading dashboards
+
+By setting the flag `--set grafana.sidecar.enabled=true` you can automatically provision grafana dashboards for Fusion. It will however not allow to you modify it later. Alternatively, you can import selected dashboards manually form this link:fusion-monitoring-stack/dashboards[directory]

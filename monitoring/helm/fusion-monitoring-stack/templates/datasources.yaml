@@ -1,0 +1,42 @@
+{{- if .Values.grafana.sidecar.datasources.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "loki-stack.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ template "loki-stack.name" . }}
+    chart: {{ template "loki-stack.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    grafana_datasource: "1"
+data:
+  loki-stack-datasource.yaml: |-
+    apiVersion: 1
+    datasources:
+{{- if .Values.loki.enabled }}
+    - name: Loki
+      uid: P8E80F9AEF21F6940
+      type: loki
+      access: proxy
+      url: http://{{(include "loki.serviceName" .)}}:{{ .Values.loki.service.port }}
+      version: 1
+      isDefault: {{ .Values.loki.isDefault }}
+      jsonData:
+        maxLines: {{ .Values.grafana.sidecar.datasources.maxLines }}
+        manageAlerts: false
+{{- end }}
+{{- if .Values.prometheus.enabled }}
+    - name: Prometheus
+      uid: PBFA97CFB590B2093
+      type: prometheus
+      access: proxy
+      url: http://{{ include "prometheus.fullname" .}}:{{ .Values.prometheus.server.service.servicePort }}{{ .Values.prometheus.server.prefixURL }}
+      version: 1
+      isDefault: {{ .Values.prometheus.isDefault }}
+      jsonData:
+        manageAlerts: false
+{{- end }}
+{{- end }}
+
+

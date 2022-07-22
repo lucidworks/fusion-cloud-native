@@ -1,0 +1,11 @@
+apiVersion: v1
+appVersion: v2.4.2
+description: 'Fusion Monitoring stack'
+home: https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/helm/fusion-monitoring-stack
+kubeVersion: ^1.10.0-0
+maintainers:
+- name: Fusion Maintainers
+name: loki-stack
+sources:
+- https://github.com/lucidworks/fusion-cloud-native/tree/master/monitoring/helm/fusion-monitoring-stack
+version: 1.0.0

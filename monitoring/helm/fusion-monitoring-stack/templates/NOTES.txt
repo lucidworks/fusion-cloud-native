@@ -1,0 +1,1 @@
+The Monitoring stack has been deployed to your cluster.
