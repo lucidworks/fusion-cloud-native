@@ -180,7 +180,7 @@ webapps:
     {NODE_POOL}
 
 fusion-jupyter:
-  enabled: false
+  enabled: true
 
 pulsar:
   broker:
