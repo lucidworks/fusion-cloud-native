@@ -53,7 +53,7 @@ Second way you can use the image, is to convert exported apps. To do this you fi
 
 Assuming that in current directory there is an `exported-app.zip`, you can run
 ```
- docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip fusion-dev-docker.ci-artifactory.lucidworks.com/fm
+ docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-solrconfig-cache:1.0.0
 ```
 
 This command will produce the `exported-app-migrated.zip` in current directory. This method will directly modify the `solrconfig.json` file, without creating `configoverlay.json`.
