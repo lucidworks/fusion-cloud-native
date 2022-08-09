@@ -26,9 +26,16 @@ solr:
     podAnnotations:
       prometheus.io/scrape: "true"
       prometheus.io/port: "9983"
-      prometheus.io/path: "/metrics"
     nodeSelector:
       {NODE_POOL}
+
+kafka:
+  persistence:
+    size: 50Gi
+  heapOpts: -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=30.0 -XX:MaxRAMPercentage=70.0
+  metrics:
+    kafka:
+      enabled: true
 
 zookeeper:
   nodeSelector:
@@ -181,31 +188,6 @@ webapps:
 
 fusion-jupyter:
   enabled: false
-
-pulsar:
-  broker:
-    annotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "8080"
-    configData:
-      # based on container memory limit of 2300m
-      PULSAR_MEM: >
-        -XX:+ExitOnOutOfMemoryError
-        -Xms1g
-        -Xmx1g
-        -XX:MaxDirectMemorySize=1g
-
-  bookkeeper:
-    annotations:
-      prometheus.io/scrape: "true"
-      prometheus.io/port: "8000"
-    configData:
-      # based on container memory limit of 2300m
-      BOOKIE_MEM: >
-        -XX:+ExitOnOutOfMemoryError
-        -Xms1500m
-        -Xmx1500m
-        -XX:MaxDirectMemorySize=600m
 
 templating:
   nodeSelector:
