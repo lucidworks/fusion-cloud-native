@@ -489,7 +489,7 @@ END
     loops=24
     while (( loops > 0 )); do
       cat <<EOF | kubectl -n "${certmanager_namespace}" apply -f -
-  apiVersion: certmanager.k8s.io/v1alpha1
+  apiVersion: certmanager.k8s.io/v1
   kind: ClusterIssuer
   metadata:
     name: "${CERT_CLUSTER_ISSUER}"

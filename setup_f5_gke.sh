@@ -3,7 +3,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE=""
 CHART_VERSION="5.6.0"
-GKE_MASTER_VERSION="-"
+GKE_MASTER_VERSION="1.23.7-gke.1400"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
@@ -404,7 +404,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
-      --image-type "COS" \
+      --image-type "COS_CONTAINERD" \
       --disk-type "pd-standard" \
       --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
@@ -442,7 +442,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
-      --image-type "COS" \
+      --image-type "COS_CONTAINERD" \
       --disk-type "pd-standard" \
       --disk-size "100" \
       --metadata disable-legacy-endpoints=true \
@@ -519,7 +519,7 @@ if [ "${TLS_ENABLED}" == "1" ]; then
   fi
 
   cat <<EOF | kubectl -n "${NAMESPACE}" apply -f -
-apiVersion: networking.gke.io/v1beta1
+apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
   name: "${RELEASE}-managed-certificate"
