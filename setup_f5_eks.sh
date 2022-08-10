@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-KUBERNETES_VERSION="1.20"
+KUBERNETES_VERSION="1.22"
 INSTANCE_TYPE="m5.2xlarge"
 CHART_VERSION="5.6.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
@@ -17,7 +17,7 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 FORCE=0
-AMI="auto"
+AMI=""
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50

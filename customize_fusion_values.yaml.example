@@ -34,6 +34,7 @@ solr:
 kafka:
   image:
     registry: bitnami
+  replicaCount: {KAFKA_REPLICAS}
   zkConnectionString: "{RELEASE}-zookeeper-0.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-1.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-2.{RELEASE}-zookeeper-headless:2181"
   logstashEnabled: false
   persistence:
@@ -152,6 +153,7 @@ auth-ui:
 classic-rest-service:
   kafka:
     bootstrapServers: {KAFKA_URL}
+  kafkaSvcUrl: {KAFKA_URL}
   logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
@@ -187,6 +189,17 @@ job-rest-server:
       prometheus.io/path: "/actuator/prometheus"
 
 connectors:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  kafkaSvcUrl: {KAFKA_URL}
+  logstashEnabled: false
+  nodeSelector:
+    {NODE_POOL}
+
+connector-plugin:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  kafkaSvcUrl: {KAFKA_URL}
   logstashEnabled: false
   nodeSelector:
     {NODE_POOL}

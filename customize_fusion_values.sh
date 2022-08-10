@@ -2,7 +2,7 @@
 
 NODE_POOL=""
 SOLR_REPLICAS=3
-KAFKA_REPLICAS=1
+KAFKA_REPLICAS=3
 CLUSTER_NAME=
 PROMETHEUS_ON=true
 SOLR_DISK_GB=50
@@ -255,6 +255,7 @@ cp customize_fusion_values.yaml.example $MY_VALUES
 if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i -e "s|{KAFKA_REPLICAS}|${KAFKA_REPLICAS}|g" "$MY_VALUES"
   sed -i -e "s|{ZK_REPLICAS}|${ZK_REPLICAS}|g" "$MY_VALUES"
   sed -i -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
@@ -263,6 +264,7 @@ if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
 else
   sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
+  sed -i '' -e "s|{KAFKA_REPLICAS}|${KAFKA_REPLICAS}|g" "$MY_VALUES"
   sed -i '' -e "s|{ZK_REPLICAS}|${ZK_REPLICAS}|g" "$MY_VALUES"
   sed -i '' -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i '' -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
