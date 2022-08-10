@@ -2,6 +2,7 @@ global:
   zkReplicaCount: {ZK_REPLICAS}
 
 sql-service:
+  logstashEnabled: false
   enabled: false
   nodeSelector:
     {NODE_POOL}
@@ -11,6 +12,7 @@ sql-service:
       type: "ClusterIP"
 
 solr:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   updateStrategy:
@@ -30,6 +32,10 @@ solr:
       {NODE_POOL}
 
 kafka:
+  image:
+    registry: bitnami
+  zkConnectionString: "{RELEASE}-zookeeper-0.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-1.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-2.{RELEASE}-zookeeper-headless:2181"
+  logstashEnabled: false
   persistence:
     size: 50Gi
   heapOpts: -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=30.0 -XX:MaxRAMPercentage=70.0
@@ -38,6 +44,7 @@ kafka:
       enabled: true
 
 zookeeper:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   replicaCount: {ZK_REPLICAS}
@@ -49,6 +56,7 @@ zookeeper:
     ZK_PURGE_INTERVAL: 1
 
 ml-model-service:
+  logstashEnabled: false
   image:
     imagePullPolicy: "IfNotPresent"
   nodeSelector:
@@ -63,12 +71,18 @@ ml-model-service:
     enabled: true
 
 fusion-admin:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   readinessProbe:
     initialDelaySeconds: 100
 
 fusion-indexing:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   readinessProbe:
@@ -80,6 +94,9 @@ fusion-indexing:
       prometheus.io/path: "/actuator/prometheus"
 
 query-pipeline:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
@@ -110,10 +127,12 @@ query-pipeline:
       prometheus.io/path: "/actuator/prometheus"
 
 admin-ui:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 api-gateway:
+  logstashEnabled: false
   service:
     externalTrafficPolicy: "Local"
   nodeSelector:
@@ -126,26 +145,29 @@ api-gateway:
       prometheus.io/path: "/actuator/prometheus"
 
 auth-ui:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 classic-rest-service:
-  nodeSelector:
-    {NODE_POOL}
-
-devops-ui:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 fusion-resources:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 insights:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 job-launcher:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   pod:
@@ -155,6 +177,7 @@ job-launcher:
       prometheus.io/path: "/actuator/prometheus"
 
 job-rest-server:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   pod:
@@ -163,33 +186,34 @@ job-rest-server:
       prometheus.io/scrape: "true"
       prometheus.io/path: "/actuator/prometheus"
 
-logstash:
-  nodeSelector:
-    {NODE_POOL}
-
 connectors:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 connectors-backend:
+  kafka:
+    bootstrapServers: {KAFKA_URL}
+  kafkaSvcUrl: {KAFKA_URL}
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 rules-ui:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
 
 webapps:
+  logstashEnabled: false
   livenessProbe:
     initialDelaySeconds: 60
   javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false -XX:+ExitOnOutOfMemoryError"
   nodeSelector:
     {NODE_POOL}
 
-fusion-jupyter:
-  enabled: false
-
 templating:
+  logstashEnabled: false
   nodeSelector:
     {NODE_POOL}
   pod:
@@ -236,6 +260,16 @@ templating:
 #      email: TODO_GITHUB_EMAIL
 
 tikaserver:
+  logstashEnabled: false
   extractInlineImages: true
   replicaCount: 1
   resources: {}
+
+argo:
+  images:
+    server: argocli
+    namespace: argoproj
+
+seldon-core-operator:
+  crd:
+    create: true

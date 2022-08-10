@@ -47,6 +47,7 @@ function print_usage() {
   echo -e "  --values               Custom values file containing config overrides; defaults to gke_<cluster>_<namespace>_fusion_values.yaml"
   echo -e "                         (can be specified multiple times to add additional yaml files, see example-values/*.yaml)\n"
   echo -e "  --num-solr             Number of Solr pods to deploy, defaults to 1. If a multiaz deployment is created the default value will be 3\n"
+  echo -e "  --num-kafka            Number of Kafka pods to deploy, defaults to 1. If a multiaz deployment is created the default value will be 3\n"
   echo -e "  --solr-disk-gb         Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --enable-solr-backup   Enable creation of a GCP Fileshare for solr backups and automation of backup \n"
   echo -e "  --solr-backup-fs-gb    Size (in gigabytes) of the GCP Fileshare for solr backups, defaults to ${SOLR_BACKUP_NFS_GB}\n"
@@ -148,6 +149,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --num-kafka)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-kafka parameter!"
+              exit 1
+            fi
+            KAFKA_REPLICAS=$2
             shift 2
         ;;
         --solr-disk-gb)
@@ -375,6 +384,10 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       SOLR_REPLICAS=1
     fi
 
+    if [ -z ${KAFKA_REPLICAS+x} ]; then
+      KAFKA_REPLICAS=1
+    fi
+
      #Get zone in case it is not defined
     if [ -z ${GCLOUD_ZONE+x} ]; then
       GCLOUD_ZONE=$(gcloud compute zones list --filter=region:${GCLOUD_REGION} | grep -m1 "${GCLOUD_REGION}-[a-z]" | cut -d' ' -f 1 | tail -1)
@@ -413,6 +426,10 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
 
     if [ -z ${SOLR_REPLICAS+x} ]; then
       SOLR_REPLICAS=3
+    fi
+
+    if [ -z ${KAFKA_REPLICAS+x} ]; then
+      KAFKA_REPLICAS=3
     fi
 
     # make sure the compute/region is updated
@@ -560,8 +577,12 @@ if [ -z ${SOLR_REPLICAS+x} ]; then
   SOLR_REPLICAS=1
 fi
 
+if [ -z ${KAFKA_REPLICAS+x} ]; then
+  KAFKA_REPLICAS=1
+fi
+
 ( ${SCRIPT_DIR}/setup_f5_k8s.sh -c $CLUSTER_NAME -r "${RELEASE}" --provider "gke" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
+  --version ${CHART_VERSION} --prometheus ${PROMETHEUS} --num-solr "${SOLR_REPLICAS}" --num-kafka "${KAFKA_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
 
 # Open the proxy URL in the browser on a mac

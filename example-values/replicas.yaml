@@ -132,6 +132,9 @@ rules-ui:
 solr:
   replicaCount: 3
 
+kafka:
+  replicaCount: 1
+
 sql-service:
   replicaCount: 0
 

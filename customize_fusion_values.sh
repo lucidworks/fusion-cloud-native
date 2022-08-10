@@ -2,6 +2,7 @@
 
 NODE_POOL=""
 SOLR_REPLICAS=3
+KAFKA_REPLICAS=1
 CLUSTER_NAME=
 PROMETHEUS_ON=true
 SOLR_DISK_GB=50
@@ -14,6 +15,7 @@ NAMESPACE=default
 OUTPUT_SCRIPT=""
 ADDITIONAL_VALUES=()
 SKIP_CRDS=""
+KAFKA_URL=""
 
 function print_usage() {
   CMD="$1"
@@ -33,6 +35,7 @@ function print_usage() {
   echo -e "  --prometheus            Enable Prometheus? true or false, defaults to true\n"
   echo -e "  --skip-crds             Add skip CRDs option to the helm upgrade command\n"
   echo -e "  --num-solr              Number of Solr pods to deploy, defaults to 3\n"
+  echo -e "  --num-kafka             Number of Kafka pods to deploy, defaults to 3\n"
   echo -e "  --solr-disk-gb          Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --node-pool             Node pool label to assign pods to specific nodes, this option is only useful for existing\n                          clusters where you defined a custom node pool; defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
   echo -e "  --with-resource-limits  Flag to enable resource limits yaml, defaults to off\n"
@@ -143,6 +146,14 @@ if [ $# -gt 1 ]; then
             SOLR_REPLICAS=$2
             shift 2
         ;;
+        --num-kafka)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-kafka parameter!"
+              exit 1
+            fi
+            KAFKA_REPLICAS=$2
+            shift 2
+        ;;
         --solr-disk-gb)
             if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
               print_usage "$SCRIPT_CMD" "Missing value for the --solr-disk-gb parameter!"
@@ -232,6 +243,14 @@ fi
 
 ZK_REPLICAS=3
 
+
+
+if [[ "$KAFKA_REPLICAS" == 1 ]]; then
+  KAFKA_URL="$RELEASE-kafka-headless:9092"
+else
+  KAFKA_URL="$RELEASE-kafka-0.$RELEASE-kafka-headless:9092,$RELEASE-kafka-1.$RELEASE-kafka-headless:9092,$RELEASE-kafka-2.$RELEASE-kafka-headless:9092"
+fi
+
 cp customize_fusion_values.yaml.example $MY_VALUES
 if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
@@ -240,6 +259,7 @@ if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "msys"  ]]; then
   sed -i -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
   sed -i -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
+  sed -i -e "s|{KAFKA_URL}|${KAFKA_URL}|g" "$MY_VALUES"
 else
   sed -i '' -e "s|{NODE_POOL}|${NODE_POOL}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_REPLICAS}|${SOLR_REPLICAS}|g" "$MY_VALUES"
@@ -247,6 +267,7 @@ else
   sed -i '' -e "s|{RELEASE}|${RELEASE}|g" "$MY_VALUES"
   sed -i '' -e "s|{PROMETHEUS}|${PROMETHEUS_ON}|g" "$MY_VALUES"
   sed -i '' -e "s|{SOLR_DISK_GB}|${SOLR_DISK_GB}|g" "$MY_VALUES"
+  sed -i '' -e "s|{KAFKA_URL}|${KAFKA_URL}|g" "$MY_VALUES"
 fi
 
 echo -e "\nCreated Fusion custom values yaml: ${MY_VALUES}\n"
