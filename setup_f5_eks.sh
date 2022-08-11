@@ -1,11 +1,12 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-KUBERNETES_VERSION="1.20"
+KUBERNETES_VERSION="1.22"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.5.2"
+CHART_VERSION="5.6.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
+KAFKA_REPLICAS=1
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
 AWS_ACCOUNT=
@@ -16,7 +17,7 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 FORCE=0
-AMI="auto"
+AMI=""
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
@@ -50,6 +51,7 @@ function print_usage() {
   echo -e "  --version         Fusion Helm Chart version, defaults to ${CHART_VERSION}\n"
   echo -e "  --values          Custom values file containing config overrides; defaults to eks_<cluster>_<release>_fusion_values.yaml  (can be specified multiple times)\n"
   echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --num-kafka       Number of Kafka pods to deploy, defaults to 1\n"
   echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
   echo -e "  --node-pool       Node pool label to assign pods to specific nodes, this option is only useful for existing clusters where you defined a custom node pool;"
   echo -e "                    defaults to '${NODE_POOL}', wrap the arg in double-quotes\n"
@@ -141,6 +143,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --num-kafka)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-kafka parameter!"
+              exit 1
+            fi
+            KAFKA_REPLICAS=$2
             shift 2
         ;;
         --solr-disk-gb)
@@ -467,6 +477,6 @@ fi
 # for debug only
 #echo -e "Calling setup_f5_k8s.sh with: ${VALUES_STRING}${UPGRADE_ARGS}"
 ( "${SCRIPT_DIR}/setup_f5_k8s.sh" -c "$CLUSTER_NAME" -r "${RELEASE}" --provider "eks" -n "${NAMESPACE}" --node-pool "${NODE_POOL}" \
-  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
+  --version "${CHART_VERSION}" --prometheus "${PROMETHEUS}" --num-solr "${SOLR_REPLICAS}" --num-kafka "${KAFKA_REPLICAS}" --solr-disk-gb  "${SOLR_DISK_GB}" ${VALUES_STRING}${INGRESS_ARG}${UPGRADE_ARGS} )
 setup_result=$?
 exit $setup_result

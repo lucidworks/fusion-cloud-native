@@ -4,7 +4,7 @@
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-CHART_VERSION="5.5.2"
+CHART_VERSION="5.6.0"
 PROVIDER="k8s"
 INGRESS_HOSTNAME=""
 TLS_ENABLED="0"
@@ -20,6 +20,7 @@ MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
 SOLR_REPLICAS=1
+KAFKA_REPLICAS=1
 NODE_POOL="{}"
 
 function print_usage() {
@@ -52,6 +53,7 @@ function print_usage() {
   echo -e "                    Be careful! This operation cannot be undone.\n"
   echo -e "  --force           Force upgrade or purge a deployment if your account is not the value 'owner' label on the namespace\n"
   echo -e "  --num-solr        Number of Solr pods to deploy, defaults to 1\n"
+  echo -e "  --num-kafka       Number of Kafka pods to deploy, defaults to 1\n"
   echo -e "  --solr-disk-gb    Size (in gigabytes) of the Solr persistent volume claim, defaults to 50\n"
 }
 
@@ -116,6 +118,14 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             SOLR_REPLICAS=$2
+            shift 2
+        ;;
+        --num-kafka)
+            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
+              print_usage "$SCRIPT_CMD" "Missing value for the --num-kafka parameter!"
+              exit 1
+            fi
+            KAFKA_REPLICAS=$2
             shift 2
         ;;
         --solr-disk-gb)
@@ -459,7 +469,7 @@ if [ "$UPGRADE" != "1" ]; then
     fi
 
      ( "${SCRIPT_DIR}/customize_fusion_values.sh" "${DEFAULT_MY_VALUES}" -c "${CLUSTER_NAME}" -n "${NAMESPACE}" -r "${RELEASE}" --provider "${PROVIDER}" --prometheus "${PROMETHEUS_ON}" \
-      --num-solr "${SOLR_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --version "${CHART_VERSION}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
+      --num-solr "${SOLR_REPLICAS}" --num-kafka "${KAFKA_REPLICAS}" --solr-disk-gb "${SOLR_DISK_GB}" --node-pool "${NODE_POOL}" --version "${CHART_VERSION}" --output-script "${UPGRADE_SCRIPT}" ${VALUES_STRING} )
   else
     echo -e "\nValues file $DEFAULT_MY_VALUES already exists, not regenerating.\n"
   fi

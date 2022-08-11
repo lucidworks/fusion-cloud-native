@@ -18,38 +18,14 @@ solr:
     limits:
       memory: 6Gi
 
-pulsar:
-  broker:
-    initContainer:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 512Mi
-        limits:
-          cpu: 1
-          memory: 512Mi
-    resources:
-      requests:
-        cpu: 300m
-        memory: 2300Mi
-      limits:
-        memory: 2300Mi
 
-  bookkeeper:
-    initContainer:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 512Mi
-        limits:
-          cpu: 1
-          memory: 512Mi
-    resources:
-      requests:
-        cpu: 300m
-        memory: 2300Mi
-      limits:
-        memory: 2300Mi
+kafka:
+  resources:
+    requests:
+      memory: 5Gi
+      cpu: 1000m
+    limits:
+      memory: 8Gi
 
 argo:
   server:
