@@ -1,0 +1,380 @@
+admin-ui:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+api-gateway:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+argo:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  minio:
+    image:
+      repository: ${REPOSITORY}/minio
+argo-common-workflows:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+auth-ui:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+classic-rest-service:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+classification:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+connector-plugin:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+connectors:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+connectors-backend:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+devops-ui:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+fusion-admin:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+fusion-data-augmentation:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+fusion-indexing:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+fusion-jupyter:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+fusion-log-forwarder:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+fusion-resources:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+fusion-superset:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+insights:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+job-launcher:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+job-rest-server:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+ml-model-service:
+  ambassador:
+    image:
+      repository: ${REPOSITORY}/datawire/ambassador
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    pro:
+      image:
+        repository: ${REPOSITORY}/datawire/ambassador_pro
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+  milvus:
+    admin:
+      image:
+        repository: ${REPOSITORY}/milvus-em
+    image:
+      repository: ${REPOSITORY}/milvus
+    initContainerImage: ${REPOSITORY}/alpine:3.8
+    mishards:
+      image:
+        repository: ${REPOSITORY}/mishards
+    mysql:
+      busybox:
+        image: ${REPOSITORY}/busybox
+      image: ${REPOSITORY}/mysql
+  preinstall:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}/bitnami
+pm-ui:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+pulsar:
+  dashboard:
+    image:
+      repository: ${REPOSITORY}/pulsar-dashboard
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  images:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+  initContainer:
+    image:
+      repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      repository: ${REPOSITORY}
+  pulsar_metadata:
+    image:
+      repository: ${REPOSITORY}/pulsar-all
+query-pipeline:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+question-answering:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+recommender:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+rules-ui:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+seldon-core-operator:
+  engine:
+    image:
+      repository: ${REPOSITORY}/engine
+  executor:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}/seldon-core-executor
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}/seldon-core-operator
+solr:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}/solr
+  initContainer:
+    image:
+      repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+  zookeeper:
+    exporters:
+      jmx:
+        image:
+          repository: ${REPOSITORY}/jmx-prometheus-exporter
+      zookeeper:
+        image:
+          repository: ${REPOSITORY}/zookeeper-exporter
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}/zookeeper
+    keytoolUtils:
+      image:
+        imagePullSecrets:
+        - name: ${REPOSITORY}
+        repository: ${REPOSITORY}
+solr-backup-runner:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+sql-service:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+templating:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+tikaserver:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}/apache
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+webapps:
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
+zookeeper:
+  exporters:
+    jmx:
+      image:
+        repository: ${REPOSITORY}/jmx-prometheus-exporter
+    zookeeper:
+      image:
+        repository: ${REPOSITORY}/zookeeper-exporter
+  image:
+    imagePullSecrets:
+    - name: ${REPOSITORY}
+    repository: ${REPOSITORY}/zookeeper
+  keytoolUtils:
+    image:
+      imagePullSecrets:
+      - name: ${REPOSITORY}
+      repository: ${REPOSITORY}
