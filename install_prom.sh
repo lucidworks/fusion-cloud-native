@@ -151,7 +151,8 @@ fi
 
 MONITORING_VALUES="${PROVIDER}_${CLUSTER_NAME}_${RELEASE}_monitoring_values.yaml"
 if [ ! -f "${MONITORING_VALUES}" ]; then
-  cp example-values/monitoring-values.yaml "${MONITORING_VALUES}"
+  cp example-values/monitoring-values.yaml "${MONITORING_VALUES}" # TODO the file found here needs to be updated as part of the first step.
+                                                                  # TODO From what I can tell, nothing above this line matters for this ticket
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
     sed -i -e "s|{NODE_POOL}|${NODE_POOL}|g" "${MONITORING_VALUES}"
     sed -i -e "s|{NAMESPACE}|${NAMESPACE}|g" "${MONITORING_VALUES}"
@@ -168,7 +169,7 @@ if [ "$UPGRADE" != "1" ]; then
 fi
 
 helm dep up ./monitoring/helm/fusion-monitoring
-
+# TODO this looks important (below command that takes up 10 lines of code)
 helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
   --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
   --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
@@ -180,6 +181,20 @@ helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring
   --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/kube_metrics.json \
   --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
   --render-subchart-notes --wait
+
+# Below numbered comments point to specific steps in https://doc.lucidworks.com/how-to/743/prometheus-and-grafana-setup-and-configuration#configure-f5-microservices
+#1.2.2
+helm install ${NAMESPACE}-prometheus --namespace ${NAMESPACE} -f example-values/prometheus-values.yaml stable/prometheus
+#1.3.2
+helm install --name ${NAMESPACE}-grafana --namespace ${NAMESPACE} -f example-values/grafana-values.yaml stable/grafana
+echo "your grafana password is"
+kubectl get secret --namespace ${NAMESPACE} ${NAMESPACE}-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+#1.4
+kubectl expose deployment ${NAMESPACE}-grafana --type=LoadBalancer --name=grafana
+
+#3
+helm template --name "${NAMESPACE}-solr" . --values example-values/solr_exporter.yaml > solr.yaml
+kubectl apply -f solr.yaml
 
 ACTION=installed
 if [ "$UPGRADE" == "1" ]; then
