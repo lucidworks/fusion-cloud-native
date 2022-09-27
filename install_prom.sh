@@ -170,7 +170,7 @@ fi
 
 helm dep up ./monitoring/helm/fusion-monitoring
 
-helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+helm upgrade --install "${RELEASE}-monitoring" ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
   --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
   --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
   --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
@@ -183,14 +183,11 @@ helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring
   --render-subchart-notes --wait
 
 
-helm upgrade --install ${NAMESPACE}-prometheus --namespace ${NAMESPACE} -f example-values/prometheus-values.yaml prometheus-community/prometheus
+helm upgrade --install "${NAMESPACE}-prometheus" --namespace "${NAMESPACE}" -f example-values/prometheus-values.yaml prometheus-community/prometheus
 
-helm install ${NAMESPACE}-grafana --namespace ${NAMESPACE} -f example-values/grafana-values.yaml grafana/grafana
+helm install "${NAMESPACE}-grafana" --namespace "${NAMESPACE}" -f example-values/grafana-values.yaml grafana/grafana
 
-# I am unsure if this command should be added to the script or not.
-#kubectl get secret --namespace ${NAMESPACE} ${NAMESPACE}-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-kubectl expose deployment ${NAMESPACE}-grafana --type=LoadBalancer --name=grafana
+kubectl expose deployment "${NAMESPACE}-grafana" --type=LoadBalancer --name=grafana
 
 helm template --namespace "${NAMESPACE}" ./monitoring/helm/fusion-monitoring --values monitoring/helm/fusion-monitoring/solr_exporter.yaml > solr.yaml
 
