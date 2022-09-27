@@ -192,7 +192,7 @@ helm install ${NAMESPACE}-grafana --namespace ${NAMESPACE} -f example-values/gra
 
 kubectl expose deployment ${NAMESPACE}-grafana --type=LoadBalancer --name=grafana
 
-helm template --namespace "${NAMESPACE}-solr" ./monitoring/helm/fusion-monitoring --values example-values/solr_exporter.yaml > solr.yaml
+helm template --namespace "${NAMESPACE}" ./monitoring/helm/fusion-monitoring --values monitoring/helm/fusion-monitoring/solr_exporter.yaml > solr.yaml
 
 kubectl apply -f solr.yaml
 
