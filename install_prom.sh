@@ -189,5 +189,3 @@ fi
 
 echo -e "\n\nSuccessfully $ACTION Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
 helm ls -n "${NAMESPACE}"
-
-echo "namespace ${NAMESPACE}, release ${RELEASE}, cluster ${CLUSTER_NAME}"
