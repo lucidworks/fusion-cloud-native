@@ -182,17 +182,6 @@ helm upgrade --install "${RELEASE}-monitoring" ./monitoring/helm/fusion-monitori
   --set-file grafana.dashboards.default.kube_metrics.json=monitoring/grafana/pulsar_grafana_dashboard.json \
   --render-subchart-notes --wait
 
-
-helm upgrade --install "${NAMESPACE}-prometheus" --namespace "${NAMESPACE}" -f example-values/prometheus-values.yaml prometheus-community/prometheus
-
-helm install "${NAMESPACE}-grafana" --namespace "${NAMESPACE}" -f example-values/grafana-values.yaml grafana/grafana
-
-kubectl expose deployment "${NAMESPACE}-grafana" --type=LoadBalancer --name=grafana
-
-helm template --namespace "${NAMESPACE}" ./monitoring/helm/fusion-monitoring --values monitoring/helm/fusion-monitoring/solr_exporter.yaml > solr.yaml
-
-kubectl apply -f solr.yaml
-
 ACTION=installed
 if [ "$UPGRADE" == "1" ]; then
   ACTION="upgraded"
@@ -200,3 +189,5 @@ fi
 
 echo -e "\n\nSuccessfully $ACTION Prometheus and Grafana into the ${NAMESPACE} namespace.\n"
 helm ls -n "${NAMESPACE}"
+
+echo "namespace ${NAMESPACE}, release ${RELEASE}, cluster ${CLUSTER_NAME}"
