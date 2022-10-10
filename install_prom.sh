@@ -117,7 +117,8 @@ fi
 
 if ! helm repo list | grep -q "https://kubernetes-charts.storage.googleapis.com"; then
   echo -e "\nAdding the stable chart repo to helm repo list"
-  helm repo add stable https://charts.helm.sh/stable
+  helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+  helm repo add grafana https://grafana.github.io/helm-charts
 fi
 
 if ! kubectl get namespace "${NAMESPACE}" > /dev/null 2>&1; then
@@ -169,7 +170,7 @@ fi
 
 helm dep up ./monitoring/helm/fusion-monitoring
 
-helm upgrade --install ${RELEASE}-monitoring ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
+helm upgrade --install "${RELEASE}-monitoring" ./monitoring/helm/fusion-monitoring --namespace "${NAMESPACE}" -f "${MONITORING_VALUES}" \
   --set-file grafana.dashboards.default.dashboard_gateway_metrics.json=monitoring/grafana/dashboard_gateway_metrics.json \
   --set-file grafana.dashboards.default.dashboard_indexing_metrics.json=monitoring/grafana/dashboard_indexing_metrics.json \
   --set-file grafana.dashboards.default.dashboard_jvm_metrics.json=monitoring/grafana/dashboard_jvm_metrics.json \
