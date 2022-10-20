@@ -292,24 +292,51 @@ image:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_gui
 You can use the `fusion_node_type` property in Solr auto-scaling policies to govern replica placement during collection creation.
 
 [[solr-autoscaling]]
-=== Solr auto-scaling policy
+=== Solr auto-scaling configuration
 
-You can configure a custom Solr auto-scaling policy in the custom values YAML file under the `fusion-admin` section as shown below:
+Auto-scaling with solr 9 is achieved by configuration of Affinity Replica Placement Plugin that is extended by 'policies' element and 'strictPolicy' boolean.
+
+Each policy is identified by a unique policy name and a map of replica type (key) to suitable node type(s) as a comma-separated list.
+
+Solr node type is obtained from its system property node_type, which may contain a list of comma-separated node types that this Solr node supports, for example -Dnode_type=search,analytics.
+
+Boolean flag strictPolicy controls the leniency of the plugin for misconfigurations. When strictPolicy: false (default) the policy constraints for non-existent policies are simply ignored. Also, if no nodes can satisfy the placement for a given replica type then all eligible nodes will be allowed (still honoring other constraints). When strictPolicy: true misconfigurations such as an unknown policy or not enough eligible nodes due to filtering by node type will cause a PlacementException and the placement request will fail.
+
+NOTE: replica types are all lower-case names of supported replica types, i.e. one of nrt, tlog or pull.
+
+It can be configured in the custom values YAML file under the `fusion-admin` section as shown in the below example:
 [source,yaml]
 ----
 fusion-admin:
   ...
   solrAutocalingPolicyJson:
     {
-      "set-cluster-policy": [
-        {"node": "#ANY", "shard": "#EACH", "replica":"<2"},
-        {"replica": "#EQUAL", "sysprop.solr_zone": "#EACH", "strict" : false}
-      ]
+      "minimalFreeDiskGB": 20,
+      "prioritizedFreeDiskGB": 200,
+      "withCollections": {
+      },
+      "collectionNodeType": {
+        "test-collection" : "example-node-type"
+      },
+      "policies": {
+        "system": {
+          "*": "system"
+        },
+        "search": {
+          "nrt": "search",
+          "tlog": "search",
+          "pull": "analytics,search"
+        },
+        "analytics": {
+          "*": "analytics"
+        }
+      },
+      "strictPolicy": false
     }
 ----
-You can use an auto-scaling policy to govern how the shards and replicas for Fusion system and application-specific collections are laid out.
 
-If your cluster defines the search, analytics, and system node pools, then we recommend using the policy.json provided in the link:https://github.com/lucidworks/fusion-cloud-native[fusion-cloud-native repo^] as a starting point. The Fusion Admin service will apply the policy from the custom values YAML file to Solr before creating system collections during initialization.
+In the example above, direct children of the policies element are policy names which matches the collections' custom property property.policy. Each policy contains a set of replica types as keys and comma-separated solr node types as values. A special value of * is used to define placement policy for any replica type.
+Each policy is identified by a unique policy name and a map of replica type (key) to suitable node type(s) as a comma-separated list.
 
 [[network-policy]]
 === Pod network policy
