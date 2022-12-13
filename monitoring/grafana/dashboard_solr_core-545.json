@@ -8,30 +8,21 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
         "type": "dashboard"
       }
     ]
   },
   "description": "Solr Dashboard 2",
   "editable": true,
-  "fiscalYearStartMonth": 0,
+  "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1658171406346,
+  "id": 8,
+  "iteration": 1576611872525,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -40,6 +31,7 @@
       },
       "id": 60,
       "panels": [],
+      "repeat": null,
       "title": "Core Metrics",
       "type": "row"
     },
@@ -48,16 +40,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -66,7 +49,6 @@
         "x": 0,
         "y": 1
       },
-      "hiddenSeries": false,
       "id": 31,
       "legend": {
         "alignAsTable": true,
@@ -83,10 +65,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -96,7 +77,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_requests_total{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}} {{handler}}",
@@ -104,7 +85,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Requests",
       "tooltip": {
         "shared": true,
@@ -113,25 +96,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -139,16 +130,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -157,7 +139,6 @@
         "x": 12,
         "y": 1
       },
-      "hiddenSeries": false,
       "id": 34,
       "legend": {
         "alignAsTable": true,
@@ -174,10 +155,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -187,7 +167,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_time_seconds_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_time_seconds_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}}{{handler}}",
@@ -195,7 +175,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Request Time",
       "tooltip": {
         "shared": true,
@@ -204,25 +186,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -230,16 +220,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -248,7 +229,6 @@
         "x": 0,
         "y": 8
       },
-      "hiddenSeries": false,
       "id": 29,
       "legend": {
         "alignAsTable": true,
@@ -265,10 +245,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -278,7 +257,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_client_errors_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_client_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -286,7 +265,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Client Errors",
       "tooltip": {
         "shared": true,
@@ -295,25 +276,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -321,16 +310,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -339,7 +319,6 @@
         "x": 12,
         "y": 8
       },
-      "hiddenSeries": false,
       "id": 32,
       "legend": {
         "alignAsTable": true,
@@ -356,10 +335,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -369,7 +347,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_server_errors_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_server_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -377,7 +355,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Server Errors",
       "tooltip": {
         "shared": true,
@@ -386,25 +366,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -412,16 +400,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -430,7 +409,6 @@
         "x": 0,
         "y": 15
       },
-      "hiddenSeries": false,
       "id": 30,
       "legend": {
         "alignAsTable": true,
@@ -447,10 +425,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -460,7 +437,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_errors_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}{{handler}}",
@@ -468,7 +445,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Errors",
       "tooltip": {
         "shared": true,
@@ -477,25 +456,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -503,16 +490,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -521,7 +499,6 @@
         "x": 12,
         "y": 15
       },
-      "hiddenSeries": false,
       "id": 33,
       "legend": {
         "alignAsTable": true,
@@ -538,10 +515,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -559,7 +535,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Timeouts",
       "tooltip": {
         "shared": true,
@@ -568,25 +546,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -594,16 +580,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -612,7 +589,6 @@
         "x": 0,
         "y": 22
       },
-      "hiddenSeries": false,
       "id": 35,
       "legend": {
         "alignAsTable": true,
@@ -629,10 +605,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -642,7 +617,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_field_cache_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_field_cache_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -650,7 +625,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Field Cache",
       "tooltip": {
         "shared": true,
@@ -659,25 +636,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -685,16 +670,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -703,7 +679,6 @@
         "x": 12,
         "y": 22
       },
-      "hiddenSeries": false,
       "id": 36,
       "legend": {
         "alignAsTable": true,
@@ -720,10 +695,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -733,7 +707,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_cache{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_cache{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}} {{item}}",
@@ -741,7 +715,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Searcher Cache",
       "tooltip": {
         "shared": true,
@@ -750,25 +726,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -776,16 +760,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -794,7 +769,6 @@
         "x": 0,
         "y": 29
       },
-      "hiddenSeries": false,
       "id": 37,
       "legend": {
         "alignAsTable": true,
@@ -811,10 +785,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -824,7 +797,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_warmup_time_seconds{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_warmup_time_seconds{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}}",
@@ -832,7 +805,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Searcher Warm Up Time",
       "tooltip": {
         "shared": true,
@@ -841,24 +816,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -866,16 +850,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -884,7 +859,6 @@
         "x": 12,
         "y": 29
       },
-      "hiddenSeries": false,
       "id": 38,
       "legend": {
         "alignAsTable": true,
@@ -901,10 +875,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -914,7 +887,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_searcher_cumulative_cache_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_searcher_cumulative_cache_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{type}} {{item}}",
@@ -922,7 +895,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Searcher Cumulative Cache",
       "tooltip": {
         "shared": true,
@@ -931,25 +906,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -957,16 +940,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -975,7 +949,6 @@
         "x": 0,
         "y": 36
       },
-      "hiddenSeries": false,
       "id": 39,
       "legend": {
         "alignAsTable": true,
@@ -992,10 +965,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1005,7 +977,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_fs_bytes{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_fs_bytes{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1013,7 +985,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "File System",
       "tooltip": {
         "shared": true,
@@ -1022,25 +996,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "decbytes",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1048,16 +1030,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1066,7 +1039,6 @@
         "x": 12,
         "y": 36
       },
-      "hiddenSeries": false,
       "id": 40,
       "legend": {
         "alignAsTable": true,
@@ -1083,10 +1055,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1096,7 +1067,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1104,7 +1075,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Index Size",
       "tooltip": {
         "shared": true,
@@ -1113,25 +1086,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "decbytes",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1139,16 +1120,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1157,7 +1129,6 @@
         "x": 0,
         "y": 43
       },
-      "hiddenSeries": false,
       "id": 41,
       "legend": {
         "alignAsTable": true,
@@ -1175,10 +1146,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1188,7 +1158,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "solr_metrics_core_searcher_documents{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
+          "expr": "solr_metrics_core_searcher_documents{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}} {{item}}",
@@ -1196,7 +1166,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Searcher Documents",
       "tooltip": {
         "shared": true,
@@ -1205,25 +1177,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1231,16 +1211,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1249,7 +1220,6 @@
         "x": 0,
         "y": 50
       },
-      "hiddenSeries": false,
       "id": 42,
       "legend": {
         "alignAsTable": true,
@@ -1267,10 +1237,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1280,7 +1249,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_adds_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_adds_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{core}}",
@@ -1288,7 +1257,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Adds",
       "tooltip": {
         "shared": true,
@@ -1297,25 +1268,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1323,16 +1302,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1341,7 +1311,6 @@
         "x": 12,
         "y": 50
       },
-      "hiddenSeries": false,
       "id": 46,
       "legend": {
         "alignAsTable": true,
@@ -1358,10 +1327,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1379,7 +1347,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Pending Docs",
       "tooltip": {
         "shared": true,
@@ -1388,25 +1358,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1414,16 +1392,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1432,7 +1401,6 @@
         "x": 0,
         "y": 57
       },
-      "hiddenSeries": false,
       "id": 43,
       "legend": {
         "alignAsTable": true,
@@ -1449,10 +1417,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1462,7 +1429,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_deletes_by_id_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_deletes_by_id_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1470,7 +1437,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Deletes By ID",
       "tooltip": {
         "shared": true,
@@ -1479,25 +1448,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1505,16 +1482,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1523,7 +1491,6 @@
         "x": 8,
         "y": 57
       },
-      "hiddenSeries": false,
       "id": 44,
       "legend": {
         "alignAsTable": true,
@@ -1540,10 +1507,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1553,7 +1519,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_deletes_by_query_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_deletes_by_query_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1561,7 +1527,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Deletes By Query",
       "tooltip": {
         "shared": true,
@@ -1570,24 +1538,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1595,16 +1572,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1613,7 +1581,6 @@
         "x": 16,
         "y": 57
       },
-      "hiddenSeries": false,
       "id": 47,
       "legend": {
         "alignAsTable": true,
@@ -1630,10 +1597,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1643,7 +1609,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_expunge_deletes_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_expunge_deletes_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1651,7 +1617,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Expunge Deletes",
       "tooltip": {
         "shared": true,
@@ -1660,25 +1628,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1686,16 +1662,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1704,7 +1671,6 @@
         "x": 0,
         "y": 64
       },
-      "hiddenSeries": false,
       "id": 48,
       "legend": {
         "alignAsTable": true,
@@ -1721,10 +1687,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1734,7 +1699,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_merges_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_merges_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1742,7 +1707,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Merges",
       "tooltip": {
         "shared": true,
@@ -1751,25 +1718,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1777,16 +1752,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1795,7 +1761,6 @@
         "x": 12,
         "y": 64
       },
-      "hiddenSeries": false,
       "id": 52,
       "legend": {
         "alignAsTable": true,
@@ -1812,10 +1777,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1825,7 +1789,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_splits_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_splits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1833,7 +1797,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Splits",
       "tooltip": {
         "shared": true,
@@ -1842,25 +1808,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1868,16 +1842,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1886,7 +1851,6 @@
         "x": 0,
         "y": 71
       },
-      "hiddenSeries": false,
       "id": 49,
       "legend": {
         "alignAsTable": true,
@@ -1903,10 +1867,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1916,7 +1879,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_optimizes_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_optimizes_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -1924,7 +1887,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Optimizes",
       "tooltip": {
         "shared": true,
@@ -1933,25 +1898,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1959,16 +1932,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1977,7 +1941,6 @@
         "x": 12,
         "y": 71
       },
-      "hiddenSeries": false,
       "id": 50,
       "legend": {
         "alignAsTable": true,
@@ -1994,10 +1957,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2007,7 +1969,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_rollbacks_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_rollbacks_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2015,7 +1977,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Rollbacks",
       "tooltip": {
         "shared": true,
@@ -2024,25 +1988,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -2050,16 +2022,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2068,7 +2031,6 @@
         "x": 0,
         "y": 78
       },
-      "hiddenSeries": false,
       "id": 51,
       "legend": {
         "alignAsTable": true,
@@ -2085,10 +2047,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2098,7 +2059,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_soft_auto_commits_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_soft_auto_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2106,7 +2067,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Soft Auto Commits",
       "tooltip": {
         "shared": true,
@@ -2115,25 +2078,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -2141,16 +2112,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2159,7 +2121,6 @@
         "x": 8,
         "y": 78
       },
-      "hiddenSeries": false,
       "id": 53,
       "legend": {
         "alignAsTable": true,
@@ -2176,10 +2137,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2189,7 +2149,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_auto_commits_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_auto_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2197,7 +2157,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Auto Commits",
       "tooltip": {
         "shared": true,
@@ -2206,25 +2168,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -2232,16 +2202,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2250,7 +2211,6 @@
         "x": 16,
         "y": 78
       },
-      "hiddenSeries": false,
       "id": 54,
       "legend": {
         "alignAsTable": true,
@@ -2267,10 +2227,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2280,7 +2239,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_commits_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_commits_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2288,7 +2247,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Commits",
       "tooltip": {
         "shared": true,
@@ -2297,25 +2258,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -2323,16 +2292,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2341,7 +2301,6 @@
         "x": 0,
         "y": 85
       },
-      "hiddenSeries": false,
       "id": 45,
       "legend": {
         "alignAsTable": true,
@@ -2359,10 +2318,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -2372,7 +2330,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "increase(solr_metrics_core_update_handler_errors_total{kubernetes_namespace=~\"$kubernetes_namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
+          "expr": "increase(solr_metrics_core_update_handler_errors_total{namespace=~\"$namespace\",base_url=~\"$base_url\",core=~\"$core\"}[1m])",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "{{base_url}}/{{core}}",
@@ -2380,7 +2338,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Update Handler Errors",
       "tooltip": {
         "shared": true,
@@ -2389,60 +2349,64 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     }
   ],
   "refresh": "1m",
-  "schemaVersion": 34,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
       {
+        "allValue": null,
         "current": {
-          "selected": false,
-          "text": "",
+          "isNone": true,
+          "text": "None",
           "value": ""
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_collections_shard_state{namespace=~\".+\"},namespace)",
         "hide": 0,
         "includeAll": false,
-        "label": "Kube kubernetes_namespace",
+        "label": "Kube Namespace",
         "multi": false,
-        "name": "kubernetes_namespace",
+        "name": "namespace",
         "options": [],
-        "query": {
-          "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
-          "refId": "Prometheus-kubernetes_namespace-Variable-Query"
-        },
+        "query": "label_values(solr_collections_shard_state{namespace=~\".+\"},namespace)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2450,33 +2414,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\".+\"},zk_host)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_ping{namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "zk_host",
         "options": [],
-        "query": {
-          "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\".+\"},zk_host)",
-          "refId": "Prometheus-zk_host-Variable-Query"
-        },
+        "query": "label_values(solr_ping{namespace=~\"$namespace\", zk_host=~\".+\"},zk_host)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2484,33 +2439,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$kubernetes_namespace\",collection=~\".+\"},collection)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",collection=~\".+\"},collection)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "collection",
         "options": [],
-        "query": {
-          "query": "label_values(solr_metrics_core_index_size_bytes{kubernetes_namespace=~\"$kubernetes_namespace\",collection=~\".+\"},collection)",
-          "refId": "Prometheus-collection-Variable-Query"
-        },
+        "query": "label_values(solr_metrics_core_index_size_bytes{namespace=~\"$namespace\",collection=~\".+\"},collection)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2518,33 +2464,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_collections_shard_state{kubernetes_namespace=~\"$kubernetes_namespace\",shard=~\".+\"},shard)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_collections_shard_state{namespace=~\"$namespace\",shard=~\".+\"},shard)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "shard",
         "options": [],
-        "query": {
-          "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\"$kubernetes_namespace\",shard=~\".+\"},shard)",
-          "refId": "Prometheus-shard-Variable-Query"
-        },
+        "query": "label_values(solr_collections_shard_state{namespace=~\"$namespace\",shard=~\".+\"},shard)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2552,33 +2489,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_collections_replica_state{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_collections_replica_state{namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "replica",
         "options": [],
-        "query": {
-          "query": "label_values(solr_collections_replica_state{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
-          "refId": "Prometheus-replica-Variable-Query"
-        },
+        "query": "label_values(solr_collections_replica_state{namespace=~\"$namespace\", zk_host=~\"$zk_host\",collection=~\"$collection\",shard=~\"$shard\",replica=~\".+\"},replica)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2586,33 +2514,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\".+\"},base_url)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_ping{namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "base_url",
         "options": [],
-        "query": {
-          "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\".+\"},base_url)",
-          "refId": "Prometheus-base_url-Variable-Query"
-        },
+        "query": "label_values(solr_ping{namespace=~\"$namespace\", base_url=~\".+\"},base_url)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2620,33 +2539,25 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
-        "definition": "label_values(solr_metrics_core_requests_total{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\"$base_url\"},core)",
+        "datasource": "Prometheus",
+        "definition": "label_values(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "core",
         "options": [],
-        "query": {
-          "query": "label_values(solr_metrics_core_requests_total{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\"$base_url\"},core)",
-          "refId": "Prometheus-core-Variable-Query"
-        },
+        "query": "label_values(solr_metrics_core_requests_total{namespace=~\"$namespace\", base_url=~\"$base_url\"},core)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -2685,6 +2596,5 @@
   "timezone": "browser",
   "title": "Solr Core Metrics",
   "uid": "ir2qNw2Wz22",
-  "version": 1,
-  "weekStart": ""
+  "version": 2
 }

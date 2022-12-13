@@ -8,30 +8,21 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
         "type": "dashboard"
       }
     ]
   },
   "description": "Solr Dashboard 2",
   "editable": true,
-  "fiscalYearStartMonth": 0,
+  "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1658351231073,
+  "id": 6,
+  "iteration": 1576611894214,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -40,6 +31,7 @@
       },
       "id": 56,
       "panels": [],
+      "repeat": null,
       "title": "Jetty Metrics",
       "type": "row"
     },
@@ -48,16 +40,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -66,7 +49,6 @@
         "x": 0,
         "y": 1
       },
-      "hiddenSeries": false,
       "id": 2,
       "legend": {
         "alignAsTable": true,
@@ -83,10 +65,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -104,7 +85,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Requests",
       "tooltip": {
         "shared": true,
@@ -113,25 +96,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -139,17 +130,8 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": "Prometheus",
       "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -158,7 +140,6 @@
         "x": 12,
         "y": 1
       },
-      "hiddenSeries": false,
       "id": 1,
       "legend": {
         "alignAsTable": true,
@@ -175,10 +156,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -197,7 +177,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Response",
       "tooltip": {
         "shared": true,
@@ -206,25 +188,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -232,16 +222,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -250,7 +231,6 @@
         "x": 0,
         "y": 8
       },
-      "hiddenSeries": false,
       "id": 55,
       "legend": {
         "alignAsTable": true,
@@ -268,10 +248,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -289,7 +268,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Dispatches",
       "tooltip": {
         "shared": true,
@@ -298,33 +279,38 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
       "collapsed": true,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -338,25 +324,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 16
+            "y": 2
           },
-          "hiddenSeries": false,
           "id": 3,
           "legend": {
             "alignAsTable": true,
@@ -373,10 +349,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -394,7 +369,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Buffers",
           "tooltip": {
             "shared": true,
@@ -403,25 +380,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -429,25 +414,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 16
+            "y": 2
           },
-          "hiddenSeries": false,
           "id": 4,
           "legend": {
             "alignAsTable": true,
@@ -464,10 +439,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -485,7 +459,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Buffer Size",
           "tooltip": {
             "shared": true,
@@ -494,25 +470,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "decbytes",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -520,25 +504,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 23
+            "y": 9
           },
-          "hiddenSeries": false,
           "id": 5,
           "legend": {
             "alignAsTable": true,
@@ -555,10 +529,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -576,7 +549,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "GC Count (per minute)",
           "tooltip": {
             "shared": true,
@@ -585,25 +560,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -611,25 +594,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 23
+            "y": 9
           },
-          "hiddenSeries": false,
           "id": 6,
           "legend": {
             "alignAsTable": true,
@@ -646,10 +619,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -667,7 +639,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "GC Time (per minute)",
           "tooltip": {
             "shared": true,
@@ -676,25 +650,34 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
+              "decimals": null,
               "format": "s",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -702,25 +685,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 30
+            "y": 16
           },
-          "hiddenSeries": false,
           "id": 7,
           "legend": {
             "alignAsTable": true,
@@ -737,10 +710,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -758,7 +730,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Heap Size",
           "tooltip": {
             "shared": true,
@@ -767,25 +741,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "decbytes",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -793,25 +775,15 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 30
+            "y": 16
           },
-          "hiddenSeries": false,
           "id": 8,
           "legend": {
             "alignAsTable": true,
@@ -828,10 +800,9 @@
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -849,7 +820,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Non-Heap Size",
           "tooltip": {
             "shared": true,
@@ -858,25 +831,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "decbytes",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -884,23 +865,14 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 0,
-            "y": 37
+            "y": 23
           },
           "id": 9,
           "legend": {
@@ -917,8 +889,10 @@
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -936,7 +910,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Pool Size",
           "tooltip": {
             "shared": true,
@@ -945,25 +921,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "decbytes",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -971,23 +955,14 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 12,
             "x": 12,
-            "y": 37
+            "y": 23
           },
           "id": 10,
           "legend": {
@@ -1004,8 +979,10 @@
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1023,7 +1000,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Memory Size",
           "tooltip": {
             "shared": true,
@@ -1032,25 +1011,33 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "decbytes",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         },
         {
@@ -1058,23 +1045,14 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "links": []
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 7,
             "w": 24,
             "x": 0,
-            "y": 44
+            "y": 30
           },
           "id": 16,
           "legend": {
@@ -1092,8 +1070,10 @@
           "linewidth": 1,
           "links": [],
           "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
           "percentage": false,
-          "pluginVersion": "8.3.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1111,7 +1091,9 @@
             }
           ],
           "thresholds": [],
+          "timeFrom": null,
           "timeRegions": [],
+          "timeShift": null,
           "title": "Threads",
           "tooltip": {
             "shared": true,
@@ -1120,37 +1102,43 @@
           },
           "type": "graph",
           "xaxis": {
+            "buckets": null,
             "mode": "time",
+            "name": null,
             "show": true,
             "values": []
           },
           "yaxes": [
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
               "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ],
           "yaxis": {
-            "align": false
+            "align": false,
+            "alignLevel": null
           }
         }
       ],
+      "repeat": null,
       "title": "JVM Metrics",
       "type": "row"
     },
     {
       "collapsed": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
+      "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -1159,6 +1147,7 @@
       },
       "id": 58,
       "panels": [],
+      "repeat": null,
       "title": "OS Metrics",
       "type": "row"
     },
@@ -1167,16 +1156,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1185,7 +1165,6 @@
         "x": 0,
         "y": 17
       },
-      "hiddenSeries": false,
       "id": 11,
       "legend": {
         "alignAsTable": true,
@@ -1202,10 +1181,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1223,7 +1201,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Memory Size",
       "tooltip": {
         "shared": true,
@@ -1232,25 +1212,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "decbytes",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1258,16 +1246,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1276,7 +1255,6 @@
         "x": 12,
         "y": 17
       },
-      "hiddenSeries": false,
       "id": 12,
       "legend": {
         "alignAsTable": true,
@@ -1293,10 +1271,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1314,7 +1291,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "File Descriptors",
       "tooltip": {
         "shared": true,
@@ -1323,24 +1302,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1348,16 +1336,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1366,7 +1345,6 @@
         "x": 0,
         "y": 24
       },
-      "hiddenSeries": false,
       "id": 13,
       "legend": {
         "alignAsTable": true,
@@ -1383,10 +1361,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1404,7 +1381,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "CPU Load",
       "tooltip": {
         "shared": true,
@@ -1413,25 +1392,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "percentunit",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1439,16 +1426,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1457,7 +1435,6 @@
         "x": 12,
         "y": 24
       },
-      "hiddenSeries": false,
       "id": 14,
       "legend": {
         "alignAsTable": true,
@@ -1474,10 +1451,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1495,7 +1471,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "CPU Time",
       "tooltip": {
         "shared": true,
@@ -1504,25 +1482,33 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     },
     {
@@ -1530,16 +1516,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "links": []
-        },
-        "overrides": []
-      },
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1548,7 +1525,6 @@
         "x": 0,
         "y": 31
       },
-      "hiddenSeries": false,
       "id": 15,
       "legend": {
         "alignAsTable": true,
@@ -1566,10 +1542,9 @@
       "links": [],
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "dataLinks": []
       },
       "percentage": false,
-      "pluginVersion": "8.3.5",
       "pointradius": 5,
       "points": false,
       "renderer": "flot",
@@ -1587,7 +1562,9 @@
         }
       ],
       "thresholds": [],
+      "timeFrom": null,
       "timeRegions": [],
+      "timeShift": null,
       "title": "Load Average",
       "tooltip": {
         "shared": true,
@@ -1596,44 +1573,50 @@
       },
       "type": "graph",
       "xaxis": {
+        "buckets": null,
         "mode": "time",
+        "name": null,
         "show": true,
         "values": []
       },
       "yaxes": [
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
           "min": "0",
           "show": true
         },
         {
           "format": "short",
+          "label": null,
           "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         }
       ],
       "yaxis": {
-        "align": false
+        "align": false,
+        "alignLevel": null
       }
     }
   ],
   "refresh": false,
-  "schemaVersion": 34,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": [
       {
+        "allValue": null,
         "current": {
-          "selected": true,
-          "text": "",
+          "isNone": true,
+          "text": "None",
           "value": ""
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
+        "datasource": "Prometheus",
         "definition": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
         "hide": 0,
         "includeAll": false,
@@ -1641,15 +1624,13 @@
         "multi": false,
         "name": "kubernetes_namespace",
         "options": [],
-        "query": {
-          "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
-          "refId": "Prometheus-kubernetes_namespace-Variable-Query"
-        },
+        "query": "label_values(solr_collections_shard_state{kubernetes_namespace=~\".+\"},kubernetes_namespace)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -1657,33 +1638,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
+        "datasource": "Prometheus",
         "definition": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\".+\"},zk_host)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "zk_host",
         "options": [],
-        "query": {
-          "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\".+\"},zk_host)",
-          "refId": "Prometheus-zk_host-Variable-Query"
-        },
+        "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", zk_host=~\".+\"},zk_host)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -1691,33 +1663,24 @@
       {
         "allValue": ".*",
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "PBFA97CFB590B2093"
-        },
+        "datasource": "Prometheus",
         "definition": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\".+\"},base_url)",
         "hide": 0,
         "includeAll": true,
+        "label": null,
         "multi": true,
         "name": "base_url",
         "options": [],
-        "query": {
-          "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\".+\"},base_url)",
-          "refId": "Prometheus-base_url-Variable-Query"
-        },
+        "query": "label_values(solr_ping{kubernetes_namespace=~\"$kubernetes_namespace\", base_url=~\".+\"},base_url)",
         "refresh": 1,
         "regex": "/(.+)/",
         "skipUrlSync": false,
         "sort": 1,
         "tagValuesQuery": "",
+        "tags": [],
         "tagsQuery": "",
         "type": "query",
         "useTags": false
@@ -1756,6 +1719,5 @@
   "timezone": "browser",
   "title": "Solr System Dashboard",
   "uid": "ir2qNw2Wz",
-  "version": 1,
-  "weekStart": ""
+  "version": 10
 }
