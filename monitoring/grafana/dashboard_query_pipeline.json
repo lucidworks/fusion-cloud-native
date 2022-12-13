@@ -922,7 +922,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(query_stage_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
+          "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
           "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
           "refId": "A"
         }
@@ -1009,7 +1009,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(query_stage_outcome_total{namespace=\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
+          "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
           "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
           "refId": "A"
         }
@@ -1839,7 +1839,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (level)(logback_events_total{namespace=\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"})",
+          "expr": "sum by (level)(logback_events_total{namespace=~\"$namespace\",app_kubernetes_io_component=\"query-pipeline\"})",
           "legendFormat": "{{level}} messages",
           "refId": "A"
         }
