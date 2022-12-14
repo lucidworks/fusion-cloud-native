@@ -15,6 +15,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.7.0|2022-08-11|Fusion 5.7.0 release, see official https://doc.lucidworks.com/fusion/5.7/3c6x8l/fusion-5-7-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.6.0|2022-08-11|Fusion 5.6.0 release, see official https://doc.lucidworks.com/fusion/5.6/mme9fq/fusion-5-6-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.5.2|2022-05-31|Fusion 5.5.2 release, see official https://doc.lucidworks.com/fusion/5.5/k63wv1/fusion-5-5-2-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.5.1|2022-04-13|Fusion 5.5.1 release, see official https://doc.lucidworks.com/fusion/5.5/drg5sz/fusion-5-5-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
@@ -399,7 +400,7 @@ Before launching an EKS cluster, you need to install and configure `kubectl`, `a
 
 Run `aws configure` to configure a profile for authenticating to AWS. You'll use the profile name you configure in this step, which defaults to `default`, as the `-p` argument to the `setup_f5_eks.sh` script in the next section.
 
-NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures.
+NOTE: When working in Ubuntu, avoid using the eksctl snap version. Alternative sources can have different versions that could cause command failures. Also, always make sure you are using the latest version for each one of the required tools.
 
 [[eks-cluster-create]]
 === Set up Fusion on EKS

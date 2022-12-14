@@ -1,9 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-KUBERNETES_VERSION="1.22"
+KUBERNETES_VERSION="1.24"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.6.0"
+CHART_VERSION="5.7.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 KAFKA_REPLICAS=1
@@ -344,8 +344,8 @@ nodeGroups:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
     privateNetworking: ${INTERNAL}
-    ami: ${AMI}
     maxSize: 6
     minSize: 0
 
@@ -379,6 +379,10 @@ if [ "$UPGRADE" == "0" ]; then
     --user="$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" sts get-caller-identity --query "Arn")"
 fi
 
+NODE_GROUP_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stack-resource --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --logical-resource-id NodeInstanceRole --query 'StackResourceDetail.PhysicalResourceId' --output text)
+
+echo -e "\nAdding aws-ebs-csi-driver to : ${current_cluster}"
+eksctl --profile "${AWS_ACCOUNT}" --region "${REGION}" create addon --name aws-ebs-csi-driver --cluster "${CLUSTER_NAME}" --service-account-role-arn ${NODE_GROUP_ARN} --force
 
 echo -e "\nInstalling Fusion 5.0 Helm chart ${CHART_VERSION} into namespace ${NAMESPACE} with release tag: ${RELEASE}"
 
@@ -389,8 +393,6 @@ if [ "${DEPLOY_ALB}" == "1" ]; then
   #Creating required ALB policy and attaching it to the Cluster Node Group
 
   wget https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.2.1/docs/install/iam_policy.json -O alb-policy.json
-
-  NODE_GROUP_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" cloudformation describe-stack-resource --stack-name eksctl-${CLUSTER_NAME}-nodegroup-standard-workers --logical-resource-id NodeInstanceRole --query 'StackResourceDetail.PhysicalResourceId' --output text)
 
   POLICY_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" iam create-policy --policy-name eksctl-${CLUSTER_NAME}-alb-policy --policy-document file://alb-policy.json --query 'Policy.Arn' --output text)
 
