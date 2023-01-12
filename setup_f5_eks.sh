@@ -2,16 +2,17 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 KUBERNETES_VERSION="1.24"
-INSTANCE_TYPE="m5.2xlarge"
+#INSTANCE_TYPE="m5.2xlarge"
+INSTANCE_TYPE="m6g.2xlarge"
 CHART_VERSION="5.7.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
-SOLR_REPLICAS=1
-KAFKA_REPLICAS=1
+SOLR_REPLICAS=3
+KAFKA_REPLICAS=2
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
-AWS_ACCOUNT=
-REGION=us-west-2
-CLUSTER_NAME=
+AWS_ACCOUNT=default
+REGION=us-east-1
+CLUSTER_NAME=fusion-5-cluster
 NAMESPACE=default
 UPGRADE=0
 CREATE_MODE=

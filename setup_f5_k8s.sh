@@ -212,7 +212,8 @@ fi
 if [ -z ${RELEASE+x} ]; then
   # keep "f5" as the default for legacy purposes when using the default namespace
   if [ "${NAMESPACE}" == "default" ]; then
-    RELEASE="f5"
+    #RELEASE="f5"
+    RELEASE="default"
   else
     RELEASE="$NAMESPACE"
   fi

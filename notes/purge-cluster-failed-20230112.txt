@@ -1,0 +1,36 @@
+jeffrey.grunstein@WSAMZN-QRCTNTM7 MINGW64 ~/git-repo/icecoldfusion/fusion-cloud-native (master)
+$ ./setup_f5_eks.sh --purge -c my-eks-cluster  -p default -z us-east-1
+
+Logged in as: arn:aws:sts::455457388207:assumed-role/AWSReservedSSO_AWSAdministratorAccess_568bf08dc6b892cd/jeffrey.grunstein.sparx@frit.frb.org
+
+
+EKS Cluster 'my-eks-cluster' already exists, proceeding with Fusion 5 install ...
+
+Updated context arn:aws:eks:us-east-1:455457388207:cluster/my-eks-cluster in D:\Users\jeffrey.grunstein\.kube\config
+
+Configured to use EKS cluster: arn:aws:eks:us-east-1:455457388207:cluster/my-eks-cluster
+error: failed to create clusterrolebinding: clusterrolebindings.rbac.authorization.k8s.io "cluster-admin-binding" already exists
+
+Adding aws-ebs-csi-driver to : arn:aws:eks:us-east-1:455457388207:cluster/my-eks-cluster
+2023-01-12 13:49:54 [!]  no IAM OIDC provider associated with cluster, try 'eksctl utils associate-iam-oidc-provider --region=us-east-1 --cluster=my-eks-cluster'
+2023-01-12 13:49:54 [?]  Kubernetes version "1.22" in use by cluster "my-eks-cluster"
+2023-01-12 13:49:54 [?]  Addon aws-ebs-csi-driver is already present in this cluster, as an EKS managed addon, and won't be re-created
+
+Installing Fusion 5.0 Helm chart 5.7.0 into namespace default with release tag: f5
+Using kubeconfig: arn:aws:eks:us-east-1:455457388207:cluster/my-eks-cluster
+Using Helm v3 (v3.10.3+g835b733)
+NAME      STATUS   AGE
+default   Active   51d
+
+Are you sure you want to purge the f5 release from the default namespace in: arn:aws:eks:us-east-1:455457388207:cluster/my-eks-cluster? This operation cannot be undone! Y/n Y
+Error: uninstall: Release not loaded: f5: release: not found
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+No resources found
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+No resources found
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+No resources found
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+No resources found
+Warning: Immediate deletion does not wait for confirmation that the running resource has been terminated. The resource may continue to run on the cluster indefinitely.
+No resources found

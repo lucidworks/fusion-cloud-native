@@ -1,0 +1,31 @@
+15  ./setup_f5_eks.sh
+   16  ./setup_f5_eks.sh --purge -c my-eks-cluster -n cold-fusion
+   17  ./setup_f5_eks.sh --purge -c my-eks-cluster -n cold-fusion -p default
+   18  ./setup_f5_eks.sh --purge -c my-eks-cluster -n cold-fusion -p default -z us-east-1
+   19  kubectl
+   20  kubectl get ns
+   21  ./setup_f5_eks.sh --help
+   22  ./setup_f5_eks.sh --purge -c my-eks-cluster  -p default -z us-east-1
+   23* ./setup_f5_eks.sh --purge -c fusion-cluster -n f5 -p default -z us-east-1
+   24  cp setup_f5_eks.sh setup_f5_eks.sh.debug
+   25  code setup_f5_eks.sh.debug
+   26  ./setup_f5_eks.sh --purge -c my-eks-cluster  -p default -z us-east-1
+   27  helm list
+   28  helm list --all
+   29  kubectl delete deployments -l app.kubernetes.io/part-of=fusion --namespace default --grace-period=0 --force --timeout=5s
+   30  aws eks list-nodegroups --cluster-name fusion-cluster
+   31  aws eks delete-nodegroup --cluster-name fusion-cluster -nodegroup-name ng-37233177
+   32  aws eks delete-nodegroup --cluster-name fusion-cluster --nodegroup-name ng-37233177
+   33  aws eks list-nodegroups --cluster-name fusion-cluster
+   34  aws eks list-nodegroups --cluster-name fusion-cluster
+   35  aws eks list-nodegroups --cluster-name fusion-test
+   36  aws eks list-nodegroups --cluster-name my-eks-cluster
+   37  aws autoscaling delete-auto-scaling-group --auto-scaling-group-name eksctl-fusion-test-nodegroup-standard-workers-NodeGroup-1LPY9ZP6MLGE8
+   38  aws autoscaling delete-auto-scaling-group --auto-scaling-group-name eksctl-my-eks-cluster-nodegroup-standard-workers-NodeGroup-1HVHLYX4CCF01
+   39  aws autoscaling delete-auto-scaling-group --auto-scaling-group-name eksctl-my-eks-cluster-nodegroup-standard-workers-NodeGroup-1HVHLYX4CCF01
+   40  aws autoscaling delete-auto-scaling-group --auto-scaling-group-name eksctl-my-eks-cluster-nodegroup-standard-workers-NodeGroup-1HVHLYX4CCF01
+   41  aws autoscaling delete-auto-scaling-group --auto-scaling-group-name eksctl-fusion-test-nodegroup-standard-workers-NodeGroup-1LPY9ZP6MLGE8
+
+deleted VPCs in the UI
+adjusted autoscaling groups to 0 instances in the UI
+deleted CloudFormation stacks from the UI

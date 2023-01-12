@@ -1,0 +1,74 @@
+jeffrey.grunstein@WSAMZN-QRCTNTM7 MINGW64 ~/git-repo/icecoldfusion/fusion-cloud-native (master)
+$ aws eks delete-nodegroup --cluster-name fusion-cluster --nodegroup-name ng-37233177
+{
+    "nodegroup": {
+        "nodegroupName": "ng-37233177",
+        "nodegroupArn": "arn:aws:eks:us-east-1:455457388207:nodegroup/fusion-cluster/ng-37233177/0cc2c455-ae34-c2ab-5e56-5a0e6a879b7b",
+        "clusterName": "fusion-cluster",
+        "version": "1.23",
+        "releaseVersion": "1.23.13-20221222",
+        "createdAt": "2023-01-06T15:00:11.423000-05:00",
+        "modifiedAt": "2023-01-12T14:33:46.837000-05:00",
+        "status": "DELETING",
+        "capacityType": "ON_DEMAND",
+        "scalingConfig": {
+            "minSize": 2,
+            "maxSize": 2,
+            "desiredSize": 2
+        },
+        "instanceTypes": [
+            "m5.large"
+        ],
+        "subnets": [
+            "subnet-0a36fd1821ab2cf64",
+            "subnet-06dfc0ff62c638c4d"
+        ],
+        "amiType": "AL2_x86_64",
+        "nodeRole": "arn:aws:iam::455457388207:role/eksctl-fusion-cluster-nodegroup-n-NodeInstanceRole-1ICQLBKBZM1E4",
+        "labels": {
+            "alpha.eksctl.io/nodegroup-name": "ng-37233177",
+            "alpha.eksctl.io/cluster-name": "fusion-cluster"
+        },
+        "resources": {
+            "autoScalingGroups": [
+                {
+                    "name": "eks-ng-37233177-0cc2c455-ae34-c2ab-5e56-5a0e6a879b7b"
+                }
+            ]
+        },
+        "health": {
+            "issues": []
+        },
+        "updateConfig": {
+            "maxUnavailable": 1
+        },
+        "launchTemplate": {
+            "name": "eksctl-fusion-cluster-nodegroup-ng-37233177",
+            "version": "1",
+            "id": "lt-051d0446c628c2833"
+        },
+        "tags": {
+            "aws:cloudformation:stack-name": "eksctl-fusion-cluster-nodegroup-ng-37233177",
+
+
+
+
+
+
+
+
+
+
+
+
+
+            "alpha.eksctl.io/cluster-name": "fusion-cluster",
+            "alpha.eksctl.io/nodegroup-name": "ng-37233177",
+            "aws:cloudformation:stack-id": "arn:aws:cloudformation:us-east-1:455457388207:stack/eksctl-fusion-cluster-nodegroup-ng-37233177/a7115780-8dfc-11ed-be2e-0aa27aef0297",
+            "eksctl.cluster.k8s.io/v1alpha1/cluster-name": "fusion-cluster",
+            "aws:cloudformation:logical-id": "ManagedNodeGroup",
+            "alpha.eksctl.io/nodegroup-type": "managed",
+            "alpha.eksctl.io/eksctl-version": "0.124.0"
+        }
+    }
+}

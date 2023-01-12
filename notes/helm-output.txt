@@ -1,0 +1,6 @@
+$ helm list
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+
+jeffrey.grunstein@WSAMZN-QRCTNTM7 MINGW64 ~/git-repo/icecoldfusion/fusion-cloud-native (master)
+$ helm list --all
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
