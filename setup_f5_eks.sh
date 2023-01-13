@@ -2,8 +2,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 KUBERNETES_VERSION="1.24"
-#INSTANCE_TYPE="m5.2xlarge"
-INSTANCE_TYPE="m6g.2xlarge"
+INSTANCE_TYPE="m5.2xlarge"
+#INSTANCE_TYPE="m5.4xlarge"
 CHART_VERSION="5.7.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=3

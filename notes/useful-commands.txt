@@ -28,4 +28,4 @@
 
 deleted VPCs in the UI
 adjusted autoscaling groups to 0 instances in the UI
-deleted CloudFormation stacks from the UI
+deleted CloudFormation stacks from the UI (need to delete eksctl-fusion-5-cluster-nodegroup-standard-workers stack first, then delete eksctl-fusion-5-cluster-cluster stack)

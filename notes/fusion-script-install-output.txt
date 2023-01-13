@@ -1,0 +1,236 @@
+jeffrey.grunstein@WSAMZN-QRCTNTM7 MINGW64 ~/git-repo/icecoldfusion/fusion-cloud-native (master)
+$ ./setup_f5_eks.sh
+
+Logged in as: arn:aws:sts::455457388207:assumed-role/AWSReservedSSO_AWSAdministratorAccess_568bf08dc6b892cd/jeffrey.grunstein.sparx@frit.frb.org
+
+
+Launching an EKS cluster fusion-5-cluster (demo) in project default for deploying Lucidworks Fusion 5 ...
+
+2023-01-12 16:07:54 [?]  eksctl version 0.124.0
+2023-01-12 16:07:54 [?]  using region us-east-1
+2023-01-12 16:07:54 [?]  skipping us-east-1e from selection because it doesn't support the following instance type(s): m6g.2xlarge
+2023-01-12 16:07:54 [?]  setting availability zones to [us-east-1a us-east-1b]
+2023-01-12 16:07:54 [?]  subnets for us-east-1a - public:192.168.0.0/19 private:192.168.64.0/19
+2023-01-12 16:07:54 [?]  subnets for us-east-1b - public:192.168.32.0/19 private:192.168.96.0/19
+2023-01-12 16:07:54 [?]  nodegroup "standard-workers" will use "ami-02d5a5508f2c23400" [AmazonLinux2/1.24]
+2023-01-12 16:07:54 [?]  using Kubernetes version 1.24
+2023-01-12 16:07:54 [?]  creating EKS cluster "fusion-5-cluster" in "us-east-1" region with un-managed nodes
+2023-01-12 16:07:54 [?]  1 nodegroup (standard-workers) was included (based on the include/exclude rules)
+2023-01-12 16:07:54 [?]  will create a CloudFormation stack for cluster itself and 1 nodegroup stack(s)
+2023-01-12 16:07:54 [?]  will create a CloudFormation stack for cluster itself and 0 managed nodegroup stack(s)
+2023-01-12 16:07:54 [?]  if you encounter any issues, check CloudFormation console or try 'eksctl utils describe-stacks --region=us-east-1 --cluster=fusion-5-cluster'
+2023-01-12 16:07:54 [?]  Kubernetes API endpoint access will use default of {publicAccess=true, privateAccess=false} for cluster "fusion-5-cluster" in "us-east-1"
+2023-01-12 16:07:54 [?]  CloudWatch logging will not be enabled for cluster "fusion-5-cluster" in "us-east-1"
+2023-01-12 16:07:54 [?]  you can enable it with 'eksctl utils update-cluster-logging --enable-types={SPECIFY-YOUR-LOG-TYPES-HERE (e.g. all)} --region=us-east-1 --cluster=fusion-5-cluster'
+2023-01-12 16:07:54 [?]  
+2 sequential tasks: { create cluster control plane "fusion-5-cluster", 
+    2 sequential sub-tasks: { 
+        wait for control plane to become ready,
+        create nodegroup "standard-workers",
+    } 
+}
+2023-01-12 16:07:54 [?]  building cluster stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:07:55 [?]  deploying stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:08:25 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:08:55 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:09:55 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:10:56 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:11:56 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:12:56 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:13:56 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:14:57 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:15:57 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:16:57 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:17:58 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:18:58 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-cluster"
+2023-01-12 16:21:01 [?]  building nodegroup stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:21:02 [?]  deploying stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:21:02 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:21:32 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:22:03 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:23:55 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:25:07 [?]  waiting for CloudFormation stack "eksctl-fusion-5-cluster-nodegroup-standard-workers"
+2023-01-12 16:25:08 [?]  waiting for the control plane to become ready
+2023-01-12 16:25:11 [?]  saved kubeconfig as "D:\\Users\\jeffrey.grunstein\\.kube\\config"
+2023-01-12 16:25:11 [?]  no tasks
+2023-01-12 16:25:11 [?]  all EKS cluster resources for "fusion-5-cluster" have been created
+2023-01-12 16:25:11 [?]  adding identity "arn:aws:iam::455457388207:role/eksctl-fusion-5-cluster-nodegroup-NodeInstanceRole-1EVGA49MEW451" to auth ConfigMap
+2023-01-12 16:25:14 [?]  kubectl command should work with "D:\\Users\\jeffrey.grunstein\\.kube\\config", try 'kubectl get nodes'
+2023-01-12 16:25:14 [?]  EKS cluster "fusion-5-cluster" in "us-east-1" region is ready
+
+Cluster 'fusion-5-cluster' deployed ... testing if it is healthy
+Added new context arn:aws:eks:us-east-1:455457388207:cluster/fusion-5-cluster to D:\Users\jeffrey.grunstein\.kube\config
+
+Configured to use EKS cluster: arn:aws:eks:us-east-1:455457388207:cluster/fusion-5-cluster
+clusterrolebinding.rbac.authorization.k8s.io/cluster-admin-binding created
+
+Adding aws-ebs-csi-driver to : arn:aws:eks:us-east-1:455457388207:cluster/fusion-5-cluster
+2023-01-12 16:25:26 [!]  no IAM OIDC provider associated with cluster, try 'eksctl utils associate-iam-oidc-provider --region=us-east-1 --cluster=fusion-5-cluster'
+2023-01-12 16:25:26 [?]  Kubernetes version "1.24" in use by cluster "fusion-5-cluster"
+2023-01-12 16:25:26 [!]  OIDC is disabled but policies are required/specified for this addon. Users are responsible for attaching the policies to all nodegroup roles
+2023-01-12 16:25:26 [?]  creating addon
+
+Installing Fusion 5.0 Helm chart 5.7.0 into namespace default with release tag: f5
+Using kubeconfig: arn:aws:eks:us-east-1:455457388207:cluster/fusion-5-cluster
+Using Helm v3 (v3.10.3+g835b733)
+Found at least one healthy node matching nodeSelector: alpha.eksctl.io/nodegroup-name: standard-workers
+
+Created Fusion custom values yaml: eks_fusion-5-cluster_f5_fusion_values.yaml
+
+
+Created Monitoring custom values yaml: eks_fusion-5-cluster_f5_monitoring_values.yaml. Keep this file handy as you'll need it to customize your Monitoring installation.
+
+
+Create eks_fusion-5-cluster_f5_upgrade_fusion.sh for upgrading you Fusion cluster. Please keep this script along with your custom values yaml file(s) in version control.
+
+Error: no repositories to show
+
+Adding the stable chart repo to helm repo list
+"prometheus-community" has been added to your repositories
+"grafana" has been added to your repositories
+
+Installing Prometheus and Grafana for monitoring Fusion metrics ... this can take a few minutes.
+
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "grafana" chart repository
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ?Happy Helming!?
+Saving 2 charts
+Downloading prometheus from repo https://prometheus-community.github.io/helm-charts
+Downloading grafana from repo https://grafana.github.io/helm-charts
+Deleting outdated charts
+Release "f5-monitoring" does not exist. Installing it now.
+W0112 16:25:54.518814    2288 warnings.go:70] policy/v1beta1 PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
+W0112 16:25:54.530706    2288 warnings.go:70] policy/v1beta1 PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
+W0112 16:25:54.862963    2288 warnings.go:70] policy/v1beta1 PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
+W0112 16:25:54.867845    2288 warnings.go:70] policy/v1beta1 PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
+NAME: f5-monitoring
+LAST DEPLOYED: Thu Jan 12 16:25:52 2023
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+kube-state-metrics is a simple service that listens to the Kubernetes API server and generates metrics about the state of the objects.
+The exposed metrics can be found here:
+https://github.com/kubernetes/kube-state-metrics/blob/master/docs/README.md#exposed-metrics
+
+The metrics are exported on the HTTP endpoint /metrics on the listening port.
+In your case, f5-monitoring-kube-state-metrics.default.svc.cluster.local:8080/metrics
+
+They are served either as plaintext or protobuf depending on the Accept header.
+They are designed to be consumed either by Prometheus itself or by a scraper that is compatible with scraping a Prometheus client endpoint.
+
+
+1. Get your 'admin' user password by running:
+
+   kubectl get secret --namespace default f5-monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+2. The Grafana server can be accessed via port 80 on the following DNS name from within your cluster:
+
+   f5-monitoring-grafana.default.svc.cluster.local
+
+   Get the Grafana URL to visit by running these commands in the same shell:
+
+     export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=f5-monitoring" -o jsonpath="{.items[0].metadata.name}")
+     kubectl --namespace default port-forward $POD_NAME 3000
+
+3. Login with the password from step 1 and the username: admin
+
+The Prometheus server can be accessed via port 80 on the following DNS name from within your cluster:
+f5-monitoring-prometheus-server.default.svc.cluster.local
+
+
+Get the Prometheus server URL by running these commands in the same shell:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app=prometheus,component=server" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace default port-forward $POD_NAME 9090
+
+
+#################################################################################
+######   WARNING: Pod Security Policy has been moved to a global property.  #####
+######            use .Values.podSecurityPolicy.enabled with pod-based      #####
+######            annotations                                               #####
+######            (e.g. .Values.nodeExporter.podSecurityPolicy.annotations) #####
+#################################################################################
+
+
+The Prometheus PushGateway can be accessed via port 9091 on the following DNS name from within your cluster:
+f5-monitoring-prometheus-pushgateway.default.svc.cluster.local
+
+
+Get the PushGateway URL by running these commands in the same shell:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app=prometheus,component=pushgateway" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace default port-forward $POD_NAME 9091
+
+For more information on running Prometheus, visit:
+https://prometheus.io/
+
+# Fusion Monitoring
+
+
+Successfully installed Prometheus and Grafana into the default namespace.
+
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+f5-monitoring   default         1               2023-01-12 16:25:52.8804887 -0500 EST   deployed        fusion-monitoring-1.0.1 1.0.1
+
+Installing Fusion 5.0 Helm chart 5.7.0 into namespace default with release tag: f5
+
+Adding the Lucidworks chart repo to helm repo list
+"lucidworks" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "lucidworks" chart repository
+...Successfully got an update from the "grafana" chart repository
+...Successfully got an update from the "prometheus-community" chart repository
+Update Complete. ?Happy Helming!?
+Upgrading the 'f5' release (Fusion chart: 5.7.0) in the 'default' namespace in the 'fusion-5-cluster' cluster using values:
+      eks_fusion-5-cluster_f5_fusion_values.yaml
+
+NOTE: If this will be a long-running cluster for production purposes, you should save the following file(s) in version control:
+  eks_fusion-5-cluster_f5_fusion_values.yaml
+
+Release "f5" does not exist. Installing it now.
+W0112 16:27:01.018332    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.030516    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.035333    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.040296    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.044574    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.049855    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.055980    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.079673    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.104020    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.200169    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.328173    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.390125    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.519136    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.524183    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.610996    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.697993    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.703954    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.708607    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.771637    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.902712    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:01.918598    5324 warnings.go:70] policy/v1beta1 PodDisruptionBudget is deprecated in v1.21+, unavailable in v1.25+; use policy/v1 PodDisruptionBudget
+W0112 16:27:03.223538    5324 warnings.go:70] batch/v1beta1 CronJob is deprecated in v1.21+, unavailable in v1.25+; use batch/v1 CronJob
+W0112 16:27:03.228036    5324 warnings.go:70] batch/v1beta1 CronJob is deprecated in v1.21+, unavailable in v1.25+; use batch/v1 CronJob
+Error: failed pre-install: timed out waiting for the condition
+
+Waiting up to 10 minutes to see the Fusion API Gateway deployment come online ...
+
+Error from server (NotFound): deployments.apps "f5-api-gateway" not found
+
+Waiting up to 5 minutes to see the Fusion Indexing deployment come online ...
+
+Error from server (NotFound): deployments.apps "f5-fusion-indexing" not found
+Context "arn:aws:eks:us-east-1:455457388207:cluster/fusion-5-cluster" modified.
+
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                   APP VERSION
+f5              default         1               2023-01-12 16:26:55.7401801 -0500 EST   failed          fusion-5.7.0            5.7.0
+f5-monitoring   default         1               2023-01-12 16:25:52.8804887 -0500 EST   deployed        fusion-monitoring-1.0.1 1.0.1
+
+Error from server (NotFound): services "proxy" not found
+Error from server (NotFound): services "proxy" not found
+
+
+Failed to get Fusion Gateway service URL! Check console for previous errors.
+
+
+jeffrey.grunstein@WSAMZN-QRCTNTM7 MINGW64 ~/git-repo/icecoldfusion/fusion-cloud-native (master)
