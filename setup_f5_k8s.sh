@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Platform agnostic script used by the other setup_f5_*.sh scripts to perform general K8s and Helm commands to install Fusion.
 # This script assumes kubectl is pointing to the right cluster and that the user is already authenticated.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+
+echo "In setup_f5_k8s"
 
 CHART_VERSION="5.7.0"
 PROVIDER="k8s"

@@ -1,5 +1,8 @@
-#!/bin/bash
+#!/bin/bash -x
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+
+echo "In setup_f5_eks"
 
 KUBERNETES_VERSION="1.24"
 INSTANCE_TYPE="m5.2xlarge"
@@ -470,6 +473,10 @@ else
     fi
   fi
 fi
+
+# NExt 2 lines debug - JAG
+echo -e "UPGRADE_ARGS set to ${UPGRADE_ARGS}"
+#exit
 
 if [ "${NODE_POOL}" == "" ]; then
   # the user did not specify a node pool label, but our templating needs one
