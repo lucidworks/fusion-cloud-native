@@ -3,14 +3,14 @@
 # This script helps you keep track of the parameters needed to upgrade a Fusion cluster in Kubernetes
 # vs. having to remember all the --values parameters you need to pass
 PROVIDER=eks
-CLUSTER_NAME=fusion-5-cluster
+CLUSTER_NAME=fusion-5
 RELEASE=f5
 NAMESPACE=default
 CHART_VERSION=5.7.0
 SKIP_CRDS=
 
 MY_VALUES=""
-MY_VALUES="$MY_VALUES --values eks_fusion-5-cluster_f5_fusion_values.yaml"
+MY_VALUES="$MY_VALUES --values eks_fusion-5_f5_fusion_values.yaml"
 
 
 
