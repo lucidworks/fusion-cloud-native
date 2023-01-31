@@ -1,5 +1,5 @@
 #!/bin/bash
-pod_type=admin-ui
+pod_type="admin-ui"
 pod_name="$(kubectl get pods --template '{{range.items}}{{.metadata.name}}{{"\n"}}{{end}}' | grep ${pod_type})"
 echo "Pod name is: ${pod_name}"
 
