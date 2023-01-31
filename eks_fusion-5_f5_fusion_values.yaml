@@ -278,11 +278,11 @@ tikaserver:
   replicaCount: 1
   resources: {}
 
-argo:
-  images:
-    server: argocli
-    namespace: argoproj
-
-seldon-core-operator:
-  crd:
-    create: true
+# argo:
+#  images:
+#    server: argocli
+#    namespace: argoproj
+#
+# seldon-core-operator:
+#  crd:
+#    create: true
