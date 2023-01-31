@@ -1,0 +1,288 @@
+global:
+  zkReplicaCount: 3
+
+sql-service:
+  logstashEnabled: false
+  enabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  replicaCount: 0
+  service:
+    thrift:
+      type: "ClusterIP"
+
+solr:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  updateStrategy:
+    type: "RollingUpdate"
+  javaMem: "-Xmx2g -Dfusion_node_type=system"
+  solrGcTune: "-XX:+ExitOnOutOfMemoryError -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+UseStringDeduplication -XX:+PerfDisableSharedMem -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=150 -XX:+UseLargePages -XX:+AlwaysPreTouch"
+  volumeClaimTemplates:
+    storageSize: "50Gi"
+  replicaCount: 3
+  resources: {}
+  exporter:
+    enabled: true
+    podAnnotations:
+      prometheus.io/scrape: "true"
+      prometheus.io/port: "9983"
+    nodeSelector:
+      alpha.eksctl.io/nodegroup-name: standard-workers
+
+kafka:
+  image:
+    registry: bitnami
+  replicaCount: 2
+  zkConnectionString: "f5-zookeeper-0.f5-zookeeper-headless:2181,f5-zookeeper-1.f5-zookeeper-headless:2181,f5-zookeeper-2.f5-zookeeper-headless:2181"
+  logstashEnabled: false
+  persistence:
+    size: 50Gi
+  heapOpts: -XX:+ExitOnOutOfMemoryError -XX:+UseContainerSupport -XX:InitialRAMPercentage=30.0 -XX:MaxRAMPercentage=70.0
+  metrics:
+    kafka:
+      enabled: true
+
+zookeeper:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  replicaCount: 3
+  persistence:
+    size: 15Gi
+  resources: {}
+  env:
+    ZK_HEAP_SIZE: 1G
+    ZK_PURGE_INTERVAL: 1
+
+ml-model-service:
+  logstashEnabled: false
+  image:
+    imagePullPolicy: "IfNotPresent"
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  pod:
+    annotations:
+      prometheus.io/port: "8086"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+  modelRepoImpl: fusion
+  fs:
+    enabled: true
+
+fusion-admin:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  readinessProbe:
+    initialDelaySeconds: 100
+
+fusion-indexing:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  readinessProbe:
+    initialDelaySeconds: 100
+  pod:
+    annotations:
+      prometheus.io/port: "8765"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+query-pipeline:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  javaToolOptions: "-Xmx3g -Djava.util.concurrent.ForkJoinPool.common.parallelism=1 -Dserver.jetty.max-threads=500 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
+  livenessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  readinessProbe:
+    failureThreshold: 10
+    httpGet:
+      path: /actuator/health
+      port: jetty
+      scheme: HTTP
+    initialDelaySeconds: 45
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  pod:
+    annotations:
+      prometheus.io/port: "8787"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+admin-ui:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+api-gateway:
+  logstashEnabled: false
+  service:
+    externalTrafficPolicy: "Local"
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  javaToolOptions: "-Xms2g -Xmx2g -Djwt.token.user-cache-size=100 -Dhttp.maxConnections=1000 -XX:+ExitOnOutOfMemoryError"
+  pod:
+    annotations:
+      prometheus.io/port: "6764"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+auth-ui:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+classic-rest-service:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  kafkaSvcUrl: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+fusion-resources:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+insights:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+job-launcher:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  pod:
+    annotations:
+      prometheus.io/port: "8083"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+job-rest-server:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  pod:
+    annotations:
+      prometheus.io/port: "8081"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+connectors:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  kafkaSvcUrl: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+connector-plugin:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  kafkaSvcUrl: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+connectors-backend:
+  kafka:
+    bootstrapServers: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  kafkaSvcUrl: f5-kafka-0.f5-kafka-headless:9092,f5-kafka-1.f5-kafka-headless:9092,f5-kafka-2.f5-kafka-headless:9092
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+rules-ui:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+webapps:
+  logstashEnabled: false
+  livenessProbe:
+    initialDelaySeconds: 60
+  javaToolOptions: "-Xmx1g -Dspring.zipkin.enabled=false -Dspring.sleuth.enabled=false -XX:+ExitOnOutOfMemoryError"
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+
+templating:
+  logstashEnabled: false
+  nodeSelector:
+    alpha.eksctl.io/nodegroup-name: standard-workers
+  pod:
+    annotations:
+      prometheus.io/port: "5250"
+      prometheus.io/scrape: "true"
+      prometheus.io/path: "/actuator/prometheus"
+
+# TODO: To run the config-sync service in publisher mode, provide
+# your GitHub repo URL, branch, username, and email
+# and install the GitHub OAuth token in a secret named
+# config-sync-github-oauth-token
+# for subscriber mode, enable pulsar and use the "sub" profile
+# springProfilesOverride: "kubernetes,jwt,fusion,sub", see below
+#As of July, 2021, config-sync only used internally, not for customer documentation or use.
+#config-sync:
+#  enabled: false
+#  logstashEnabled: false
+#  pub:
+#    git:
+#      repo: TODO_GITHUB_REPO_URL
+#      alias: fusion-config-sync
+#      branch: stage
+#    github:
+#      username: TODO_GITHUB_USERNAME
+#      email: TODO_GITHUB_EMAIL
+#  pulsar:
+#    enabled: false
+#  springProfilesOverride: "kubernetes,jwt,fusion,pub"
+
+# Uncomment for subscriber mode
+#config-sync:
+#  enabled: true
+#  logstashEnabled: false
+#  springProfilesOverride: "kubernetes,jwt,fusion,sub"
+#  sub:
+#    pollEnabled: false
+#    git:
+#      repo: TODO_GITHUB_REPO_URL
+#      alias: fusion-config-sync
+#      branch: prod
+#    github:
+#      username: TODO_GITHUB_USERNAME
+#      email: TODO_GITHUB_EMAIL
+
+tikaserver:
+  logstashEnabled: false
+  extractInlineImages: true
+  replicaCount: 1
+  resources: {}
+
+argo:
+  images:
+    server: argocli
+    namespace: argoproj
+
+seldon-core-operator:
+  crd:
+    create: true
