@@ -3,9 +3,84 @@
 :toclevels: 5
 :toc-title:
 
-The latest version of Fusion 5 is 5.3.x. The migration process varies depending on your current version of Fusion.
+The latest version of Fusion 5 is 5.8.x. The migration process varies depending on your current version of Fusion.
 
 // tag::body[]
+
+== Migration from Fusion 5.7.x to 5.8.y
+
+==== Prerequisites
+
+. Make sure:
+
+.. Solr is running.
+
+.. All collections are healthy.
+
+. The current Solr version is higher than 8.2.x.
+
+. For production systems, this upgrade process should be performed during a maintenance window.
+
+. This operation changes the solrconfig.xml of all collections in Solr instances. Collections not managed by Fusion in Solr can also be affected.
+
+. This operation must be performed before the Fusion upgrade.
+
+. Collections not using the default Solr configuration that is shipped with Fusion may not require an update as an update may cause some malfunctions.
+
+=== Update settings in Solr collections
+
+Solr collection settings, such as cache, configuration, and schema require updating.
+
+. Use the provided utility Docker image with a script to automate the required collections configuration update:
+
+```
+kubectl run --image="lucidworks/fm-upgrade-to-solr-9:1.0.0" \
+  -n NAMESPACE \
+  --env="HELM_RELEASE=RELEASE_NAME" \
+  --labels='app.kubernetes.io/component=solr-backup-runner'
+  --env="DRY_RUN=false" \
+  fm-upgrade-to-solr
+```
+[start=2]
+. Set `DRY_RUN=true` to see what will be affected without applying any changes to system.
+. Check the logs:
+
+```
+kubectl -n NAMESPACE logs -f fm-upgrade-to-solr
+```
+[start=4]
+. After the update is done, remove the pod:
+
+```
+kubectl -n NAMESPACE delete pod fm-upgrade-solrconfig-cache
+```
+
+=== Finish upgrade
+
+Two methods exist to finalize the upgrade process:
+
+. Use an image.
+
+. Use a JSON file.
+
+
+==== CONVERT APPS USING IMAGE
+
+The preferred way to finish migrating the settings is to use the image to convert exported apps. To do this, you first need to export the app from the existing system and place it in a local system where Docker is installed.
+
+Assuming that in the current directory there is an `exported-app.zip`, you can run:
+
+```
+docker run --rm -v $PASSWORD:/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-to-solr:1.0.0
+```
+This command will produce the exported-app-migrated.zip in the current directory and directly modify the `solrconfig.json` file without creating `configoverlay.json`.
+
+==== USE A JSON OVERLAY
+
+For the second method to finalize the upgrade, instead of a `HELM_RELEASE` name for scripts to infer the Solr server name, you can use a direct URL with a SOLR variable: `--env="SOLR=http://server:8983"`.
+
+This method creates a `configoverlay.json` file in config directory with a modified collection. It will contain all required changes which are applied by Solr on `solrconfig.xml`.
+
 
 == Migration from Fusion 5.4.x to 5.5.x
 
