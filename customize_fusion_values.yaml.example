@@ -257,3 +257,8 @@ tikaserver:
   extractInlineImages: true
   replicaCount: 1
   resources: {}
+
+argo:
+  images:
+    server: argocli
+    namespace: argoproj

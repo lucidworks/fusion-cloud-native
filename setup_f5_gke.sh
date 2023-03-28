@@ -2,8 +2,8 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE=""
-CHART_VERSION="5.5.1"
-GKE_MASTER_VERSION="-"
+CHART_VERSION="5.5.1-1"
+GKE_MASTER_VERSION="1.24.9-gke.3200"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
 SCRIPT_CMD="$0"
@@ -391,7 +391,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
-      --image-type "COS" \
+      --image-type "cos_containerd" \
       --disk-type "pd-standard" \
       --disk-size "100" \
       --scopes "https://www.googleapis.com/auth/devstorage.full_control","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" \
@@ -425,7 +425,7 @@ if [ "$cluster_status" != "0" ] && [ "${PURGE}" == "0" ] && [ "${UPGRADE}" == "0
       --no-enable-basic-auth \
       --cluster-version ${GKE_MASTER_VERSION} \
       --machine-type ${INSTANCE_TYPE} \
-      --image-type "COS" \
+      --image-type "cos_containerd" \
       --disk-type "pd-standard" \
       --disk-size "100" \
       --metadata disable-legacy-endpoints=true \

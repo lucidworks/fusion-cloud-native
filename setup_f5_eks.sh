@@ -1,9 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
-KUBERNETES_VERSION="1.20"
+KUBERNETES_VERSION="1.24"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.5.1"
+CHART_VERSION="5.5.1-1"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 PROMETHEUS="install"
@@ -16,7 +16,6 @@ UPGRADE=0
 CREATE_MODE=
 PURGE=0
 FORCE=0
-AMI="auto"
 MY_VALUES=()
 DRY_RUN=""
 SOLR_DISK_GB=50
@@ -39,7 +38,6 @@ function print_usage() {
   echo -e "  -n                Kubernetes namespace to install Fusion 5 into, defaults to 'default'\n"
   echo -e "  -z                AWS Region to launch the cluster in, defaults to 'us-west-2'\n"
   echo -e "  -i                Instance type, defaults to 'm5.2xlarge'\n"
-  echo -e "  -a                AMI to use for the nodes, defaults to 'auto'\n"
   echo -e "  --deploy-alb      Deploys alb ingress controller \n"
   echo -e "  --internal-alb    Deploys and internal ALB\n"
   echo -e "  -h                Hostname for the ingress to route requests to this Fusion cluster. It can be used with alb ingress controller "
@@ -117,14 +115,6 @@ if [ $# -gt 0 ]; then
               exit 1
             fi
             INSTANCE_TYPE="$2"
-            shift 2
-        ;;
-        -a)
-            if [[ -z "$2" || "${2:0:1}" == "-" ]]; then
-              print_usage "$SCRIPT_CMD" "Missing value for the -a parameter!"
-              exit 1
-            fi
-            AMI="$2"
             shift 2
         ;;
         --prometheus)
@@ -335,7 +325,6 @@ nodeGroups:
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
     privateNetworking: ${INTERNAL}
-    ami: ${AMI}
     maxSize: 6
     minSize: 0
 
