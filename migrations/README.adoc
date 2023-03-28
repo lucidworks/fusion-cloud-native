@@ -24,7 +24,10 @@ Operation *must* be performed before the Solr is upgraded. Upgrading the solr wi
 
 If currently used collection are not using the default solr configuration which is shipped with Fusion it may not require an update or update may cause some malfunctions.
 
-The upgrade steps:
+==== Application migration process
+
+===== Manual steps:
+
 For all the solr collections perform:
 
 * Edit `solrconfig.xml`:
@@ -33,6 +36,8 @@ For all the solr collections perform:
 ** Remove queryResponseWriter of class `solr.XSLTResponseWriter`
 * Edit `managed-schema` file:
 ** remove attribute `keepShortTerm` from all analyzers of class `solr.NGramFilterFactory`
+
+===== Migration tool
 
 Lucidworks provides the utility docker image with the script to automate the required collection configuration update.
 
