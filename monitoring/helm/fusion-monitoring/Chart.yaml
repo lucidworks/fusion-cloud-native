@@ -11,12 +11,12 @@ maintainers:
     name: Ian Thebridge
 dependencies:
 - name: prometheus
-  version: 15.8.0
+  version: 20.0.1
   repository: https://prometheus-community.github.io/helm-charts
   tags:
     - prometheus
 - name: grafana
-  version: 6.26.0
+  version: 6.52.4
   repository: https://grafana.github.io/helm-charts
   tags:
     - grafana
