@@ -452,7 +452,7 @@ For background on pulling images from private registries, see: https://kubernete
 You'll need to create docker-registry secret in the Kubernetes namespace where you want to install Fusion using a command similar to:
 +
 ```
-SECRET_NAME=<internal-private-registry>
+SECRET_NAME=<internal-private-secret>
 REPO=<internal-private-registry>
 
 kubectl create secret docker-registry "${SECRET_NAME}" \
@@ -472,7 +472,7 @@ For instance:
 query-pipeline:
   image:
     imagePullSecrets:
-      - name: <internal-private-registry>
+      - name: <internal-private-secret>
     repository: <internal-private-registry>
 ```
 +
@@ -485,10 +485,10 @@ and Grafana do not allow you to supply the pull secret using custom values yaml.
 +
 ```
 kubectl patch sa default -n $NAMESPACE \
-  -p '"imagePullSecrets": [{"name": "<internal-private-registry>" }]'
+  -p '"imagePullSecrets": [{"name": "<internal-private-secret>" }]'
 ```
 +
-IMPORTANT: Be sure to replace `<internal-private-registry>` with the name of the secret you created in step above.
+IMPORTANT: Be sure to replace `<internal-private-secret>` with the name of the secret you created in step above.
 
 This should allow the default service account to pull images from the private registry without specifying the pull secret on the resources directly.
 
