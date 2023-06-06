@@ -314,7 +314,7 @@ Since Fusion Garnet - 5.9 It is possible to specify resources and replica count 
 Set the pluginValues in the connector-plugin file for example:
 The pluginValues is a list of plugins and its resources
 
- ```
+```
  pluginValues:
    - id: "plugin-id" (1)
      resources: (2)
@@ -325,7 +325,7 @@ The pluginValues is a list of plugins and its resources
          cpu: "250m"
          memory: "2Gi"
      replicaCount: 1
-    ```
+ ```
 
   1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
   * lucidworks.sharepoint-optimized → sharepoint-optimized
