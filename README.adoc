@@ -313,7 +313,7 @@ The `--values` option can be passed multiple times, if the same configuration pr
 
 If you are using Fusion 5.9 or later, you can specify resources and replica count per connector. This allows you to set different resource limits for each connector. If you do not set custom values for a connector, that connector uses the default values.
 
-Set each connector's resource values in the `connector-plugin` section. The following code sample shows an example.
+Set each connector's resource values in the `connector-plugin` section under `pluginValues`. The `pluginValues` section is a list of plugins and its resources. The following sample shows an example.
 
 ```
  pluginValues:
@@ -325,16 +325,16 @@ Set each connector's resource values in the `connector-plugin` section. The foll
        requests:
          cpu: "250m"
          memory: "2Gi"
-     replicaCount: 1
+     replicaCount: 1 <3>
 ```
-
-The pluginValues is a list of plugins and its resources.
 
 <1> The plugin ID. The plugin ID must match the plugin ID on the plugin ZIP file. without the `lucidworks.` prefix For example, if the plugin ID on the plugin ZIP file is `lucidworks.sharepoint-optimized`, the plugin ID is `sharepoint-optimized`.
 
-<2> The resources settings. You must specify the limits, the requests, and the CPU for each.
+<2> The resources settings. You may specify the limits, the requests, and the CPU and memory for each.
 
-*IMPORTANT* After editing the `connector-plugin` section, the affected connector must be re-installed.
+<3> The number of replicas per connector. This value is 1 by default.
+
+*IMPORTANT* After editing the `connector-plugin` section, you must reinstall the affected connector.
 
 // end::connectors-values[]
 
