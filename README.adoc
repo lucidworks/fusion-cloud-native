@@ -307,6 +307,33 @@ These can be passed to the install script using the `--values` option, for examp
 ```
 The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
 
+===== Connectors Custom values
+
+Since Fusion Garnet - 5.9 It is possible to specify resources and replica count per plugin.
+
+Set the pluginValues in the connector-plugin file for example:
+The pluginValues is a list of plugins and its resources
+
+ ```
+ pluginValues:
+   - id: "plugin-id" (1)
+     resources: (2)
+       limits:
+         cpu: "2"
+         memory: "3Gi"
+       requests:
+         cpu: "250m"
+         memory: "2Gi"
+     replicaCount: 1
+    ```
+
+  1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
+  * lucidworks.sharepoint-optimized → sharepoint-optimized
+  * lucidworks.fs → fs
+  * lucidworks.s3 → s3
+
+  2. The resources settings
+
 ==== Upgrades and Ingress
 
 *IMPORTANT* If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
