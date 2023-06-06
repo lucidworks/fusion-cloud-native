@@ -325,7 +325,7 @@ The pluginValues is a list of plugins and its resources
          cpu: "250m"
          memory: "2Gi"
      replicaCount: 1
- ```
+```
 
   1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
   * lucidworks.sharepoint-optimized → sharepoint-optimized
