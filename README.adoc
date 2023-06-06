@@ -309,10 +309,9 @@ The `--values` option can be passed multiple times, if the same configuration pr
 
 ===== Connectors Custom values
 
-Since Fusion Garnet - 5.9 It is possible to specify resources and replica count per plugin.
+Since Fusion 5.9 It is possible to specify resources and replica count per plugin.
 
-Set the pluginValues in the connector-plugin file for example:
-The pluginValues is a list of plugins and its resources
+Set the pluginValues in the connector-plugin section for example:
 
 ```
  pluginValues:
@@ -327,7 +326,10 @@ The pluginValues is a list of plugins and its resources
      replicaCount: 1
 ```
 
+The pluginValues is a list of plugins and its resources
+
   1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
+  For example:
   * lucidworks.sharepoint-optimized → sharepoint-optimized
   * lucidworks.fs → fs
   * lucidworks.s3 → s3
