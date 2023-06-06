@@ -309,16 +309,16 @@ The `--values` option can be passed multiple times, if the same configuration pr
 
 
 // tag::connectors-values[]
-===== Connectors Custom values
+===== Connectors custom values
 
-Since Fusion 5.9 It is possible to specify resources and replica count per plugin.
+If you are using Fusion 5.9 or later, you can specify resources and replica count per connector. This allows you to set different resource limits for each connector. If you do not set custom values for a connector, that connector uses the default values.
 
-Set the pluginValues in the connector-plugin section for example:
+Set each connector's resource values in the `connector-plugin` section. The following code sample shows an example.
 
 ```
  pluginValues:
-   - id: "plugin-id" (1)
-     resources: (2)
+   - id: "plugin-id" <1>
+     resources: <2>
        limits:
          cpu: "2"
          memory: "3Gi"
@@ -328,17 +328,13 @@ Set the pluginValues in the connector-plugin section for example:
      replicaCount: 1
 ```
 
-The pluginValues is a list of plugins and its resources
+The pluginValues is a list of plugins and its resources.
 
-  1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
-  For example:
-  * lucidworks.sharepoint-optimized → sharepoint-optimized
-  * lucidworks.fs → fs
-  * lucidworks.s3 → s3
+<1> The plugin ID. The plugin ID must match the plugin ID on the plugin ZIP file. without the `lucidworks.` prefix For example, if the plugin ID on the plugin ZIP file is `lucidworks.sharepoint-optimized`, the plugin ID is `sharepoint-optimized`.
 
-  2. The resources settings
+<2> The resources settings. You must specify the limits, the requests, and the CPU for each.
 
-*IMPORTANT* After changes on the connector-plugin - the affected plugin must be re-installed.
+*IMPORTANT* After editing the `connector-plugin` section, the affected connector must be re-installed.
 
 // end::connectors-values[]
 
