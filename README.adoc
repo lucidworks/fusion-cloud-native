@@ -307,6 +307,8 @@ These can be passed to the install script using the `--values` option, for examp
 ```
 The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
 
+
+// tag::connectors-values[]
 ===== Connectors Custom values
 
 Since Fusion 5.9 It is possible to specify resources and replica count per plugin.
@@ -337,6 +339,8 @@ The pluginValues is a list of plugins and its resources
   2. The resources settings
 
 *IMPORTANT* After changes on the connector-plugin - the affected plugin must be re-installed.
+
+// end::connectors-values[]
 
 ==== Upgrades and Ingress
 
