@@ -334,6 +334,8 @@ The pluginValues is a list of plugins and its resources
 
   2. The resources settings
 
+*IMPORTANT* After changes on the connector-plugin - the affected plugin must be re-installed.
+
 ==== Upgrades and Ingress
 
 *IMPORTANT* If you used the `-t -h <hostname>` options when installing your cluster, our script created an additional values yaml file named `tls-values.yaml`.
