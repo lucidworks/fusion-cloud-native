@@ -716,8 +716,11 @@ If you're working with Helm directly and not using one of our setup scripts, the
 NOTE: Pass `--help` for usage details.
 
 In this example:
+
 * `<provider>` is the K8s platform you're running on, such as `gke`
+
 * `<cluster>` is the name of your cluster
+
 * `<namespace>` is the K8s namespace where you plan to install Fusion
 
 NOTE: The `--node-pool` option specifies the node selector label for determining which nodes to run Fusion pods. You can pass `"{}"` to let Kubernetes decide which nodes to schedule pods on.
