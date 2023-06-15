@@ -128,6 +128,8 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
 
+|`kafka` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Kafka pods to ensure a quorum; HPA should not be used for scaling ZK |.
+
 |===
 
 == Ports used by Fusion
