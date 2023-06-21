@@ -309,36 +309,36 @@ These can be passed to the install script using the `--values` option, for examp
 ```
 The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
 
-===== Connectors Custom values
 
-Since Fusion 5.9 It is possible to specify resources and replica count per plugin.
+// tag::connectors-values[]
+===== Connectors custom values
 
-Set the pluginValues in the connector-plugin section for example:
+If you are using Fusion 5.9 or later, you can specify resources and replica count per connector. This allows you to set different resource limits for each connector. If you do not set custom values for a connector, that connector uses the default values.
+
+Set each connector's resource values in the `connector-plugin` section under `pluginValues`. The `pluginValues` section is a list of plugins and its resources. The following sample shows an example.
 
 ```
  pluginValues:
-   - id: "plugin-id" (1)
-     resources: (2)
+   - id: "plugin-id" <1>
+     resources: <2>
        limits:
          cpu: "2"
          memory: "3Gi"
        requests:
          cpu: "250m"
          memory: "2Gi"
-     replicaCount: 1
+     replicaCount: 1 <3>
 ```
 
-The pluginValues is a list of plugins and its resources
+<1> The plugin ID. The plugin ID must match the plugin ID on the plugin ZIP file. without the `lucidworks.` prefix. For example, if the plugin ID on the plugin ZIP file is `lucidworks.sharepoint-optimized`, the plugin ID is `sharepoint-optimized`.
 
-  1. The plugin id, the plugin id must match the plugin id on the plugin zip. without the `lucidworks.` prefix.
-  For example:
-  * lucidworks.sharepoint-optimized → sharepoint-optimized
-  * lucidworks.fs → fs
-  * lucidworks.s3 → s3
+<2> The resources settings. You may specify the limits, the requests, and the CPU and memory for each.
 
-  2. The resources settings
+<3> The number of replicas per connector. This value is 1 by default.
 
-*IMPORTANT* After changes on the connector-plugin - the affected plugin must be re-installed.
+*IMPORTANT* After editing the `connector-plugin` section, you must reinstall the affected connector.
+
+// end::connectors-values[]
 
 ==== Upgrades and Ingress
 
