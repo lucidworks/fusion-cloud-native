@@ -90,8 +90,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`connector-plugin-<connector_plugin>` | HTTP/TCP |Deployment |`analytics` or `system` |Yes (CPU or custom metric) | Deployment for each connector plugin type. *Note:* There is a base deployment, `connector-plugin` with 0 replicas. This is used as a deployment template for each connector plugin type. It should not be deleted or scaled.
 
-|`devops-ui` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the DevOps UI.
-
 |`indexing` |REST/HTTP |Deployment |`search` or `analytics` depending on write-volume |Yes (CPU or custom metric) |Processes indexing requests.
 
 |`insights` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves the App Insights UI
@@ -99,10 +97,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`job-launcher` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Configures and launches the Spark driver pod for running Spark jobs
 
 |`job-rest-server` |REST/HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and running Spark jobs.
-
-|`jupyter` |HTTP |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Jupyter notebook for ad hoc analytics and visualization.
-
-|`logstash` |HTTP |StatefulSet |`system` |Not required. Minimum of 1 but 2 pods are recommended for HA |Collects logs from the other microservices and either indexes into system_logs or ships them to an external service like Elastic
 
 |`milvus` |REST/HTTP |Deployment |`analytics` or `system`| Not required; only 1 pod should be sufficient for most clusters |Dense Vector Search Engine for ML models active.
 
@@ -113,10 +107,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 |`pm-ui` |Web |Deployment  |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves static Web assets for the Predictive Merchandiser app.
 
 |`proxy` / `api-gateway` |HTTP |Deployment |`search` |Not required. Minimum of 1 but 2 pods are recommended for HA |Performs authentication, authorization, and traffic routing.
-
-|`pulsar-bookkeeper` |HTTP |StatefulSet | `search` | At least 3 nodes in HA, you need to run 3 or 5 to ensure a quorum | Write Ahead Log (WAL) used for persistent message storage.
-
-|`pulsar-broker` |HTTP and TCP | Deployment | `search`  | At least 3 nodes in HA | Contains REST API for managing administration and dispatcher for handling all message transfers.
 
 |`query` |REST/HTTP |Deployment |`search` |Yes (CPU or custom metric) |Processes query requests.
 
@@ -134,10 +124,6 @@ The table below lists the Fusion microservices deployed by our Helm chart. Recog
 
 |`spark-executor` |n/a |one or more pods launched by the Spark driver for executing job tasks |`analytics` or dedicated Node Pool for Spark jobs |depends on job configuration; controlled by the spark.executor.instances setting |Executes tasks for a Spark job
 
-|`sql-service` |REST/HTTP and JDBC |Deployment |`analytics` |Not required; only 1 pod should be sufficient for most clusters |Performs admin tasks for creating and managing SQL catalog assets.
-
-Exposes a JDBC endpoint for the SQL service.
-
 |`templating` |Web |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Retrieves and renders Predictive Merchandiser templates.
 
 |`tikaserver` |HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Is responsible for text extraction using Tika Server Parser
@@ -145,6 +131,8 @@ Exposes a JDBC endpoint for the SQL service.
 |`webapps` |REST/HTTP |Deployment |`system` |Not required; only 1 pod should be sufficient for most clusters |Serves App Studio-based Web apps.
 
 |`zookeeper` |TCP |StatefulSet |`system` |No, you need to run 1,3, or 5 Zookeeper pods to ensure a quorum; HPA should not be used for scaling ZK |Stores centralized configuration and performs distributed coordination tasks.
+
+|`kafka` |TCP |StatefulSet |`system` |Yes, required, only 1 pod should be sufficient for most clusters|Topic are used to hold incoming data for solr
 
 |===
 
@@ -185,6 +173,7 @@ Below you will find the list of ports required to access Fusion services.
 |`templating` | 5250
 |`webapps` | 8780
 |`zookeeper` | 2181, 2888, 3888, 2281, 9141
+|`kafka` | 9092, 9093
 |===
 
 
