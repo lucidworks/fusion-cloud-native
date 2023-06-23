@@ -162,7 +162,6 @@ Below you will find the list of ports required to access Fusion services.
 |`ml-model-service milvus` | 3000
 |`ml-model-service mysql` | 3306
 |`pm-ui` | 8080
-|`pulsar` | 8080, 8443, 6650, 6651, 9527
 |`query-pipeline` | 8787
 |`rest-service` | 9010
 |`rpc-service` | 8771, 8772
