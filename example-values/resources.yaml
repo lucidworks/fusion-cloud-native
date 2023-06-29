@@ -307,3 +307,13 @@ connector-plugin:
       memory: "1500Mi"
     limits:
       memory: "2300Mi"
+  pluginValues:
+    - id: "sharepoint-optimized"
+      resources:
+        limits:
+          cpu: "2"
+          memory: "4Gi"
+        requests:
+          cpu: "250m"
+          memory: "2Gi"
+      replicaCount: 1

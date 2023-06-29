@@ -286,3 +286,4 @@ argo:
 seldon-core-operator:
   crd:
     create: true
+

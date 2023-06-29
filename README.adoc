@@ -15,6 +15,7 @@ We assume that you'll want to control how your production clusters are provision
 [width="100%",cols="1,2,7",options="header"]
 |=========================================================
 |Version|Date|Notes
+|5.9.0|2023-06-21|Fusion 5.9.0 release, see official http://doc.lucidworks.com/fusion/5.9/kpv8sh/fusion-5-9-0[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.8.1|2023-06-08|Fusion 5.8.1 release, see official https://doc.lucidworks.com/fusion/5.8/608v1q/fusion-5-8-1[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.8.0|2023-03-22|Fusion 5.8.0 release, see official https://doc.lucidworks.com/fusion/5.8/2k5m8y/fusion-5-8-0-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
 |5.7.1|2023-01-30|Fusion 5.7.1 release, see official https://doc.lucidworks.com/fusion/5.7/dvb7jr/fusion-5-7-1-release-notes[release notes]. For upgrades from previous versions of Fusion 5.0.x, see the {migration-guide}[Migration Guide].
@@ -307,6 +308,37 @@ These can be passed to the install script using the `--values` option, for examp
   --values example-values/affinity.yaml --values example-values/resources.yaml --values example-values/replicas.yaml
 ```
 The `--values` option can be passed multiple times, if the same configuration property is contained within multiple `values` files then the values from the latest file passed as a `--values` option are used.
+
+
+// tag::connectors-values[]
+===== Connectors custom values
+
+If you are using Fusion 5.9 or later, you can specify resources and replica count per connector. This allows you to set different resource limits for each connector. If you do not set custom values for a connector, that connector uses the default values.
+
+Set each connector's resource values in the `connector-plugin` section under `pluginValues`. The `pluginValues` section is a list of plugins and its resources. The following sample shows an example.
+
+```
+ pluginValues:
+   - id: "plugin-id" <1>
+     resources: <2>
+       limits:
+         cpu: "2"
+         memory: "3Gi"
+       requests:
+         cpu: "250m"
+         memory: "2Gi"
+     replicaCount: 1 <3>
+```
+
+<1> The plugin ID. The plugin ID must match the plugin ID on the plugin ZIP file. without the `lucidworks.` prefix. For example, if the plugin ID on the plugin ZIP file is `lucidworks.sharepoint-optimized`, the plugin ID is `sharepoint-optimized`.
+
+<2> The resources settings. You may specify the limits, the requests, and the CPU and memory for each.
+
+<3> The number of replicas per connector. This value is 1 by default.
+
+*IMPORTANT* After editing the `connector-plugin` section, you must reinstall the affected connector.
+
+// end::connectors-values[]
 
 ==== Upgrades and Ingress
 
