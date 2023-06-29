@@ -287,7 +287,3 @@ seldon-core-operator:
   crd:
     create: true
 
-apps-manager:
-  zkReplicaCount: 3
-  zkPort: 2181
-  zkTLSPort: 2281
