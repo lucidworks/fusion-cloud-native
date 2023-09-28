@@ -3,7 +3,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 KUBERNETES_VERSION="1.26"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.9.1"
+CHART_VERSION="5.10.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 KAFKA_REPLICAS=1
