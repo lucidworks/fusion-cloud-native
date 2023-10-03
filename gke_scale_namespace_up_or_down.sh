@@ -215,6 +215,3 @@ if [ -f "${UPGRADE_SCRIPT}" ]; then
 else
   echo -e "\nERROR: Fusion upgrade script ${UPGRADE_SCRIPT} not found! This script is needed to restore your cluster."
 fi
-
-
-
