@@ -26,7 +26,7 @@ If currently used collection are not using the default solr configuration which 
 
 ==== Application migration process
 
-===== Manual steps:
+===== Manual steps
 
 For all the solr collections perform:
 
@@ -44,7 +44,7 @@ Lucidworks provides the utility docker image with the script to automate the req
 The best way is to export the existing application to zip file and run the migration on it.
 Assuming that you are in the directory where you have exported the app with the name `exported-app.zip`, run:
 ```
- docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-to-solr-9:1.0.0
+ docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-to-solr-9:1.0.1
 ```
 
 This will generate the migrated application with name `exported-app-migrated.zip`. Check the output for any _WARNINGS_ and _ERRORS_.
@@ -52,7 +52,7 @@ This will generate the migrated application with name `exported-app-migrated.zip
 Second way is to upgrade the application in place on live solr through solr API. Note, that this must be done before upgrading the solr.
 
 ```
-kubectl run --image="lucidworks/fm-upgrade-to-solr-9:1.0.0" \
+kubectl run --image="lucidworks/fm-upgrade-to-solr-9:1.0.1" \
   -n<namespace> \
   --env="HELM_RELEASE=<release_name>" \
   --labels='app.kubernetes.io/component=solr-backup-runner'
