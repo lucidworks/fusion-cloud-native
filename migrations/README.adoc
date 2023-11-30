@@ -22,7 +22,7 @@ Always test the migration on pre-production environment with the exact copy of p
 
 Operation *must* be performed before the Solr is upgraded. Upgrading the solr with not migrated collection will prevent them to load.
 
-If currently used collection are not using the default solr configuration which is shipped with Fusion it may not require an update or update may cause some malfunctions.
+If currently used collection are not using the default solr configuration which is shipped with Fusion it may not require an update may cause some malfunctions or there maybe needed an additional steps .
 
 ==== Application migration process
 
@@ -34,6 +34,7 @@ For all the solr collections perform:
 ** In caches elements ("filterCache", "cache", "documentCache", "queryResultCache") check if `class` attribute is either empty or set to `solr.search.CaffeineCache`.
 ** From all `requestHandler/lst` elements remove the element `<bool..>` with attribute `name='preferLocalShards'`
 ** Remove queryResponseWriter of class `solr.XSLTResponseWriter`
+** Remove `circuitBreaker` elements which doesn't have a class attribute
 * Edit `managed-schema` file:
 ** remove attribute `keepShortTerm` from all analyzers of class `solr.NGramFilterFactory`
 
@@ -44,40 +45,10 @@ Lucidworks provides the utility docker image with the script to automate the req
 The best way is to export the existing application to zip file and run the migration on it.
 Assuming that you are in the directory where you have exported the app with the name `exported-app.zip`, run:
 ```
- docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-to-solr-9:1.0.1
+ docker run --rm -v $(pwd):/apps -e INPUT_FILE=/apps/exported-app.zip lucidworks/fm-upgrade-to-solr-9:1.1.0
 ```
 
 This will generate the migrated application with name `exported-app-migrated.zip`. Check the output for any _WARNINGS_ and _ERRORS_.
-
-Second way is to upgrade the application in place on live solr through solr API. Note, that this must be done before upgrading the solr.
-
-```
-kubectl run --image="lucidworks/fm-upgrade-to-solr-9:1.0.1" \
-  -n<namespace> \
-  --env="HELM_RELEASE=<release_name>" \
-  --labels='app.kubernetes.io/component=solr-backup-runner'
-  --env="DRY_RUN=false" \
-  fm-upgrade-to-solr
-```
-
-Set `DRY_RUN=true` if you want to simulate the changes without applying any changes to system. Check logs:
-```
-kubectl -n<namespace> logs -f fm-upgrade-to-solr
-```
-
-After updated is done, remove the pod:
-```
-kubectl -n<namespace> delete pod fm-upgrade-to-solr
-```
-
-Instead of providing `HELM_RELEASE` name from which scripts infer the Solr sever name, you can use direct url with `SOLR` variable: `--env="SOLR=http://server:8983"`.
-
-Using the Solr API is not modifying the existing collection files, but creates `configoverlay.json` file in config directory of modified collection. It will contain changes which solr applies to config files.
-
-This method has a limitation. It cannot remove `queryResponseWriter` of class `solr.XSLTResponseWriter`.
-If scripts finds it, it will print the warning.
-In this case you need to migrate the exported app.
-This may happen if you are migrating very old collection, created before Fusion 5.2.
 
 ==== How to fix the solr after importing not migrated application
 
@@ -93,7 +64,7 @@ If you have upgraded the solr without migration the collection configuration fir
 * If you have just imported not migrated application:
 ** remove the application
 ** manually remove collections configuration from `/configs/` node in Zookeeper (remove only configs which belongs to application you have removed, not all)
-** restart all solr nodes
+** restart *all* solr nodes
 ** migrate the application
 ** import migrated application
 
