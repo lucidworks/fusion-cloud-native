@@ -3,7 +3,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 KUBERNETES_VERSION="1.27"
 INSTANCE_TYPE="m5.2xlarge"
-CHART_VERSION="5.9.2"
+CHART_VERSION="5.11.0"
 NODE_POOL="alpha.eksctl.io/nodegroup-name: standard-workers"
 SOLR_REPLICAS=1
 KAFKA_REPLICAS=1
@@ -392,7 +392,7 @@ if [ "${DEPLOY_ALB}" == "1" ]; then
 
   #Creating required ALB policy and attaching it to the Cluster Node Group
 
-  wget https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.2.1/docs/install/iam_policy.json -O alb-policy.json
+  wget https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.6.1/docs/install/iam_policy.json -O alb-policy.json
 
   POLICY_ARN=$(aws --profile "${AWS_ACCOUNT}" --region "${REGION}" iam create-policy --policy-name eksctl-${CLUSTER_NAME}-alb-policy --policy-document file://alb-policy.json --query 'Policy.Arn' --output text)
 
@@ -437,7 +437,7 @@ api-gateway:
       alb.ingress.kubernetes.io/healthy-threshold-count: '2'
     enabled: true
     host: "${INGRESS_HOSTNAME}"
-    path: "/*"
+    path: "/"
 END
 fi
 
