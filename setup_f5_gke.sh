@@ -2,7 +2,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 
 INSTANCE_TYPE=""
-CHART_VERSION="5.9.3"
+CHART_VERSION="5.12.0"
 GKE_MASTER_VERSION="1.28.6-gke.1369000"
 NODE_POOL="cloud.google.com/gke-nodepool: default-pool"
 PROMETHEUS="install"
