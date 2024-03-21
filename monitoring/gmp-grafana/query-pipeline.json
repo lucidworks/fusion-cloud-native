@@ -32,7 +32,7 @@
       {
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -86,7 +86,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "sum(increase(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m]))/60",
@@ -105,7 +105,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -151,7 +151,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "sum by(pod)(increase(http_server_requests_seconds_count{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m]))/60",
@@ -195,7 +195,7 @@
         "collapsed": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "gridPos": {
           "h": 1,
@@ -209,7 +209,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "refId": "A"
           }
@@ -224,7 +224,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -270,7 +270,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.99, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
             "legendFormat": "{{pipelineId}}",
@@ -314,7 +314,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -360,7 +360,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.5, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "legendFormat": "{{pipelineId}}",
@@ -404,7 +404,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -450,7 +450,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.75, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "legendFormat": "{{pipelineId}}",
@@ -494,7 +494,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -540,7 +540,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.95, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "legendFormat": "{{pipelineId}}",
@@ -584,7 +584,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -631,7 +631,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.99, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "intervalFactor": 2,
@@ -676,7 +676,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -723,7 +723,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.95, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "intervalFactor": 2,
@@ -768,7 +768,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -815,7 +815,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.75, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "intervalFactor": 2,
@@ -860,7 +860,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -906,7 +906,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.5, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "intervalFactor": 2,
@@ -951,7 +951,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -997,7 +997,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}) by (error, pipelineId, stageType)",
             "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
@@ -1041,7 +1041,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1087,7 +1087,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])) by (error, pipelineId, stageType)",
             "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
@@ -1128,7 +1128,7 @@
         "collapsed": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "gridPos": {
           "h": 1,
@@ -1142,7 +1142,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "refId": "A"
           }
@@ -1157,7 +1157,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1203,7 +1203,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "sum by(errorCode,host)(rate(solr_api_call_total{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m]))",
             "hide": false,
@@ -1213,7 +1213,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "",
             "refId": "A"
@@ -1256,7 +1256,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1302,7 +1302,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.99, sum by(host, le)(rate(solr_api_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m])))",
             "hide": false,
@@ -1346,7 +1346,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1392,7 +1392,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.95, sum by(host, le)(rate(solr_api_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m])))",
             "hide": false,
@@ -1436,7 +1436,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1482,7 +1482,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.75, sum by(host, le)(rate(solr_api_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m])))",
             "hide": false,
@@ -1526,7 +1526,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1572,7 +1572,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "expr": "histogram_quantile(0.50, sum by(host, le)(rate(solr_api_call_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",cluster=~\"$cluster\"}[1m])))",
             "hide": false,
@@ -1613,7 +1613,7 @@
         "collapsed": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "gridPos": {
           "h": 1,
@@ -1627,7 +1627,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "refId": "A"
           }
@@ -1642,7 +1642,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1688,7 +1688,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "sum by (outcome, uri, pod)(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",cluster=~\"$cluster\"}[1m]))",
@@ -1734,7 +1734,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1780,7 +1780,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "http_server_requests_seconds_count{namespace=~\"$namespace\",cluster=~\"$cluster\"}",
@@ -1823,7 +1823,7 @@
         "collapsed": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "gridPos": {
           "h": 1,
@@ -1837,7 +1837,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "refId": "A"
           }
@@ -1852,7 +1852,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1898,7 +1898,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "sum by(level)(irate(logback_events_total{namespace=~\"$namespace\",cluster=~\"$cluster\"}[5m]))",
@@ -1944,7 +1944,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -1990,7 +1990,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "sum by (level)(logback_events_total{namespace=~\"$namespace\",cluster=~\"$cluster\"})",
@@ -2036,7 +2036,7 @@
         "dashes": false,
         "datasource": {
           "type": "prometheus",
-          "uid": "<DATASOURCE-UID>"
+          "uid": "managed-prometheus"
         },
         "fieldConfig": {
           "defaults": {
@@ -2082,7 +2082,7 @@
           {
             "datasource": {
               "type": "prometheus",
-              "uid": "<DATASOURCE-UID>"
+              "uid": "managed-prometheus"
             },
             "editorMode": "code",
             "expr": "jetty_threads_current{namespace=~\"$namespace\",cluster=~\"$cluster\"}",
@@ -2135,7 +2135,7 @@
           },
           "datasource": {
             "type": "prometheus",
-            "uid": "<DATASOURCE-UID>"
+            "uid": "managed-prometheus"
           },
           "definition": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
           "hide": 0,
@@ -2169,7 +2169,7 @@
           },
           "datasource": {
             "type": "prometheus",
-            "uid": "<DATASOURCE-UID>"
+            "uid": "managed-prometheus"
           },
           "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pod)",
           "hide": 0,
@@ -2203,7 +2203,7 @@
           },
           "datasource": {
             "type": "prometheus",
-            "uid": "<DATASOURCE-UID>"
+            "uid": "managed-prometheus"
           },
           "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageType=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageType)",
           "hide": 0,
@@ -2237,7 +2237,7 @@
           },
           "datasource": {
             "type": "prometheus",
-            "uid": "<DATASOURCE-UID>"
+            "uid": "managed-prometheus"
           },
           "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
           "hide": 0,
@@ -2260,14 +2260,9 @@
           "useTags": false
         },
         {
-          "current": {
-            "selected": false,
-            "text": "<CLUSTER>",
-            "value": "<CLUSTER>"
-          },
           "datasource": {
             "type": "prometheus",
-            "uid": "<DATASOURCE-UID>"
+            "uid": "managed-prometheus"
           },
           "definition": "label_values(http_server_requests_seconds_count{cluster=~\".+\"},cluster)",
           "hide": 0,
@@ -2281,7 +2276,6 @@
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "^(<CLUSTER>)$",
           "skipUrlSync": false,
           "sort": 0,
           "type": "query"
