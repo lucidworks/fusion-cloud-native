@@ -18,7 +18,7 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 24,
+    "id": 25,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -44,579 +44,6 @@
           "w": 12,
           "x": 0,
           "y": 0
-        },
-        "hiddenSeries": false,
-        "id": 7,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "sum by(pipelineId)(increase(indexing_pipeline_outcome_total{namespace=~\"$namespace\", pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m]))",
-            "range": true,
-            "refId": "A"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "Pipeline Execution Rate",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 0
-        },
-        "hiddenSeries": false,
-        "id": 9,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "sum by(pipelineId, le)(histogram_quantile(0.99, rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))     ",
-            "range": true,
-            "refId": "A"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "Pipeline Execution Time (p99)",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 8
-        },
-        "hiddenSeries": false,
-        "id": 11,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "sum by(pipelineId, le)(histogram_quantile(0.50, rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))     ",
-            "range": true,
-            "refId": "A"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "Pipeline Execution Time (p50)",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 8
-        },
-        "hiddenSeries": false,
-        "id": 14,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "histogram_quantile(0.75, sum by(pipelineId,stageType,stageId,le)(rate(indexing_stage_process_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
-            "legendFormat": "{{pipelineId}}({{stageType}}) {{stageId}}",
-            "range": true,
-            "refId": "A"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "expr": "",
-            "refId": "B"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "p75 Stage Execution Times",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "s",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 16
-        },
-        "hiddenSeries": false,
-        "id": 13,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "histogram_quantile(0.50, sum by(pipelineId,stageType,stageId,le)(rate(indexing_stage_process_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
-            "legendFormat": "{{pipelineId}}({{stageType}}) {{stageId}}",
-            "range": true,
-            "refId": "A"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "expr": "",
-            "refId": "B"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "p50 Stage Execution Times",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "s",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 12,
-          "y": 16
-        },
-        "hiddenSeries": false,
-        "id": 15,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "editorMode": "code",
-            "expr": "histogram_quantile(0.99, sum by(pipelineId,stageType,stageId,le)(rate(indexing_stage_process_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
-            "legendFormat": "{{pipelineId}}({{stageType}}) {{stageId}}",
-            "range": true,
-            "refId": "A"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "managed-prometheus"
-            },
-            "expr": "",
-            "refId": "B"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "p99 Stage Execution Times",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "s",
-            "logBase": 1,
-            "show": true
-          },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 8,
-          "w": 12,
-          "x": 0,
-          "y": 24
         },
         "hiddenSeries": false,
         "id": 16,
@@ -651,15 +78,15 @@
               "uid": "managed-prometheus"
             },
             "editorMode": "code",
-            "expr": "histogram_quantile(0.95, sum by(pipelineId,stageType,stageId,le)(rate(indexing_stage_process_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
-            "legendFormat": "{{pipelineId}}({{stageType}}) {{stageId}}",
+            "expr": "system_cpu_usage{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\",cluster=~\"$cluster\"}",
+            "legendFormat": "{{pod}}",
             "range": true,
             "refId": "A"
           }
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "p95 Stage Execution Times",
+        "title": "System CPU Utilization",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -673,7 +100,7 @@
         },
         "yaxes": [
           {
-            "format": "s",
+            "format": "percentunit",
             "logBase": 1,
             "show": true
           },
@@ -708,7 +135,192 @@
           "h": 8,
           "w": 12,
           "x": 12,
-          "y": 24
+          "y": 0
+        },
+        "hiddenSeries": false,
+        "id": 14,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pluginVersion": "10.2.3",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "editorMode": "code",
+            "expr": "process_cpu_usage{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\",cluster=~\"$cluster\"}",
+            "legendFormat": "{{pod}}",
+            "range": true,
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+        "timeRegions": [],
+        "title": "Process CPU Utilization",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "mode": "time",
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "hiddenSeries": false,
+        "id": 8,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pluginVersion": "10.2.3",
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "editorMode": "code",
+            "expr": "jvm_gc_pause_seconds_count{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\",cluster=~\"$cluster\"}",
+            "legendFormat": "{{pod}} {{action}}",
+            "range": true,
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+        "timeRegions": [],
+        "title": "Garbage Collection Counts",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+          "mode": "time",
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "description": "",
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
         },
         "hiddenSeries": false,
         "id": 4,
@@ -743,14 +355,15 @@
               "uid": "managed-prometheus"
             },
             "editorMode": "code",
-            "expr": "sum by(pipelineId)(increase(indexing_docs_in_total{namespace=~\"$namespace\",cluster=~\"$cluster\"}[1m]))",
+            "expr": "rate(jvm_classes_loaded_classes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\",cluster=~\"$cluster\"}[5m])",
+            "legendFormat": "{{pod}}",
             "range": true,
             "refId": "A"
           }
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "Indexed Document Rate",
+        "title": "Class Loading",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -765,6 +378,7 @@
         "yaxes": [
           {
             "format": "short",
+            "label": "classes/sec",
             "logBase": 1,
             "show": true
           },
@@ -799,7 +413,7 @@
           "h": 9,
           "w": 12,
           "x": 0,
-          "y": 32
+          "y": 16
         },
         "hiddenSeries": false,
         "id": 2,
@@ -834,14 +448,15 @@
               "uid": "managed-prometheus"
             },
             "editorMode": "code",
-            "expr": "histogram_quantile(0.99, sum by(pipelineId, le)(rate(indexing_solr_index_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
+            "expr": "sum by(pod,id)(rate(jvm_memory_used_bytes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\",cluster=~\"$cluster\"}[5m]))",
+            "legendFormat": "{{pod}} {{id}}",
             "range": true,
             "refId": "A"
           }
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "Solr Indexing Time (p99)",
+        "title": "Heap Memory Allocation",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -855,7 +470,8 @@
         },
         "yaxes": [
           {
-            "format": "short",
+            "format": "Bps",
+            "label": "allocation rate",
             "logBase": 1,
             "show": true
           },
@@ -890,10 +506,10 @@
           "h": 9,
           "w": 12,
           "x": 12,
-          "y": 32
+          "y": 16
         },
         "hiddenSeries": false,
-        "id": 5,
+        "id": 10,
         "legend": {
           "avg": false,
           "current": false,
@@ -925,14 +541,15 @@
               "uid": "managed-prometheus"
             },
             "editorMode": "code",
-            "expr": "histogram_quantile(0.50, sum by(pipelineId, le)(rate(indexing_solr_index_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
+            "expr": "jvm_memory_used_bytes{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", area=\"heap\",cluster=~\"$cluster\"}",
+            "legendFormat": "{{pod}} {{id}} Memory",
             "range": true,
             "refId": "A"
           }
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "Solr Indexing Time (p50)",
+        "title": "Heap Memory Consumption",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -946,7 +563,7 @@
         },
         "yaxes": [
           {
-            "format": "short",
+            "format": "decbytes",
             "logBase": 1,
             "show": true
           },
@@ -981,10 +598,10 @@
           "h": 9,
           "w": 12,
           "x": 0,
-          "y": 41
+          "y": 25
         },
         "hiddenSeries": false,
-        "id": 18,
+        "id": 6,
         "legend": {
           "avg": false,
           "current": false,
@@ -1015,106 +632,25 @@
               "type": "prometheus",
               "uid": "managed-prometheus"
             },
-            "editorMode": "code",
-            "expr": "histogram_quantile(0.95, sum by(pipelineId, le)(rate(indexing_solr_index_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
-            "range": true,
+            "expr": "jvm_threads_states_threads{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"runnable\"}",
+            "legendFormat": "{{pod}} {{state}} Threads",
             "refId": "A"
-          }
-        ],
-        "thresholds": [],
-        "timeRegions": [],
-        "title": "Solr Indexing Time (p95)",
-        "tooltip": {
-          "shared": true,
-          "sort": 0,
-          "value_type": "individual"
-        },
-        "type": "graph",
-        "xaxis": {
-          "mode": "time",
-          "show": true,
-          "values": []
-        },
-        "yaxes": [
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
           },
-          {
-            "format": "short",
-            "logBase": 1,
-            "show": true
-          }
-        ],
-        "yaxis": {
-          "align": false
-        }
-      },
-      {
-        "aliasColors": {},
-        "bars": false,
-        "dashLength": 10,
-        "dashes": false,
-        "datasource": {
-          "type": "prometheus",
-          "uid": "managed-prometheus"
-        },
-        "fieldConfig": {
-          "defaults": {
-            "links": []
-          },
-          "overrides": []
-        },
-        "fill": 1,
-        "fillGradient": 0,
-        "gridPos": {
-          "h": 9,
-          "w": 12,
-          "x": 12,
-          "y": 41
-        },
-        "hiddenSeries": false,
-        "id": 17,
-        "legend": {
-          "avg": false,
-          "current": false,
-          "max": false,
-          "min": false,
-          "show": true,
-          "total": false,
-          "values": false
-        },
-        "lines": true,
-        "linewidth": 1,
-        "nullPointMode": "null",
-        "options": {
-          "alertThreshold": true
-        },
-        "percentage": false,
-        "pluginVersion": "10.2.3",
-        "pointradius": 2,
-        "points": false,
-        "renderer": "flot",
-        "seriesOverrides": [],
-        "spaceLength": 10,
-        "stack": false,
-        "steppedLine": false,
-        "targets": [
           {
             "datasource": {
               "type": "prometheus",
               "uid": "managed-prometheus"
             },
             "editorMode": "code",
-            "expr": "histogram_quantile(0.75, sum by(pipelineId, le)(rate(indexing_solr_index_time_secs_bucket{namespace=~\"$namespace\",pipelineId=~\"$pipeline\",cluster=~\"$cluster\"}[1m])))",
+            "expr": "jvm_threads_states_threads{namespace=~\"$namespace\", app_kubernetes_io_component=~\"$service\", state=\"blocked\",cluster=~\"$cluster\"}",
+            "legendFormat": "{{pod}} {{state}} Threads",
             "range": true,
-            "refId": "A"
+            "refId": "B"
           }
         ],
         "thresholds": [],
         "timeRegions": [],
-        "title": "Solr Indexing Time (p75)",
+        "title": "Thread States",
         "tooltip": {
           "shared": true,
           "sort": 0,
@@ -1149,6 +685,11 @@
     "templating": {
       "list": [
         {
+          "current": {
+            "selected": false,
+            "text": "<CLUSTER>",
+            "value": "<CLUSTER>"
+          },
           "datasource": {
             "type": "prometheus",
             "uid": "managed-prometheus"
@@ -1166,6 +707,7 @@
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
+          "regex": "^(<CLUSTER>)$",
           "skipUrlSync": false,
           "sort": 0,
           "type": "query"
@@ -1180,15 +722,16 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
+          "definition": "label_values(system_cpu_usage{namespace=~\".+\"},namespace)",
           "hide": 0,
           "includeAll": false,
           "label": "Namespace",
           "multi": false,
           "name": "namespace",
           "options": [],
-          "query": "label_values(http_server_requests_seconds_count{namespace=~\".+\"},namespace)",
+          "query": "label_values(system_cpu_usage{namespace=~\".+\"},namespace)",
           "refresh": 1,
+          "regex": "",
           "skipUrlSync": false,
           "sort": 0,
           "tagValuesQuery": "",
@@ -1198,26 +741,22 @@
         },
         {
           "current": {
-            "selected": true,
-            "text": [
-              "All"
-            ],
-            "value": [
-              "$__all"
-            ]
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
           },
           "datasource": {
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(indexing_stage_process_time_secs_sum{namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
+          "definition": "label_values(system_cpu_usage{namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
           "hide": 0,
           "includeAll": true,
-          "label": "Pipeline Id",
+          "label": "Service",
           "multi": true,
-          "name": "pipeline",
+          "name": "service",
           "options": [],
-          "query": "label_values(indexing_stage_process_time_secs_sum{namespace=~\"$namespace\",pipelineId=~\".+\"},pipelineId)",
+          "query": "label_values(system_cpu_usage{namespace=~\"$namespace\",app_kubernetes_io_component=~\".+\"},app_kubernetes_io_component)",
           "refresh": 1,
           "regex": "",
           "skipUrlSync": false,
@@ -1248,8 +787,8 @@
       ]
     },
     "timezone": "",
-    "title": "Indexing Service Metrics (GMP)",
-    "uid": "RvRcaixWk4",
+    "title": "JVM Metrics (GMP)",
+    "uid": "1arkSShZzS",
     "version": 4,
     "weekStart": ""
   }
