@@ -149,8 +149,6 @@ The https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_gke.s
 The script is mainly to help those new to Kubernetes and/or Fusion get started quickly.
 If you're already familiar with K8s, Helm, and GKE, then you can skip the script and just use Helm directly to install Fusion into an existing cluster or one you create yourself using the process described <<helm-only,here>>.
 
-If you're new to Google Cloud Platform (GCP), then you need an account on https://console.cloud.google.com/freetrial/intro[Google Cloud Platform^] before you can begin deploying Fusion on GKE.
-
 [[sdk-setup]]
 === Set up the Google Cloud SDK (one time only)
 
@@ -160,7 +158,7 @@ These steps set up your local Google Cloud SDK environment so that you're ready 
 
 Usually, you only need to perform these setup steps once.  After that, you're ready to link:#cluster-create[create a cluster].
 
-For a nice getting started tutorial for GKE, see: https://codelabs.developers.google.com/codelabs/cloud-gke-workshop-v2/#1
+For a nice getting started tutorial for GKE, see: https://cloud.google.com/kubernetes-engine/docs/deploy-app-cluster[Deploy an app to a GKE cluster^].
 
 .How to set up the Google Cloud SDK
 . https://console.cloud.google.com/apis/library/container.googleapis.com?q=kubernetes%20engine[Enable the Kubernetes Engine API^].
@@ -206,7 +204,7 @@ Error: could not get apiVersions from Kubernetes: unable to retrieve the complet
 
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
-When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
 
 === Create a three-node regional cluster to withstand a zone outage
 
@@ -227,7 +225,7 @@ When running in a multi-zone cluster, each Solr node has the `solr_zone` system 
 
 After running the `setup_f5_gke.sh` script, proceed to the <<verifying,Verifying the Fusion Installation>> section below.
 
-When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
 
 ==== GKE Ingress and TLS
 
@@ -839,7 +837,7 @@ The easiest way to install on OpenShift is to run the `setup_f5_k8s.sh` script f
 
 Tip: `kubectl` should work with your OpenShift cluster (see: https://docs.openshift.com/container-platform/4.1/cli_reference/usage-oc-kubectl.html) and Lucidworks recommends installing the latest `kubectl` for your workstation instead of using `oc` for installing Fusion 5. However, if you do not have `kubectl` installed, then you'll need to update the upgrade script created by `setup_f5_k8s.sh` to use `oc` instead of `kubectl` (search and replace on the BASH script using a text editor).
 
-When you're ready to deploy Fusion to a production-like environment, refer to the link:https://github.com/lucidworks/fusion-cloud-native/blob/master/survival_guide/2_planning.adoc[Planning^] section of the Survival Guide.
+When you're ready to deploy Fusion to a production-like environment, see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
 
 Lucidworks recommends using Helm v3, but in case Tiller is required for Helm v2, the cluster security needs to be relaxed to allow images to run with different UIDs:
 ```
@@ -953,9 +951,9 @@ To see a list of Fusion services, do:
 kubectl get svc
 ```
 
-For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion/5.3/149/fusion-microservices
+For an overview of the various Fusion 5 microservices, see: https://doc.lucidworks.com/fusion/5.12/195/fusion-microservices[Fusion microservices].
 
-Once you're ready to build a Fusion cluster for production, please see the https://github.com/lucidworks/fusion-cloud-native/tree/master/survival_guide[Fusion 5 Survival Guide] in this repo.
+Once you're ready to build a Fusion cluster for production, please see see more information at https://doc.lucidworks.com/fusion/5.12/119/fusion-5-survival-guide[Fusion 5 Survival Guide].
 
 === Upgrading with Zero Downtime
 
