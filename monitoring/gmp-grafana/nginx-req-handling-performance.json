@@ -937,8 +937,8 @@
         {
           "current": {
             "selected": false,
-            "text": "<CLUSTER>",
-            "value": "<CLUSTER>"
+            "text": "",
+            "value": ""
           },
           "datasource": {
             "type": "prometheus",
@@ -957,7 +957,7 @@
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "^(<CLUSTER>)$",
+          "regex": "",
           "skipUrlSync": false,
           "sort": 0,
           "type": "query"

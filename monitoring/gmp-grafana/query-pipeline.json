@@ -2149,7 +2149,7 @@
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "^(<ENV>)$",
+          "regex": "",
           "skipUrlSync": false,
           "sort": 0,
           "tagValuesQuery": "",
