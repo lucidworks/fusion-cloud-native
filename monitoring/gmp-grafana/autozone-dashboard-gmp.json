@@ -2320,8 +2320,8 @@
       ]
     },
     "timezone": "",
-    "title": "Customer Dashboard",
-    "uid": "customer-gmp",
+    "title": "Customer Dashboard with query-stage",
+    "uid": "customer-gmp-query-stage",
     "version": 3,
     "weekStart": ""
   }
