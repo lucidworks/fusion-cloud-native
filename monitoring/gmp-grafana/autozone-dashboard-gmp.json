@@ -2303,7 +2303,7 @@
                 "value": "$__all"
               },
             "datasource": {
-                "type": "prometheus"
+                "type": "prometheus",
                 "uid": "managed-prometheus"
               },
             "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
