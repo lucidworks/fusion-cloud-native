@@ -1615,6 +1615,10 @@
             "steppedLine": false,
             "targets": [
               {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "managed-prometheus"
+                  },
                 "expr": "histogram_quantile(0.99, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
                 "intervalFactor": 2,
                 "legendFormat": "{{pipelineId}} {{stageId}}",
@@ -1704,6 +1708,10 @@
             "steppedLine": false,
             "targets": [
               {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "managed-prometheus"
+                  },
                 "expr": "histogram_quantile(0.95, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
                 "intervalFactor": 2,
                 "legendFormat": "{{pipelineId}} {{stageId}}",
@@ -1793,6 +1801,10 @@
             "steppedLine": false,
             "targets": [
               {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "managed-prometheus"
+                  },
                 "expr": "histogram_quantile(0.75, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
                 "intervalFactor": 2,
                 "legendFormat": "{{pipelineId}} {{stageId}}",
@@ -1881,6 +1893,10 @@
             "steppedLine": false,
             "targets": [
               {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "managed-prometheus"
+                  },
                 "expr": "histogram_quantile(0.5, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
                 "intervalFactor": 2,
                 "legendFormat": "{{pipelineId}} {{stageId}}",
@@ -1969,6 +1985,10 @@
             "steppedLine": false,
             "targets": [
               {
+                "datasource": {
+                    "type": "prometheus",
+                    "uid": "managed-prometheus"
+                  },
                 "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
                 "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
                 "refId": "A"
@@ -2056,6 +2076,10 @@
             "steppedLine": false,
             "targets": [
               {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
                 "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
                 "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
                 "refId": "A"
@@ -2279,7 +2303,7 @@
                 "value": "$__all"
               },
             "datasource": {
-                "type": "prometheus",
+                "type": "prometheus"
                 "uid": "managed-prometheus"
               },
             "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
