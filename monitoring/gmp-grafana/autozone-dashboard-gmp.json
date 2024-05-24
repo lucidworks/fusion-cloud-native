@@ -1564,7 +1564,6 @@
       },
       {
         "collapsed": true,
-        "datasource": null,
         "gridPos": {
           "h": 1,
           "w": 24,
@@ -1573,557 +1572,597 @@
         },
         "id": 25,
         "panels": [
-          {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 0,
-              "y": 36
-            },
-            "hiddenSeries": false,
-            "id": 22,
-            "interval": "",
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "managed-prometheus"
-                  },
-                "expr": "histogram_quantile(0.99, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
-                "intervalFactor": 2,
-                "legendFormat": "{{pipelineId}} {{stageId}}",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Query Stage p99 Execution Times (histogram)",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
-              "buckets": null,
-              "mode": "time",
-              "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "s",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
-              "alignLevel": null
-            }
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "links": []
           },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 44
+        },
+        "hiddenSeries": false,
+        "id": 22,
+        "interval": "",
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "alertThreshold": true
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
           {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 12,
-              "y": 36
-            },
-            "hiddenSeries": false,
-            "id": 44,
-            "interval": "",
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "managed-prometheus"
-                  },
-                "expr": "histogram_quantile(0.95, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
-                "intervalFactor": 2,
-                "legendFormat": "{{pipelineId}} {{stageId}}",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Query Stage p95 Execution Times (histogram)",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
-              "buckets": null,
-              "mode": "time",
-              "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "s",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
-              "alignLevel": null
-            }
-          },
-          {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 0,
-              "y": 44
-            },
-            "hiddenSeries": false,
-            "id": 45,
-            "interval": "",
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "managed-prometheus"
-                  },
-                "expr": "histogram_quantile(0.75, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
-                "intervalFactor": 2,
-                "legendFormat": "{{pipelineId}} {{stageId}}",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Query Stage p75 Execution Times (histogram)",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
-              "buckets": null,
-              "mode": "time",
-              "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "s",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
-              "alignLevel": null
-            }
-          },
-          {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 12,
-              "y": 44
-            },
-            "hiddenSeries": false,
-            "id": 23,
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "managed-prometheus"
-                  },
-                "expr": "histogram_quantile(0.5, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
-                "intervalFactor": 2,
-                "legendFormat": "{{pipelineId}} {{stageId}}",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Query Stage p50 Execution Times",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
-              "buckets": null,
-              "mode": "time",
-              "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "s",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
-              "alignLevel": null
-            }
-          },
-          {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 0,
-              "y": 52
-            },
-            "hiddenSeries": false,
-            "id": 27,
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
-                "datasource": {
-                    "type": "prometheus",
-                    "uid": "managed-prometheus"
-                  },
-                "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
-                "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Query Stage Execution Count",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
-              "buckets": null,
-              "mode": "time",
-              "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
-                "label": null,
-                "logBase": 1,
-                "max": null,
-                "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
-              "alignLevel": null
-            }
-          },
-          {
-            "aliasColors": {},
-            "bars": false,
-            "dashLength": 10,
-            "dashes": false,
-            "datasource": null,
-            "fill": 1,
-            "fillGradient": 0,
-            "gridPos": {
-              "h": 8,
-              "w": 12,
-              "x": 12,
-              "y": 52
-            },
-            "hiddenSeries": false,
-            "id": 20,
-            "legend": {
-              "avg": false,
-              "current": false,
-              "max": false,
-              "min": false,
-              "show": true,
-              "total": false,
-              "values": false
-            },
-            "lines": true,
-            "linewidth": 1,
-            "nullPointMode": "null",
-            "options": {
-              "dataLinks": []
-            },
-            "percentage": false,
-            "pointradius": 2,
-            "points": false,
-            "renderer": "flot",
-            "seriesOverrides": [],
-            "spaceLength": 10,
-            "stack": false,
-            "steppedLine": false,
-            "targets": [
-              {
             "datasource": {
               "type": "prometheus",
               "uid": "managed-prometheus"
             },
-                "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
-                "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
-                "refId": "A"
-              }
-            ],
-            "thresholds": [],
-            "timeFrom": null,
-            "timeRegions": [],
-            "timeShift": null,
-            "title": "Stages per minute",
-            "tooltip": {
-              "shared": true,
-              "sort": 0,
-              "value_type": "individual"
-            },
-            "type": "graph",
-            "xaxis": {
+            "expr": "histogram_quantile(0.99, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
+            "intervalFactor": 2,
+            "legendFormat": "{{pipelineId}} {{stageId}}",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+        "timeFrom": null,
+        "timeRegions": [],
+        "timeShift": null,
+        "title": "Query Stage p99 Execution Times (histogram)",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
               "buckets": null,
-              "mode": "time",
+          "mode": "time",
               "name": null,
-              "show": true,
-              "values": []
-            },
-            "yaxes": [
-              {
-                "format": "short",
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "s",
                 "label": null,
-                "logBase": 1,
+            "logBase": 1,
                 "max": null,
                 "min": null,
-                "show": true
-              },
-              {
-                "format": "short",
+            "show": true
+          },
+          {
+            "format": "short",
                 "label": null,
-                "logBase": 1,
+            "logBase": 1,
                 "max": null,
                 "min": null,
-                "show": true
-              }
-            ],
-            "yaxis": {
-              "align": false,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
               "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 36
+        },
+        "hiddenSeries": false,
+        "id": 44,
+        "interval": "",
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "expr": "histogram_quantile(0.95, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
+            "intervalFactor": 2,
+            "legendFormat": "{{pipelineId}} {{stageId}}",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+            "timeFrom": null,
+        "timeRegions": [],
+            "timeShift": null,
+        "title": "Query Stage p95 Execution Times (histogram)",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+              "buckets": null,
+          "mode": "time",
+              "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "s",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+              "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+              "y": 44
+        },
+        "hiddenSeries": false,
+        "id": 45,
+        "interval": "",
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+              "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "expr": "histogram_quantile(0.75, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
+            "intervalFactor": 2,
+            "legendFormat": "{{pipelineId}} {{stageId}}",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+            "timeFrom": null,
+        "timeRegions": [],
+            "timeShift": null,
+        "title": "Query Stage p75 Execution Times (histogram)",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+              "buckets": null,
+          "mode": "time",
+              "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "s",
+            "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "datasource": {
+          "type": "prometheus",
+          "uid": "managed-prometheus"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 44
+        },
+        "hiddenSeries": false,
+        "id": 23,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "expr": "histogram_quantile(0.5, sum by(stageId, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageId=~\"$stageId\"}[1m])))",
+            "intervalFactor": 2,
+            "legendFormat": "{{pipelineId}} {{stageId}}",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+            "timeFrom": null,
+        "timeRegions": [],            "timeShift": null,
+        "title": "Query Stage p50 Execution Times",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+              "buckets": null,
+          "mode": "time",
+              "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "s",
+                "label": null,
+                "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+              "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+        "fieldConfig": {
+          "defaults": {
+            "links": []
+          },
+          "overrides": []
+        },
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 52
+        },
+        "hiddenSeries": false,
+        "id": 27,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
+            "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+            "timeFrom": null,
+        "timeRegions": [],
+            "timeShift": null,
+        "title": "Query Stage Execution Count",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+              "buckets": null,
+          "mode": "time",
+              "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+              "alignLevel": null
+        }
+      },
+      {
+        "aliasColors": {},
+        "bars": false,
+        "dashLength": 10,
+        "dashes": false,
+            "datasource": null,
+        "fill": 1,
+        "fillGradient": 0,
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 52
+        },
+        "hiddenSeries": false,
+        "id": 20,
+        "legend": {
+          "avg": false,
+          "current": false,
+          "max": false,
+          "min": false,
+          "show": true,
+          "total": false,
+          "values": false
+        },
+        "lines": true,
+        "linewidth": 1,
+        "nullPointMode": "null",
+        "options": {
+          "dataLinks": []
+        },
+        "percentage": false,
+        "pointradius": 2,
+        "points": false,
+        "renderer": "flot",
+        "seriesOverrides": [],
+        "spaceLength": 10,
+        "stack": false,
+        "steppedLine": false,
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "managed-prometheus"
+            },
+            "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
+            "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
+            "refId": "A"
+          }
+        ],
+        "thresholds": [],
+            "timeFrom": null,
+        "timeRegions": [],
+            "timeShift": null,
+        "title": "Stages per minute",
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "type": "graph",
+        "xaxis": {
+              "buckets": null,
+          "mode": "time",
+              "name": null,
+          "show": true,
+          "values": []
+        },
+        "yaxes": [
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          },
+          {
+            "format": "short",
+                "label": null,
+            "logBase": 1,
+                "max": null,
+                "min": null,
+            "show": true
+          }
+        ],
+        "yaxis": {
+          "align": false,
+          "alignLevel": null
             }
           }
         ],
@@ -2137,28 +2176,28 @@
     "templating": {
       "list": [
         {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "managed-prometheus"
-              },
-            "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageId)",
-            "hide": 0,
-            "includeAll": true,
-            "label": "Stage Id",
-            "multi": true,
-            "name": "stageId",
-            "options": [],
-            "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageId)",
-            "refresh": 1,
-            "regex": "/(.+)/",
-            "skipUrlSync": false,
-            "sort": 1,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
+          "datasource": {
+            "type": "prometheus",
+            "uid": "managed-prometheus"
           },
+          "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageId)",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Stage Id",
+          "multi": true,
+          "name": "stageId",
+          "options": [],
+          "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageId)",
+          "refresh": 1,
+          "regex": "/(.+)/",
+          "skipUrlSync": false,
+          "sort": 1,
+          "tagValuesQuery": "",
+          "tags": [],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
+        },
         {
           "datasource": {
             "type": "prometheus",
@@ -2297,33 +2336,33 @@
           "useTags": false
         },
         {
-            "current": {
-                "selected": false,
-                "text": "All",
-                "value": "$__all"
-              },
-            "datasource": {
-                "type": "prometheus",
-                "uid": "managed-prometheus"
-              },
-            "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
-            "hide": 0,
-            "includeAll": true,
-            "label": "Pipeline",
-            "multi": true,
-            "name": "pipeline",
-            "options": [],
-            "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
-            "refresh": 1,
-            "regex": "^(?!_.*$).*",
-            "skipUrlSync": false,
-            "sort": 0,
-            "tagValuesQuery": "",
-            "tags": [],
-            "tagsQuery": "",
-            "type": "query",
-            "useTags": false
-          }
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "managed-prometheus"
+          },
+          "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Pipeline",
+          "multi": true,
+          "name": "pipeline",
+          "options": [],
+          "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
+          "refresh": 1,
+          "regex": "^(?!_.*$).*",
+          "skipUrlSync": false,
+          "sort": 0,
+          "tagValuesQuery": "",
+          "tags": [],
+          "tagsQuery": "",
+          "type": "query",
+          "useTags": false
+        }
       ]
     },
     "time": {
