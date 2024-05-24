@@ -2342,8 +2342,8 @@
     ]
   },
   "timezone": "",
-  "title": "test-gmp",
-  "uid": "test-gmp",
+  "title": "Customer Dashboard with query-stage",
+  "uid": "customer-gmp-query-stage",
   "version": 2,
   "weekStart": ""
 }
