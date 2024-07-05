@@ -1625,7 +1625,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "histogram_quantile(0.99, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+              "expr": "histogram_quantile(0.99, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{pipelineId}} {{stageType}}",
               "refId": "A"
@@ -1721,7 +1721,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "histogram_quantile(0.95, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+              "expr": "histogram_quantile(0.95, sum by(stageType, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{pipelineId}} {{stageType}}",
               "refId": "A"
@@ -1817,7 +1817,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "histogram_quantile(0.75, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+              "expr": "histogram_quantile(0.75, sum by(stageType, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{pipelineId}} {{stageType}}",
               "refId": "A"
@@ -1912,7 +1912,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "histogram_quantile(0.5, sum by(stageType, pipelineId, le)(rate(query_stage_time_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+              "expr": "histogram_quantile(0.5, sum by(stageType, pipelineId, le) (rate(query_stage_time_secs_bucket{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"}[1m])))",
               "intervalFactor": 2,
               "legendFormat": "{{pipelineId}} {{stageType}}",
               "refId": "A"
@@ -2007,7 +2007,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "sum(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}) by (error, pipelineId, stageType)",
+              "expr": "sum by(error, pipelineId, stageType) (query_stage_outcome_total{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"})",
               "legendFormat": "{{pipelineId}} {{stageType}} (error {{error}})",
               "refId": "A"
             }
@@ -2100,7 +2100,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])) by (error, pipelineId, stageType)",
+              "expr": "sum by(error, pipelineId, stageType) (increase(query_stage_outcome_total{namespace=~\"$namespace\", pod=~\"$pod\", pipelineId=~\"$queryPipelineId\", pipelineId!~\"_lw_tmp_.*\", stageType=~\"$stage\"}[1m]))",
               "legendFormat": "{{pipelineId}} {{stageType}} runs per minute",
               "refId": "A"
             }
