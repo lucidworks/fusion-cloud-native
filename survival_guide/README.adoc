@@ -5,7 +5,7 @@
 
 // tag::body[]
 
-The purpose of this guide is to help you install, configure, and run Fusion 5 in production with high availability on Kubernetes. It is assumed that you're already familiar with the basic installation and getting started concepts covered in https://github.com/lucidworks/fusion-cloud-native/README.adoc[the README].
+The purpose of this guide is to help you install, configure, and run Fusion 5 in production with high availability on Kubernetes. It is assumed that you're already familiar with the basic installation and getting started concepts covered in https://github.com/lucidworks/fusion-cloud-native\#readme[the README].
 
 * link:1_concepts.adoc[Part 1: Foundational Concepts]
 * link:2_planning.adoc[Part 2: Plan Your Fusion Deployment]
