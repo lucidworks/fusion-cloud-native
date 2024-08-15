@@ -2158,6 +2158,7 @@
           "useTags": false
         },
         {
+          "allValue": ".*-query-pipeline.*",
           "current": {
             "selected": true,
             "text": [

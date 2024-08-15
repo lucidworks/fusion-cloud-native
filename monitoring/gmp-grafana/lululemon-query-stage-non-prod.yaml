@@ -2168,7 +2168,7 @@
         "type": "query"
       },
       {
-        "allValue": null,
+        "allValue": ".*-query-pipeline.*",
         "current": {
           "text": "All",
           "value": [
