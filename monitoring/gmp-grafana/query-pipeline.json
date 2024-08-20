@@ -2172,7 +2172,7 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pod)",
+          "definition": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": true,
           "label": "Pod",
@@ -2180,11 +2180,11 @@
           "name": "pod",
           "options": [],
           "query": {
-            "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pod=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pod)",
+            "query": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "",
+          "regex": "/.*pod=\"([^\"]*).*/",
           "skipUrlSync": false,
           "sort": 0,
           "tagValuesQuery": "",
@@ -2206,7 +2206,7 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageType=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageType)",
+          "definition": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": true,
           "label": "Stage Type",
@@ -2214,11 +2214,11 @@
           "name": "stage",
           "options": [],
           "query": {
-            "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",stageType=~\".+\",pipelineId!~\"_lw_tmp_.*\"},stageType)",
-            "refId": "GMP-stage-Variable-Query"
+            "query": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+            "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "/(.+)/",
+          "regex": "/.*stageType=\"([^\"]*).*/",
           "skipUrlSync": false,
           "sort": 1,
           "tagValuesQuery": "",
@@ -2240,7 +2240,7 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
+          "definition": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": true,
           "label": "Pipeline",
@@ -2248,11 +2248,11 @@
           "name": "pipeline",
           "options": [],
           "query": {
-            "query": "label_values(query_stage_outcome_total{namespace=~\"$namespace\",pipelineId=~\".+\",pipelineId!~\"_lw_tmp_.*\"},pipelineId)",
-            "refId": "GMP-pipeline-Variable-Query"
+            "query": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+            "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "^(?!_.*$).*",
+          "regex": "/.*pipelineId=\"([^\"]*).*/",
           "skipUrlSync": false,
           "sort": 0,
           "tagValuesQuery": "",
