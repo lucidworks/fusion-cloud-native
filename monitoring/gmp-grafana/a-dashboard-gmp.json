@@ -2160,9 +2160,7 @@
         },
         {
           "current": {
-            "selected": false,
-            "text": "lw-autozone-non-prod-alt-us-east1",
-            "value": "lw-autozone-non-prod-alt-us-east1"
+            "selected": false
           },
           "datasource": {
             "type": "prometheus",
