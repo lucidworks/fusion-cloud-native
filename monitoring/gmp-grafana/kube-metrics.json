@@ -313,7 +313,7 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(http_server_requests_seconds_count{cluster=~\".+\"},cluster)",
+          "definition": "query_result(rate(query_stage_outcome_total{pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": false,
           "label": "K8s Cluster",
@@ -321,12 +321,12 @@
           "name": "cluster",
           "options": [],
           "query": {
-            "qryType": 1,
-            "query": "label_values(http_server_requests_seconds_count{cluster=~\".+\"},cluster)",
+            "qryType": 3,
+            "query": "query_result(rate(query_stage_outcome_total{pipelineId!~\"_lw_tmp_.*\"}[1m]))",
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
-          "regex": "",
+          "regex": "/.*cluster=\"([^\"]*).*/",
           "skipUrlSync": false,
           "sort": 0,
           "type": "query"
@@ -345,22 +345,25 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "label_values(kube_pod_info{namespace=~\".+\"},namespace)",
+          "definition": "query_result(rate(query_stage_outcome_total{pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": true,
-          "label": "Namespace",
-          "multi": true,
+          "label": "Kubernetes Namespace",
+          "multi": false,
           "name": "namespace",
           "options": [],
-          "query": "label_values(kube_pod_info{namespace=~\".+\"},namespace)",
+          "query": {
+            "qryType": 3,
+            "query": "query_result(rate(query_stage_outcome_total{pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+            "refId": "PrometheusVariableQueryEditor-VariableQuery"
+          },
           "refresh": 1,
-          "regex": "",
+          "regex": "/.*namespace=\"([^\"]*).*/",
           "skipUrlSync": false,
           "sort": 0,
           "tagValuesQuery": "",
           "tagsQuery": "",
-          "type": "query",
-          "useTags": false
+          "type": "query"
         }
       ]
     },
