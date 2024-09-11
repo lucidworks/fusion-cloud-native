@@ -690,7 +690,7 @@
             "uid": "managed-prometheus"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",cluster=~\"$cluster\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+          "expr": "histogram_quantile(0.95, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",cluster=~\"$cluster\",pipelineId!~\"_lw_tmp_.*\",pipelineId=~\"$queryPipelineId\"}[1m])))",
           "interval": "",
           "legendFormat": "{{pipelineId}}",
           "range": true,
