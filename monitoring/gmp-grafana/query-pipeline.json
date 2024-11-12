@@ -272,7 +272,7 @@
               "type": "prometheus",
               "uid": "managed-prometheus"
             },
-            "expr": "histogram_quantile(0.99, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\"}[1m])))",
+            "expr": "histogram_quantile(0.99, sum by(pipelineId, le)(rate(pipeline_execution_duration_secs_bucket{namespace=~\"$namespace\",pod=~\"$pod\",pipelineId=~\"$pipeline\",pipelineId!~\"_lw_tmp_.*\",cluster=~\"$cluster\"}[1m])))",
             "legendFormat": "{{pipelineId}}",
             "refId": "A"
           }
