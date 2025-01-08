@@ -1072,7 +1072,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "sum(rate(http_server_requests_seconds_count{app_kubernetes_io_component=\"fusion-indexing\",method!=\"GET\"}[1m]))",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"fusion-indexing\",method!=\"GET\"}[1m]))",
               "interval": "",
               "legendFormat": "",
               "refId": "A"
@@ -1161,7 +1161,7 @@
                 "type": "prometheus",
                 "uid": "managed-prometheus"
               },
-              "expr": "sum by(pipelineId)(rate(indexing_docs_in_total{namespace=~\"$namespace\",app_kubernetes_io_component=\"fusion-indexing\",pipelineId=~\"$indexPipelineId\",pipelineId!~\"_lw_tmp_.*\"}[1m]))\n",
+              "expr": "sum by(pipelineId)(rate(indexing_docs_in_total{namespace=~\"$namespace\",job=\"fusion-indexing\",pipelineId=~\"$indexPipelineId\",pipelineId!~\"_lw_tmp_.*\"}[1m]))\n",
               "interval": "",
               "legendFormat": "{{pipelineId}}",
               "refId": "A"
