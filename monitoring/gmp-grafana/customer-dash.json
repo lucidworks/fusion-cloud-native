@@ -391,7 +391,7 @@
             "uid": "managed-prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",cluster=~\"$cluster\",uri=~\"/api/v1/(index-pipelines|index.*)/(.*)",method=\"POST\"}[1m]))",
+          "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\",cluster=~\"$cluster\",uri=~\"/api/v1/(index-pipelines|index.*)/(.*)\",method=\"POST\"}[1m]))",
           "interval": "",
           "legendFormat": "Indexing Requests Per Second",
           "range": true,
