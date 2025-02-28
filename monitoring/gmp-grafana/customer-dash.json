@@ -1667,16 +1667,20 @@
           "type": "prometheus",
           "uid": "managed-prometheus"
         },
-        "definition": "label_values(indexing_docs_in_total{cluster=~\".+\",namespace=~\"$namespace\"},pipelineId)",
+        "definition": "query_result(rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
         "hide": 0,
         "includeAll": true,
         "label": "Indexing Pipeline",
         "multi": true,
         "name": "indexPipelineId",
         "options": [],
-        "query": "label_values(indexing_docs_in_total{cluster=~\".+\",namespace=~\"$namespace\"},pipelineId)",
+        "query": {
+          "qryType": 3,
+          "query": "query_result(rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
         "refresh": 2,
-        "regex": "",
+        "regex": "/.*pipelineId=\"([^\"]*).*/",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",

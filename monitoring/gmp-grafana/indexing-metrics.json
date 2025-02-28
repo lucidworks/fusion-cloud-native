@@ -1216,7 +1216,7 @@
             "type": "prometheus",
             "uid": "managed-prometheus"
           },
-          "definition": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+          "definition": "query_result(rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
           "hide": 0,
           "includeAll": true,
           "label": "Pipeline",
@@ -1224,7 +1224,8 @@
           "name": "pipeline",
           "options": [],
           "query": {
-            "query": "query_result(rate(query_stage_outcome_total{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
+            "qryType": 3,
+            "query": "query_result(rate(indexing_pipeline_exec_time_secs_bucket{namespace=~\"$namespace\", pipelineId!~\"_lw_tmp_.*\"}[1m]))",
             "refId": "PrometheusVariableQueryEditor-VariableQuery"
           },
           "refresh": 1,
