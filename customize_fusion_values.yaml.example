@@ -33,7 +33,7 @@ solr:
 
 kafka:
   image:
-    registry: bitnami
+    registry: lucidworks
   replicaCount: {KAFKA_REPLICAS}
   zkConnectionString: "{RELEASE}-zookeeper-0.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-1.{RELEASE}-zookeeper-headless:2181,{RELEASE}-zookeeper-2.{RELEASE}-zookeeper-headless:2181"
   logstashEnabled: false

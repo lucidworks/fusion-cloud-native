@@ -212,7 +212,7 @@ ml-model-service:
     image:
       imagePullSecrets:
       - name: ${REPOSITORY}
-      repository: ${REPOSITORY}/bitnami
+      repository: ${REPOSITORY}/lucidworks
 pm-ui:
   image:
     imagePullSecrets:

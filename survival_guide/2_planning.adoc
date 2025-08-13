@@ -384,7 +384,7 @@ Here is a list of the images you need to pull for the Fusion 5.1.1 chart:
 apachepulsar/pulsar-all:2.5.0
 argoproj/argoui:v2.4.3
 argoproj/workflow-controller:v2.4.3
-bitnami/kubectl:1.15-debian-9
+lucidworks/kubectl:1.15-debian-9
 busybox:1.31.1
 busybox:latest
 curlimages/curl:7.68.0

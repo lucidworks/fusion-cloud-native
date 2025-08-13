@@ -84,7 +84,7 @@ job-launcher:
       repository: ${REPOSITORY}
   kubectlRunner:
     image:
-      repository: ${REPOSITORY}/bitnami
+      repository: ${REPOSITORY}/lucidworks
 job-rest-server:
   image:
     repository: ${REPOSITORY}
@@ -134,7 +134,7 @@ ml-model-service:
         repository: ${REPOSITORY}/mishards
   preinstall:
     image:
-      repository: ${REPOSITORY}/bitnami
+      repository: ${REPOSITORY}/lucidworks
 pm-ui:
   image:
     repository: ${REPOSITORY}
