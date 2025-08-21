@@ -751,6 +751,24 @@ Fusion version 5.5 now includes support for the Rancher Kubernetes Engine (RKE) 
 You must have a working cluster configured before performing the Helm v3 installation. 
 
 
+For example, you can https://docs.docker.com/docker-for-mac/#kubernetes[`enable Kubernetes server that comes with your Docker Desktop For Mac`^]
+
+(To install Fusion locally, you should have a node with at least 12GB of memory, 100GB of disk and 4 CPU cores. The recommended setup is 16GB (or more) of memory and 8+ CPU cores. Please follow https://docs.docker.com/docker-for-mac/#advanced[`the instructions here`^] to adjust your Docker's resource limits)
+
+Then run the https://github.com/lucidworks/fusion-cloud-native/blob/master/setup_f5_k8s.sh[`setup_f5_k8s.sh`^] script to install Fusion 5.x into local k8s cluster.
+```
+./setup_f5_k8s.sh -c <cluster_name> -r <release> -n <namespace>
+```
+
+Make sure all the pods are healthy and running by watching the cluster rollout using: `kubectl get pods --watch`
+
+Hit ctrl-c once all the pods are running.
+
+Run the following commands to access Fusion locally on http://localhost:6764
+```
+kubectl port-forward svc/proxy 6764:6764
+```
+
 [[helm-only]]
 === Use Helm v3 to Install Fusion
 
