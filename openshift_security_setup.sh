@@ -1,6 +1,6 @@
 #!/bin/bash
 # openshift_security_setup.sh
-# OpenShift Security Setup for Fusion - LANL Compliant (AMD64 only)
+# OpenShift Security Setup for Fusion (AMD64 only)
 
 # Don't use set -e because we expect some commands to fail (e.g., service accounts that don't exist yet)
 
@@ -8,7 +8,7 @@ NAMESPACE="${1:-fusion}"
 RELEASE="${2:-$NAMESPACE}"
 ACTION="${3:-setup}"  # setup, audit, post-install, or cleanup
 
-# Security-specific variables for LANL compliance
+# Security-specific variables
 FUSION_UIDS="1000,8764,8983"
 FUSION_GIDS="1000,8764,8983"
 SCC_NAME="fusion-restricted-scc"
@@ -50,7 +50,7 @@ verify_no_dangerous_permissions() {
 
 # Create custom SCCs with specific UIDs/GIDs
 create_fusion_sccs() {
-    log_info "Creating custom Security Context Constraints for LANL compliance"
+    log_info "Creating custom Security Context Constraints"
     log_info "Allowed UIDs: $FUSION_UIDS"
     log_info "Allowed GIDs: $FUSION_GIDS"
     
@@ -65,7 +65,7 @@ kind: SecurityContextConstraints
 metadata:
   name: $SCC_NAME
   annotations:
-    kubernetes.io/description: "Custom SCC for Fusion with specific UIDs/GIDs only - LANL Compliant"
+    kubernetes.io/description: "Custom SCC for Fusion with specific UIDs/GIDs only"
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
@@ -235,7 +235,7 @@ EOF
 grant_scc_to_future_service_accounts() {
     log_info "Pre-granting SCC permissions for Fusion service accounts that will be created by Helm..."
     
-    # Remove any group-level grants first (CRITICAL FOR LANL COMPLIANCE)
+    # Remove any group-level grants first
     oc adm policy remove-scc-from-group $SCC_NAME system:serviceaccounts:$NAMESPACE 2>/dev/null || true
     oc adm policy remove-scc-from-group ${SCC_NAME}-flexible system:serviceaccounts:$NAMESPACE 2>/dev/null || true
     oc adm policy remove-scc-from-group anyuid system:serviceaccounts:$NAMESPACE 2>/dev/null || true
@@ -330,7 +330,7 @@ create_security_override_values() {
     log_info "Creating security override values: $override_file"
     
     cat > $override_file <<EOF
-# OpenShift Security Override Values - LANL Compliant
+# OpenShift Security Override Values
 # Generated: $(date)
 # Namespace: $NAMESPACE
 # Release: $RELEASE
@@ -536,7 +536,7 @@ cleanup_sccs() {
 case "$ACTION" in
     setup)
         log_info "========================================="
-        log_info "OpenShift Security Setup - LANL Compliant"
+        log_info "OpenShift Security Setup"
         log_info "Namespace: $NAMESPACE"
         log_info "Release: $RELEASE"
         log_info "Approved UIDs: $FUSION_UIDS"
