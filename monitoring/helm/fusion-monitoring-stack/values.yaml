@@ -16,7 +16,7 @@ grafana:
     dashboards:
       enabled: false
   image:
-    tag: 8.3.5
+    tag: latest
 
 prometheus:
   enabled: true
